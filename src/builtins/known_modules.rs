@@ -1,10 +1,10 @@
 use super::Builtins;
-use crate::entity::Entity;
+use crate::r#type::Type;
 
 #[derive(Debug, Clone, Copy)]
 pub struct KnownModule<'a> {
-  pub namespace: Entity<'a>,
-  pub default: Entity<'a>,
+  pub namespace: Type<'a>,
+  pub default: Type<'a>,
 }
 
 impl<'a> Builtins<'a> {

@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity, scope::CfScopeKind};
+use crate::{analyzer::Analyzer, r#type::Type, scope::CfScopeKind};
 use oxc::ast::ast::CallExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_call_expression(&mut self, node: &'a CallExpression) -> Entity<'a> {
+  pub fn exec_call_expression(&mut self, node: &'a CallExpression) -> Type<'a> {
     let (scope_count, value, undefined) = self.exec_call_expression_in_chain(node).unwrap();
 
     assert_eq!(scope_count, 0);
@@ -15,7 +15,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_call_expression_in_chain(
     &mut self,
     node: &'a CallExpression,
-  ) -> Result<(usize, Entity<'a>, Option<Entity<'a>>), Entity<'a>> {
+  ) -> Result<(usize, Type<'a>, Option<Type<'a>>), Type<'a>> {
     let (mut scope_count, callee, mut undefined, this) = self.exec_callee(&node.callee)?;
 
     if node.optional {

@@ -1,11 +1,11 @@
 use crate::{
   analyzer::Analyzer,
-  entity::{Entity, EntityTrait},
+  r#type::{EntityTrait, Type},
 };
 use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKey};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_object_expression(&mut self, node: &'a ObjectExpression) -> Entity<'a> {
+  pub fn exec_object_expression(&mut self, node: &'a ObjectExpression) -> Type<'a> {
     let object = self.new_empty_object(&self.builtins.prototypes.object);
 
     let mut has_proto = false;

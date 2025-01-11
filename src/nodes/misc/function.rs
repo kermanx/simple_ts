@@ -1,7 +1,7 @@
 use crate::{
   analyzer::Analyzer,
   ast::{AstKind2, DeclarationKind},
-  entity::Entity,
+  r#type::Type,
   utils::{CalleeInfo, CalleeNode},
 };
 use oxc::{
@@ -11,7 +11,7 @@ use oxc::{
 use std::rc::Rc;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_function(&mut self, node: &'a Function<'a>) -> Entity<'a> {
+  pub fn exec_function(&mut self, node: &'a Function<'a>) -> Type<'a> {
     self.new_function(CalleeNode::Function(node))
   }
 
@@ -30,15 +30,15 @@ impl<'a> Analyzer<'a> {
 
   pub fn call_function(
     &mut self,
-    fn_entity: Entity<'a>,
+    fn_entity: Type<'a>,
     callee: CalleeInfo<'a>,
     node: &'a Function<'a>,
     variable_scopes: Rc<Vec<ScopeId>>,
-    this: Entity<'a>,
-    args: Entity<'a>,
+    this: Type<'a>,
+    args: Type<'a>,
     consume: bool,
-  ) -> Entity<'a> {
-    let runner: Box<dyn Fn(&mut Analyzer<'a>) -> Entity<'a> + 'a> =
+  ) -> Type<'a> {
+    let runner: Box<dyn Fn(&mut Analyzer<'a>) -> Type<'a> + 'a> =
       Box::new(move |analyzer: &mut Analyzer<'a>| {
         analyzer.push_call_scope(
           callee,

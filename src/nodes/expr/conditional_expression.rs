@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity, scope::CfScopeKind};
+use crate::{analyzer::Analyzer, r#type::Type, scope::CfScopeKind};
 use oxc::ast::ast::ConditionalExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_conditional_expression(&mut self, node: &'a ConditionalExpression<'a>) -> Entity<'a> {
+  pub fn exec_conditional_expression(&mut self, node: &'a ConditionalExpression<'a>) -> Type<'a> {
     let test = self.exec_expression(&node.test);
 
     let (maybe_true, maybe_false) = match test.test_truthy() {

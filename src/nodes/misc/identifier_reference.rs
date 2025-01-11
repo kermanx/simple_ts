@@ -1,11 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::IdentifierReference;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_identifier_reference_read(
-    &mut self,
-    node: &'a IdentifierReference<'a>,
-  ) -> Entity<'a> {
+  pub fn exec_identifier_reference_read(&mut self, node: &'a IdentifierReference<'a>) -> Type<'a> {
     let reference = self.semantic.symbols().get_reference(node.reference_id());
     let symbol = reference.symbol_id();
 
@@ -38,7 +35,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_identifier_reference_write(
     &mut self,
     node: &'a IdentifierReference<'a>,
-    value: Entity<'a>,
+    value: Type<'a>,
   ) {
     let reference = self.semantic.symbols().get_reference(node.reference_id());
     assert!(reference.is_write());

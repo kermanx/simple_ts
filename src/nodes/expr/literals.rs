@@ -1,35 +1,30 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{
-  BigIntLiteral, BooleanLiteral, NullLiteral, NumberBase, NumericLiteral, RegExpLiteral,
-  StringLiteral,
+  BigIntLiteral, BooleanLiteral, NullLiteral, NumericLiteral, RegExpLiteral, StringLiteral,
 };
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_string_literal(&mut self, node: &'a StringLiteral) -> Entity<'a> {
-    self.factory.string_literal(&node.value)
+  pub fn exec_string_literal(&mut self, node: &'a StringLiteral) -> Type<'a> {
+    Type::StringLiteral(&node.value)
   }
 
-  pub fn exec_numeric_literal(&mut self, node: &'a NumericLiteral) -> Entity<'a> {
-    if node.base == NumberBase::Float {
-      self.factory.number
-    } else {
-      self.factory.numeric_literal(node.value)
-    }
+  pub fn exec_numeric_literal(&mut self, node: &'a NumericLiteral) -> Type<'a> {
+    Type::NumberLiteral(node.value.into())
   }
 
-  pub fn exc_big_int_literal(&mut self, node: &'a BigIntLiteral) -> Entity<'a> {
-    self.factory.big_int_literal(&node.raw)
+  pub fn exc_big_int_literal(&mut self, node: &'a BigIntLiteral) -> Type<'a> {
+    Type::BigIntLiteral(&node.raw)
   }
 
-  pub fn exec_boolean_literal(&mut self, node: &'a BooleanLiteral) -> Entity<'a> {
-    self.factory.boolean_literal(node.value)
+  pub fn exec_boolean_literal(&mut self, node: &'a BooleanLiteral) -> Type<'a> {
+    Type::BooleanLiteral(node.value)
   }
 
-  pub fn exec_null_literal(&mut self, _node: &'a NullLiteral) -> Entity<'a> {
-    self.factory.null
+  pub fn exec_null_literal(&mut self, _node: &'a NullLiteral) -> Type<'a> {
+    Type::Null
   }
 
-  pub fn exec_regexp_literal(&mut self, _node: &'a RegExpLiteral<'a>) -> Entity<'a> {
-    self.factory.unknown
+  pub fn exec_regexp_literal(&mut self, _node: &'a RegExpLiteral<'a>) -> Type<'a> {
+    todo!()
   }
 }

@@ -1,5 +1,5 @@
 use super::{object::create_object_prototype, Prototype};
-use crate::{entity::EntityFactory, init_prototype};
+use crate::{init_prototype, r#type::EntityFactory};
 
 pub fn create_regexp_prototype<'a>(factory: &EntityFactory<'a>) -> Prototype<'a> {
   init_prototype!("RegExp", create_object_prototype(factory), {

@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::MetaProperty;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_meta_property(&mut self, node: &'a MetaProperty<'a>) -> Entity<'a> {
+  pub fn exec_meta_property(&mut self, node: &'a MetaProperty<'a>) -> Type<'a> {
     let meta = node.meta.name.as_str();
     let property = node.property.name.as_str();
 

@@ -2,7 +2,7 @@ use crate::{
   ast::AstKind2,
   builtins::Builtins,
   config::Config,
-  entity::{Entity, EntityFactory, EntityOpHost},
+  r#type::{EntityFactory, EntityOpHost, Type},
   scope::{exhaustive::ExhaustiveCallback, ScopeContext},
 };
 use line_index::LineIndex;
@@ -24,7 +24,7 @@ pub struct Analyzer<'a> {
   pub span_stack: Vec<Span>,
   pub data: FxHashMap<(usize, usize), Box<PhantomData<&'a ()>>>,
   pub named_exports: Vec<SymbolId>,
-  pub default_export: Option<Entity<'a>>,
+  pub default_export: Option<Type<'a>>,
   pub scope_context: ScopeContext<'a>,
   pub pending_labels: Vec<&'a LabeledStatement<'a>>,
   pub pending_deps: FxHashSet<ExhaustiveCallback<'a>>,

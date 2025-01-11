@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, entity::Entity, scope::CfScopeKind};
+use crate::{analyzer::Analyzer, r#type::Type, scope::CfScopeKind};
 use oxc::semantic::{ScopeId, SymbolId};
 use rustc_hash::FxHashSet;
 use std::{
@@ -32,7 +32,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_consumed_fn(
     &mut self,
     kind: &str,
-    runner: impl Fn(&mut Analyzer<'a>) -> Entity<'a> + 'a,
+    runner: impl Fn(&mut Analyzer<'a>) -> Type<'a> + 'a,
   ) {
     let runner: Rc<dyn Fn(&mut Analyzer<'a>) + 'a> = Rc::new(move |analyzer| {
       analyzer.push_indeterminate_cf_scope();

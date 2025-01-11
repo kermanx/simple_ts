@@ -15,7 +15,7 @@ use std::fmt;
 
 use crate::{
   analyzer::Analyzer,
-  entity::{Entity, EntityFactory, LiteralEntity},
+  r#type::{EntityFactory, LiteralEntity, Type},
 };
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
@@ -25,8 +25,8 @@ use super::Builtins;
 #[derive(Default)]
 pub struct Prototype<'a> {
   name: &'static str,
-  string_keyed: FxHashMap<&'static str, Entity<'a>>,
-  symbol_keyed: FxHashMap<SymbolId, Entity<'a>>,
+  string_keyed: FxHashMap<&'static str, Type<'a>>,
+  symbol_keyed: FxHashMap<SymbolId, Type<'a>>,
 }
 
 impl<'a> fmt::Debug for Prototype<'a> {
@@ -41,23 +41,23 @@ impl<'a> Prototype<'a> {
     self
   }
 
-  pub fn insert_string_keyed(&mut self, key: &'static str, value: impl Into<Entity<'a>>) {
+  pub fn insert_string_keyed(&mut self, key: &'static str, value: impl Into<Type<'a>>) {
     self.string_keyed.insert(key, value.into());
   }
 
-  pub fn insert_symbol_keyed(&mut self, key: SymbolId, value: impl Into<Entity<'a>>) {
+  pub fn insert_symbol_keyed(&mut self, key: SymbolId, value: impl Into<Type<'a>>) {
     self.symbol_keyed.insert(key, value.into());
   }
 
-  pub fn get_string_keyed(&self, key: &str) -> Option<Entity<'a>> {
+  pub fn get_string_keyed(&self, key: &str) -> Option<Type<'a>> {
     self.string_keyed.get(key).copied()
   }
 
-  pub fn get_symbol_keyed(&self, key: SymbolId) -> Option<Entity<'a>> {
+  pub fn get_symbol_keyed(&self, key: SymbolId) -> Option<Type<'a>> {
     self.symbol_keyed.get(&key).copied()
   }
 
-  pub fn get_literal_keyed(&self, key: LiteralEntity) -> Option<Entity<'a>> {
+  pub fn get_literal_keyed(&self, key: LiteralEntity) -> Option<Type<'a>> {
     match key {
       LiteralEntity::String(key) => self.get_string_keyed(key),
       LiteralEntity::Symbol(key, _) => self.get_symbol_keyed(key),
@@ -65,7 +65,7 @@ impl<'a> Prototype<'a> {
     }
   }
 
-  pub fn get_property(&self, analyzer: &Analyzer<'a>, key: Entity<'a>) -> Entity<'a> {
+  pub fn get_property(&self, analyzer: &Analyzer<'a>, key: Type<'a>) -> Type<'a> {
     let key = key.get_to_property_key(analyzer);
     if let Some(key_literals) = key.get_to_literals(analyzer) {
       let mut values = vec![];

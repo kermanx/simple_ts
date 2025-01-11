@@ -1,4 +1,4 @@
-use crate::entity::EntityFactory;
+use crate::r#type::EntityFactory;
 
 use super::{object::create_object_prototype, Prototype};
 

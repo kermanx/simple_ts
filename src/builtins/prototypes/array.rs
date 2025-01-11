@@ -1,5 +1,5 @@
 use super::{object::create_object_prototype, Prototype};
-use crate::{entity::EntityFactory, init_prototype};
+use crate::{init_prototype, r#type::EntityFactory};
 
 pub fn create_array_prototype<'a>(factory: &EntityFactory<'a>) -> Prototype<'a> {
   init_prototype!("Array", create_object_prototype(factory), {

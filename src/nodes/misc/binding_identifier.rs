@@ -1,7 +1,7 @@
 use crate::{
   analyzer::Analyzer,
   ast::{AstKind2, DeclarationKind},
-  entity::Entity,
+  r#type::Type,
 };
 use oxc::ast::ast::BindingIdentifier;
 
@@ -19,7 +19,7 @@ impl<'a> Analyzer<'a> {
   pub fn init_binding_identifier(
     &mut self,
     node: &'a BindingIdentifier<'a>,
-    init: Option<Entity<'a>>,
+    init: Option<Type<'a>>,
   ) {
     let symbol = node.symbol_id.get().unwrap();
     self.init_symbol(symbol, init);

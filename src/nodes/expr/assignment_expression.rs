@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator, LogicalOperator};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_assignment_expression(&mut self, node: &'a AssignmentExpression<'a>) -> Entity<'a> {
+  pub fn exec_assignment_expression(&mut self, node: &'a AssignmentExpression<'a>) -> Type<'a> {
     if node.operator == AssignmentOperator::Assign {
       let rhs = self.exec_expression(&node.right);
       self.exec_assignment_target_write(&node.left, rhs, None);

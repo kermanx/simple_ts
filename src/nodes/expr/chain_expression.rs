@@ -1,11 +1,11 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::{
   ast::{ChainElement, ChainExpression, Expression},
   match_member_expression,
 };
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_chain_expression(&mut self, node: &'a ChainExpression<'a>) -> Entity<'a> {
+  pub fn exec_chain_expression(&mut self, node: &'a ChainExpression<'a>) -> Type<'a> {
     match &node.expression {
       ChainElement::CallExpression(node) => {
         let result = self.exec_call_expression_in_chain(node);
@@ -33,7 +33,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_expression_in_chain(
     &mut self,
     node: &'a Expression<'a>,
-  ) -> Result<(usize, Entity<'a>, Option<Entity<'a>>), Entity<'a>> {
+  ) -> Result<(usize, Type<'a>, Option<Type<'a>>), Type<'a>> {
     match node {
       match_member_expression!(Expression) => self
         .exec_member_expression_read_in_chain(node.to_member_expression())

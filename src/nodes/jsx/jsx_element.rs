@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{JSXElement, PropertyKind};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_jsx_element(&mut self, node: &'a JSXElement<'a>) -> Entity<'a> {
+  pub fn exec_jsx_element(&mut self, node: &'a JSXElement<'a>) -> Type<'a> {
     let tag = self.exec_jsx_element_name(&node.opening_element.name);
     let attributes = self.exec_jsx_attributes(&node.opening_element);
     let children = self.exec_jsx_children(&node.children);

@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind, entity::Entity};
+use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
 use oxc::ast::ast::BindingRestElement;
 
 impl<'a> Analyzer<'a> {
@@ -11,7 +11,7 @@ impl<'a> Analyzer<'a> {
     self.declare_binding_pattern(&node.argument, exporting, kind);
   }
 
-  pub fn init_binding_rest_element(&mut self, node: &'a BindingRestElement<'a>, init: Entity<'a>) {
+  pub fn init_binding_rest_element(&mut self, node: &'a BindingRestElement<'a>, init: Type<'a>) {
     self.init_binding_pattern(&node.argument, Some(init));
   }
 }

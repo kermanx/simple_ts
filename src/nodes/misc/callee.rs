@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::{
   ast::{ChainElement, Expression, MemberExpression},
   match_member_expression,
@@ -28,7 +28,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_callee(
     &mut self,
     node: &'a Expression<'a>,
-  ) -> Result<(usize, Entity<'a>, Option<Entity<'a>>, Entity<'a>), Entity<'a>> {
+  ) -> Result<(usize, Type<'a>, Option<Type<'a>>, Type<'a>), Type<'a>> {
     if let Some((member_expr, same_chain)) = unwrap_to_member_expression(node) {
       if same_chain {
         let (scope_count, callee, undefined, (object, _)) =

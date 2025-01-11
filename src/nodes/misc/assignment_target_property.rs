@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::AstKind2, entity::Entity};
+use crate::{analyzer::Analyzer, ast::AstKind2, r#type::Type};
 use oxc::ast::ast::AssignmentTargetProperty;
 
 #[derive(Debug, Default)]
@@ -11,8 +11,8 @@ impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_property(
     &mut self,
     node: &'a AssignmentTargetProperty<'a>,
-    value: Entity<'a>,
-  ) -> Entity<'a> {
+    value: Type<'a>,
+  ) -> Type<'a> {
     match node {
       AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(node) => {
         let key = self.factory.string_literal(node.binding.name.as_str());

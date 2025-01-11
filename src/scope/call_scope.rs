@@ -1,5 +1,5 @@
 use super::try_scope::TryScope;
-use crate::{analyzer::Analyzer, entity::Entity, utils::CalleeInfo};
+use crate::{analyzer::Analyzer, r#type::Type, utils::CalleeInfo};
 use oxc::semantic::ScopeId;
 use std::mem;
 
@@ -9,7 +9,7 @@ pub struct CallScope<'a> {
   pub old_variable_scope_stack: Vec<ScopeId>,
   pub cf_scope_depth: usize,
   pub body_variable_scope: ScopeId,
-  pub returned_values: Vec<Entity<'a>>,
+  pub returned_values: Vec<Type<'a>>,
   pub is_async: bool,
   pub is_generator: bool,
   pub try_scopes: Vec<TryScope<'a>>,
@@ -46,7 +46,7 @@ impl<'a> CallScope<'a> {
     }
   }
 
-  pub fn finalize(self, analyzer: &mut Analyzer<'a>) -> (Vec<ScopeId>, Entity<'a>) {
+  pub fn finalize(self, analyzer: &mut Analyzer<'a>) -> (Vec<ScopeId>, Type<'a>) {
     assert_eq!(self.try_scopes.len(), 1);
 
     // Forwards the thrown value to the parent try scope
@@ -87,7 +87,7 @@ impl<'a> CallScope<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn return_value(&mut self, value: Entity<'a>) {
+  pub fn return_value(&mut self, value: Type<'a>) {
     let call_scope = self.call_scope_mut();
     call_scope.returned_values.push(value);
 

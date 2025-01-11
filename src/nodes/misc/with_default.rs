@@ -1,12 +1,12 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::Expression;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_with_default(
     &mut self,
     default: &'a Expression<'a>,
-    value: Entity<'a>,
-  ) -> (bool, Entity<'a>) {
+    value: Type<'a>,
+  ) -> (bool, Type<'a>) {
     let is_undefined = value.test_is_undefined();
 
     let binding_val = match is_undefined {

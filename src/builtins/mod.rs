@@ -7,7 +7,7 @@ mod utils;
 
 use crate::{
   config::Config,
-  entity::{Entity, EntityFactory},
+  r#type::{EntityFactory, Type},
 };
 use known_modules::KnownModule;
 use prototypes::BuiltinPrototypes;
@@ -19,8 +19,8 @@ pub struct Builtins<'a> {
   pub factory: &'a EntityFactory<'a>,
 
   pub prototypes: &'a BuiltinPrototypes<'a>,
-  pub globals: FxHashMap<&'static str, Entity<'a>>,
-  pub import_meta: Entity<'a>,
+  pub globals: FxHashMap<&'static str, Type<'a>>,
+  pub import_meta: Type<'a>,
   pub known_modules: FxHashMap<&'static str, KnownModule<'a>>,
 }
 

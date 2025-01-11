@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::{
   ast::AssignmentTarget, match_assignment_target_pattern, match_simple_assignment_target,
 };
@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_read(
     &mut self,
     node: &'a AssignmentTarget<'a>,
-  ) -> (Entity<'a>, Option<(Entity<'a>, Entity<'a>)>) {
+  ) -> (Type<'a>, Option<(Type<'a>, Type<'a>)>) {
     match node {
       match_simple_assignment_target!(AssignmentTarget) => {
         self.exec_simple_assignment_target_read(node.to_simple_assignment_target())
@@ -21,8 +21,8 @@ impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_write(
     &mut self,
     node: &'a AssignmentTarget<'a>,
-    value: Entity<'a>,
-    cache: Option<(Entity<'a>, Entity<'a>)>,
+    value: Type<'a>,
+    cache: Option<(Type<'a>, Type<'a>)>,
   ) {
     match node {
       match_simple_assignment_target!(AssignmentTarget) => {

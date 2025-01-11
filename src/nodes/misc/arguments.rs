@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, ast::Arguments, entity::Entity};
+use crate::{analyzer::Analyzer, ast::Arguments, r#type::Type};
 use oxc::ast::ast::Argument;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_arguments(&mut self, node: &'a Arguments<'a>) -> Entity<'a> {
+  pub fn exec_arguments(&mut self, node: &'a Arguments<'a>) -> Type<'a> {
     let mut arguments = vec![];
     for argument in node {
       let (spread, val) = match argument {

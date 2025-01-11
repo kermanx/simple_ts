@@ -1,9 +1,9 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 
 #[derive(Debug)]
 pub struct TryScope<'a> {
   pub may_throw: bool,
-  pub thrown_values: Vec<Entity<'a>>,
+  pub thrown_values: Vec<Type<'a>>,
   /// Here we use index in current stack instead of ScopeId
   pub cf_scope_depth: usize,
 }
@@ -13,7 +13,7 @@ impl<'a> TryScope<'a> {
     TryScope { may_throw: false, thrown_values: Vec::new(), cf_scope_depth }
   }
 
-  pub fn thrown_val(self, analyzer: &Analyzer<'a>) -> Option<Entity<'a>> {
+  pub fn thrown_val(self, analyzer: &Analyzer<'a>) -> Option<Type<'a>> {
     // Always unknown here
     self.may_throw.then_some(analyzer.factory.unknown)
   }
@@ -30,7 +30,7 @@ impl<'a> Analyzer<'a> {
     // self.exit_to(cf_scope_depth, false);
   }
 
-  pub fn explicit_throw(&mut self, value: Entity<'a>) {
+  pub fn explicit_throw(&mut self, value: Type<'a>) {
     self.explicit_throw_impl(value);
 
     let try_scope = self.try_scope();
@@ -48,7 +48,7 @@ impl<'a> Analyzer<'a> {
     self.exit_to(try_scope.cf_scope_depth);
   }
 
-  pub fn forward_throw(&mut self, values: Vec<Entity<'a>>) {
+  pub fn forward_throw(&mut self, values: Vec<Type<'a>>) {
     if values.is_empty() {
       self.may_throw();
     } else {
@@ -60,7 +60,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  fn explicit_throw_impl(&mut self, value: Entity<'a>) {
+  fn explicit_throw_impl(&mut self, value: Type<'a>) {
     let try_scope = self.try_scope_mut();
     try_scope.may_throw = true;
     try_scope.thrown_values.push(value);

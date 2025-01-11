@@ -1,5 +1,5 @@
 use super::exhaustive::ExhaustiveCallback;
-use crate::{analyzer::Analyzer, ast::DeclarationKind, entity::Entity, utils::ast::AstKind2};
+use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type, utils::ast::AstKind2};
 use oxc::semantic::{ScopeId, SymbolId};
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::{cell::RefCell, fmt};
@@ -9,15 +9,15 @@ pub struct Variable<'a> {
   pub kind: DeclarationKind,
   pub cf_scope: ScopeId,
   pub exhausted: bool,
-  pub value: Option<Entity<'a>>,
+  pub value: Option<Type<'a>>,
   pub decl_node: AstKind2<'a>,
 }
 
 #[derive(Default)]
 pub struct VariableScope<'a> {
   pub variables: FxHashMap<SymbolId, &'a RefCell<Variable<'a>>>,
-  pub this: Option<Entity<'a>>,
-  pub arguments: Option<(Entity<'a>, Vec<SymbolId>)>,
+  pub this: Option<Type<'a>>,
+  pub arguments: Option<(Type<'a>, Vec<SymbolId>)>,
   pub exhaustive_callbacks: FxHashMap<SymbolId, FxHashSet<ExhaustiveCallback<'a>>>,
 }
 
@@ -45,7 +45,7 @@ impl<'a> Analyzer<'a> {
     kind: DeclarationKind,
     symbol: SymbolId,
     decl_node: AstKind2<'a>,
-    fn_value: Option<Entity<'a>>,
+    fn_value: Option<Type<'a>>,
   ) {
     if let Some(variable) = self.scope_context.variable.get(id).variables.get(&symbol) {
       // Here we can't use kind.is_untracked() because this time we are declaring a variable
@@ -93,7 +93,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  fn init_on_scope(&mut self, id: ScopeId, symbol: SymbolId, value: Option<Entity<'a>>) {
+  fn init_on_scope(&mut self, id: ScopeId, symbol: SymbolId, value: Option<Type<'a>>) {
     let variable = self.scope_context.variable.get_mut(id).variables.get_mut(&symbol).unwrap();
 
     let variable_ref = variable.borrow();
@@ -114,7 +114,7 @@ impl<'a> Analyzer<'a> {
   /// None: not in this scope
   /// Some(None): in this scope, but TDZ
   /// Some(Some(val)): in this scope, and val is the value
-  fn read_on_scope(&mut self, id: ScopeId, symbol: SymbolId) -> Option<Option<Entity<'a>>> {
+  fn read_on_scope(&mut self, id: ScopeId, symbol: SymbolId) -> Option<Option<Type<'a>>> {
     self.scope_context.variable.get(id).variables.get(&symbol).copied().map(|variable| {
       let variable_ref = variable.borrow();
       let value =
@@ -140,7 +140,7 @@ impl<'a> Analyzer<'a> {
     })
   }
 
-  fn write_on_scope(&mut self, id: ScopeId, symbol: SymbolId, new_val: Entity<'a>) -> bool {
+  fn write_on_scope(&mut self, id: ScopeId, symbol: SymbolId, new_val: Type<'a>) -> bool {
     if let Some(variable) = self.scope_context.variable.get(id).variables.get(&symbol).copied() {
       let kind = variable.borrow().kind;
       if kind.is_untracked() {
@@ -246,7 +246,7 @@ impl<'a> Analyzer<'a> {
     decl_node: AstKind2<'a>,
     exporting: bool,
     kind: DeclarationKind,
-    fn_value: Option<Entity<'a>>,
+    fn_value: Option<Type<'a>>,
   ) {
     if exporting {
       self.named_exports.push(symbol);
@@ -261,13 +261,13 @@ impl<'a> Analyzer<'a> {
     self.declare_on_scope(variable_scope, kind, symbol, decl_node, fn_value);
   }
 
-  pub fn init_symbol(&mut self, symbol: SymbolId, value: Option<Entity<'a>>) {
+  pub fn init_symbol(&mut self, symbol: SymbolId, value: Option<Type<'a>>) {
     let variable_scope = self.scope_context.variable.current_id();
     self.init_on_scope(variable_scope, symbol, value);
   }
 
   /// `None` for TDZ
-  pub fn read_symbol(&mut self, symbol: SymbolId) -> Option<Entity<'a>> {
+  pub fn read_symbol(&mut self, symbol: SymbolId) -> Option<Type<'a>> {
     for depth in (0..self.scope_context.variable.stack.len()).rev() {
       let id = self.scope_context.variable.stack[depth];
       if let Some(value) = self.read_on_scope(id, symbol) {
@@ -278,7 +278,7 @@ impl<'a> Analyzer<'a> {
     Some(self.factory.unknown)
   }
 
-  pub fn write_symbol(&mut self, symbol: SymbolId, new_val: Entity<'a>) {
+  pub fn write_symbol(&mut self, symbol: SymbolId, new_val: Type<'a>) {
     for depth in (0..self.scope_context.variable.stack.len()).rev() {
       let id = self.scope_context.variable.stack[depth];
       if self.write_on_scope(id, symbol, new_val) {
@@ -305,7 +305,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn get_this(&self) -> Entity<'a> {
+  pub fn get_this(&self) -> Type<'a> {
     for depth in (0..self.scope_context.variable.stack.len()).rev() {
       let scope = self.scope_context.variable.get_from_depth(depth);
       if let Some(this) = scope.this {

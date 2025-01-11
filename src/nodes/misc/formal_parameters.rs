@@ -1,11 +1,11 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind, entity::Entity};
+use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
 use oxc::ast::ast::FormalParameters;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_formal_parameters(
     &mut self,
     node: &'a FormalParameters<'a>,
-    args: Entity<'a>,
+    args: Type<'a>,
     kind: DeclarationKind,
   ) {
     let (elements_init, rest_init) =

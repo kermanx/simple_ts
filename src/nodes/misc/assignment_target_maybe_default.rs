@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::AstKind2, entity::Entity};
+use crate::{analyzer::Analyzer, ast::AstKind2, r#type::Type};
 use oxc::ast::ast::AssignmentTargetMaybeDefault;
 
 #[derive(Debug, Default)]
@@ -10,7 +10,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_maybe_default(
     &mut self,
     node: &'a AssignmentTargetMaybeDefault<'a>,
-    value: Entity<'a>,
+    value: Type<'a>,
   ) {
     match node {
       AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(node) => {

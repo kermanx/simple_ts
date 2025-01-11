@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, entity::Entity, scope::CfScopeKind};
+use crate::{analyzer::Analyzer, r#type::Type, scope::CfScopeKind};
 use oxc::ast::ast::MemberExpression;
 
 impl<'a> Analyzer<'a> {
@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_member_expression_read(
     &mut self,
     node: &'a MemberExpression<'a>,
-  ) -> (Entity<'a>, (Entity<'a>, Entity<'a>)) {
+  ) -> (Type<'a>, (Type<'a>, Type<'a>)) {
     let (scope_count, value, undefined, cache) =
       self.exec_member_expression_read_in_chain(node).unwrap();
 
@@ -20,7 +20,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_member_expression_read_in_chain(
     &mut self,
     node: &'a MemberExpression<'a>,
-  ) -> Result<(usize, Entity<'a>, Option<Entity<'a>>, (Entity<'a>, Entity<'a>)), Entity<'a>> {
+  ) -> Result<(usize, Type<'a>, Option<Type<'a>>, (Type<'a>, Type<'a>)), Type<'a>> {
     let (mut scope_count, object, mut undefined) = self.exec_expression_in_chain(node.object())?;
 
     if node.optional() {
@@ -55,8 +55,8 @@ impl<'a> Analyzer<'a> {
   pub fn exec_member_expression_write(
     &mut self,
     node: &'a MemberExpression<'a>,
-    value: Entity<'a>,
-    cache: Option<(Entity<'a>, Entity<'a>)>,
+    value: Type<'a>,
+    cache: Option<(Type<'a>, Type<'a>)>,
   ) {
     let (object, key) = cache.unwrap_or_else(|| {
       let object = self.exec_expression(node.object());
@@ -69,7 +69,7 @@ impl<'a> Analyzer<'a> {
     object.set_property(self, key, value);
   }
 
-  fn exec_key(&mut self, node: &'a MemberExpression<'a>) -> Entity<'a> {
+  fn exec_key(&mut self, node: &'a MemberExpression<'a>) -> Type<'a> {
     match node {
       MemberExpression::ComputedMemberExpression(node) => self.exec_expression(&node.expression),
       MemberExpression::StaticMemberExpression(node) => self.exec_identifier_name(&node.property),

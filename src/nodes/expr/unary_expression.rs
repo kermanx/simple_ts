@@ -1,12 +1,12 @@
 use crate::{
   analyzer::Analyzer,
-  entity::{Entity, LiteralEntity},
+  r#type::{LiteralEntity, Type},
 };
 use oxc::ast::ast::{Expression, UnaryExpression, UnaryOperator};
 use oxc_ecmascript::ToInt32;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_unary_expression(&mut self, node: &'a UnaryExpression) -> Entity<'a> {
+  pub fn exec_unary_expression(&mut self, node: &'a UnaryExpression) -> Type<'a> {
     if node.operator == UnaryOperator::Delete {
       match &node.argument {
         Expression::StaticMemberExpression(node) => {

@@ -1,7 +1,7 @@
 use crate::{
   analyzer::Analyzer,
   ast::DeclarationKind,
-  entity::Entity,
+  r#type::Type,
   utils::{CalleeInfo, CalleeNode},
 };
 use oxc::{ast::ast::ArrowFunctionExpression, semantic::ScopeId};
@@ -11,7 +11,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_arrow_function_expression(
     &mut self,
     node: &'a ArrowFunctionExpression<'a>,
-  ) -> Entity<'a> {
+  ) -> Type<'a> {
     self.new_function(CalleeNode::ArrowFunctionExpression(node))
   }
 
@@ -20,9 +20,9 @@ impl<'a> Analyzer<'a> {
     callee: CalleeInfo<'a>,
     node: &'a ArrowFunctionExpression<'a>,
     variable_scopes: Rc<Vec<ScopeId>>,
-    args: Entity<'a>,
+    args: Type<'a>,
     consume: bool,
-  ) -> Entity<'a> {
+  ) -> Type<'a> {
     self.push_call_scope(callee, variable_scopes.as_ref().clone(), node.r#async, false, consume);
 
     self.exec_formal_parameters(&node.params, args, DeclarationKind::ArrowFunctionParameter);

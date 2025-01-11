@@ -8,7 +8,7 @@ pub mod variable_scope;
 
 use crate::{
   analyzer::Analyzer,
-  entity::{Entity, EntityFactory},
+  r#type::{EntityFactory, Type},
   utils::{CalleeInfo, CalleeNode},
 };
 use call_scope::CallScope;
@@ -162,7 +162,7 @@ impl<'a> Analyzer<'a> {
     ));
   }
 
-  pub fn pop_call_scope(&mut self) -> Entity<'a> {
+  pub fn pop_call_scope(&mut self) -> Type<'a> {
     let scope = self.scope_context.call.pop().unwrap();
     let (old_variable_scope_stack, ret_val) = scope.finalize(self);
     self.pop_cf_scope();

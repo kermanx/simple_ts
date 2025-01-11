@@ -1,11 +1,11 @@
-mod ts_type_annotation;
 mod ts_literal;
+mod ts_type_annotation;
 
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::TSType;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_ts_type(&mut self, node: &'a TSType<'a>) -> Entity<'a> {
+  pub fn exec_ts_type(&mut self, node: &'a TSType<'a>) -> Type<'a> {
     match node {
       TSType::TSAnyKeyword(_) => self.factory.any,
       TSType::TSBigIntKeyword(_) => self.factory.bigint,

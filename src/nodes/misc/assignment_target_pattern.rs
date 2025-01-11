@@ -1,11 +1,11 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::AssignmentTargetPattern;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_pattern_write(
     &mut self,
     node: &'a AssignmentTargetPattern<'a>,
-    value: Entity<'a>,
+    value: Type<'a>,
   ) {
     match node {
       AssignmentTargetPattern::ArrayAssignmentTarget(node) => {

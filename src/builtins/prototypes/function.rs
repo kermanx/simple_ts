@@ -1,7 +1,7 @@
 use super::{object::create_object_prototype, Prototype};
 use crate::{
-  entity::{Entity, EntityFactory},
   init_prototype,
+  r#type::{EntityFactory, Type},
 };
 use oxc::semantic::SymbolId;
 use oxc_index::Idx;
@@ -20,7 +20,7 @@ pub fn create_function_prototype<'a>(factory: &EntityFactory<'a>) -> Prototype<'
           Some(false) => arg,
           None => analyzer.factory.union((
             arg,
-            analyzer.factory.array(cf_scope, arguments_object_id) as Entity<'a>,
+            analyzer.factory.array(cf_scope, arguments_object_id) as Type<'a>,
           )),
         }
       };

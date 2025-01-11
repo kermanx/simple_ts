@@ -1,7 +1,7 @@
 use crate::{
   analyzer::Analyzer,
   ast::{AstKind2, DeclarationKind},
-  entity::Entity,
+  r#type::Type,
 };
 use oxc::ast::ast::{BindingPattern, BindingPatternKind};
 
@@ -48,7 +48,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, init: Option<Entity<'a>>) {
+  pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, init: Option<Type<'a>>) {
     let init = if let Some(annotation) = &node.type_annotation {
       Some(self.exec_ts_type_annotation(annotation))
     } else {

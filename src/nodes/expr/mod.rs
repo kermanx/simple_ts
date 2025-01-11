@@ -24,11 +24,11 @@ mod unary_expression;
 mod update_expression;
 mod yield_expression;
 
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::{ast::Expression, match_member_expression};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_expression(&mut self, node: &'a Expression<'a>) -> Entity<'a> {
+  pub fn exec_expression(&mut self, node: &'a Expression<'a>) -> Type<'a> {
     self.push_span(node);
     let value = match node {
       match_member_expression!(Expression) => {

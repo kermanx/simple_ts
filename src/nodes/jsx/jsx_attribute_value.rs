@@ -1,11 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::JSXAttributeValue;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_jsx_attribute_value(
-    &mut self,
-    node: &'a Option<JSXAttributeValue<'a>>,
-  ) -> Entity<'a> {
+  pub fn exec_jsx_attribute_value(&mut self, node: &'a Option<JSXAttributeValue<'a>>) -> Type<'a> {
     if let Some(node) = node {
       match node {
         JSXAttributeValue::StringLiteral(node) => self.exec_string_literal(node),

@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, entity::TypeofResult, scope::CfScopeKind};
+use crate::{analyzer::Analyzer, r#type::TypeofResult, scope::CfScopeKind};
 use oxc::ast::ast::ForInStatement;
 
 impl<'a> Analyzer<'a> {

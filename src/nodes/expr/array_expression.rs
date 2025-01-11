@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{ArrayExpression, ArrayExpressionElement};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_array_expression(&mut self, node: &'a ArrayExpression<'a>) -> Entity<'a> {
+  pub fn exec_array_expression(&mut self, node: &'a ArrayExpression<'a>) -> Type<'a> {
     let array = self.new_empty_array();
 
     let mut rest = vec![];

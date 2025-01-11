@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{LogicalExpression, LogicalOperator};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_logical_expression(&mut self, node: &'a LogicalExpression<'a>) -> Entity<'a> {
+  pub fn exec_logical_expression(&mut self, node: &'a LogicalExpression<'a>) -> Type<'a> {
     let left = self.exec_expression(&node.left);
 
     let (maybe_left, maybe_right) = match &node.operator {

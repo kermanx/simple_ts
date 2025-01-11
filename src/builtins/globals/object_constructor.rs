@@ -1,7 +1,7 @@
 use crate::{
   builtins::{constants::OBJECT_CONSTRUCTOR_OBJECT_ID, Builtins},
-  entity::{Entity, ObjectPropertyValue, TypeofResult},
   init_namespace,
+  r#type::{ObjectPropertyValue, Type, TypeofResult},
 };
 use std::borrow::BorrowMut;
 
@@ -24,7 +24,7 @@ impl<'a> Builtins<'a> {
     self.globals.borrow_mut().insert("Object", object);
   }
 
-  fn create_object_assign_impl(&self) -> Entity<'a> {
+  fn create_object_assign_impl(&self) -> Type<'a> {
     self.factory.implemented_builtin_fn("Object.assign", |analyzer, _, args| {
       let (known, rest) = args.iterate(analyzer);
 
@@ -34,7 +34,7 @@ impl<'a> Builtins<'a> {
 
       let target = known[0];
 
-      let mut assign = |source: Entity<'a>, indeterminate: bool| {
+      let mut assign = |source: Type<'a>, indeterminate: bool| {
         let properties = source.enumerate_properties(analyzer);
         for (definite, key, value) in properties {
           if indeterminate || !definite {
@@ -58,7 +58,7 @@ impl<'a> Builtins<'a> {
     })
   }
 
-  fn create_object_keys_impl(&self) -> Entity<'a> {
+  fn create_object_keys_impl(&self) -> Type<'a> {
     self.factory.implemented_builtin_fn("Object.keys", |analyzer, _, args| {
       let object = args.destruct_as_array(analyzer, 1, false).0[0];
       let properties = object.enumerate_properties(analyzer);
@@ -75,7 +75,7 @@ impl<'a> Builtins<'a> {
     })
   }
 
-  fn create_object_values_impl(&self) -> Entity<'a> {
+  fn create_object_values_impl(&self) -> Type<'a> {
     self.factory.implemented_builtin_fn("Object.values", |analyzer, _, args| {
       let object = args.destruct_as_array(analyzer, 1, false).0[0];
       let properties = object.enumerate_properties(analyzer);
@@ -90,7 +90,7 @@ impl<'a> Builtins<'a> {
     })
   }
 
-  fn create_object_entries_impl(&self) -> Entity<'a> {
+  fn create_object_entries_impl(&self) -> Type<'a> {
     self.factory.implemented_builtin_fn("Object.entries", |analyzer, _, args| {
       let object = args.destruct_as_array(analyzer, 1, false).0[0];
       let properties = object.enumerate_properties(analyzer);

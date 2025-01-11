@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, entity::Entity};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::TSLiteral;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_ts_literal(&mut self, node: &'a TSLiteral<'a>) -> Entity<'a> {
+  pub fn exec_ts_literal(&mut self, node: &'a TSLiteral<'a>) -> Type<'a> {
     match node {
       TSLiteral::BooleanLiteral(node) => {
         if node.value {
