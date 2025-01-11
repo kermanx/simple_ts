@@ -49,6 +49,11 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, init: Option<Entity<'a>>) {
+    let init = if let Some(annotation) = &node.type_annotation {
+      Some(self.exec_ts_type_annotation(annotation))
+    } else {
+      init
+    };
     match &node.kind {
       BindingPatternKind::BindingIdentifier(node) => {
         self.init_binding_identifier(node, init);

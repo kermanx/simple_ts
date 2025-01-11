@@ -84,14 +84,14 @@ impl<'a> EntityTrait<'a> for FunctionEntity<'a> {
   }
 
   fn get_typeof(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.string("function")
+    analyzer.factory.string_literal("function")
   }
 
   fn get_to_string(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     if self.consumed.get() {
       return consumed_object::get_to_string(analyzer);
     }
-    analyzer.factory.unknown_string
+    analyzer.factory.string
   }
 
   fn get_to_numeric(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -102,7 +102,7 @@ impl<'a> EntityTrait<'a> for FunctionEntity<'a> {
   }
 
   fn get_to_boolean(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.boolean(true)
+    analyzer.factory.boolean_literal(true)
   }
 
   fn get_to_property_key(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -114,7 +114,7 @@ impl<'a> EntityTrait<'a> for FunctionEntity<'a> {
       analyzer.factory.unknown
     } else {
       // TODO: analyzer.thrown_builtin_error("Functions are not valid JSX children");
-      analyzer.factory.string("")
+      analyzer.factory.string_literal("")
     }
   }
 

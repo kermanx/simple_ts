@@ -50,7 +50,6 @@ impl<'a> ScopeContext<'a> {
         0,
         CalleeInfo {
           node: CalleeNode::Module,
-          instance_id: factory.alloc_instance_id(),
           #[cfg(feature = "flame")]
           debug_name: "<Module>",
         },

@@ -212,10 +212,10 @@ impl<'a> EntityOpHost<'a> {
       match (lhs_str_lit, rhs_str_lit) {
         (Some(LiteralEntity::String(l)), Some(LiteralEntity::String(r))) => {
           let val = l.to_string() + r;
-          values.push(analyzer.factory.string(self.allocator.alloc(val)));
+          values.push(analyzer.factory.string_literal(self.allocator.alloc(val)));
         }
         _ => {
-          values.push(analyzer.factory.unknown_string);
+          values.push(analyzer.factory.string);
         }
       }
     }
@@ -239,10 +239,10 @@ impl<'a> EntityOpHost<'a> {
       match (l, r) {
         (LiteralEntity::Number(l, _), LiteralEntity::Number(r, _)) => calc(l.0, r.0),
         (LiteralEntity::NaN, _) | (_, LiteralEntity::NaN) => analyzer.factory.nan,
-        _ => analyzer.factory.unknown_primitive,
+        _ => analyzer.factory.unknown,
       }
     } else {
-      analyzer.factory.unknown_primitive
+      analyzer.factory.unknown
     }
   }
 
@@ -371,7 +371,7 @@ impl<'a> EntityOpHost<'a> {
           factory.number(f64::from(value), None)
         }),
 
-      BinaryOperator::In => factory.unknown_boolean,
+      BinaryOperator::In => factory.boolean,
       BinaryOperator::Instanceof => to_result(self.instanceof(lhs, rhs)),
     }
   }

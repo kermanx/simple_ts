@@ -6,8 +6,8 @@ impl<'a> Builtins<'a> {
 
     init_map!(self.globals, {
       "undefined" => factory.undefined,
-      "Infinity" => factory.infinity(true),
-      "NaN" => factory.nan,
+      "Infinity" => factory.number,
+      "NaN" => factory.number,
       "eval" => factory.unknown,
     })
   }

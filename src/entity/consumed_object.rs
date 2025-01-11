@@ -17,7 +17,7 @@ pub fn enumerate_properties<'a>(
   _target: Entity<'a>,
   analyzer: &mut Analyzer<'a>,
 ) -> EnumeratedProperties<'a> {
-  vec![(false, analyzer.factory.unknown_primitive, analyzer.factory.unknown)]
+  vec![(false, analyzer.factory.unknown, analyzer.factory.unknown)]
 }
 
 pub fn delete_property<'a>(_analyzer: &mut Analyzer<'a>, _key: Entity<'a>) {}
@@ -58,7 +58,7 @@ pub fn iterate<'a>(analyzer: &mut Analyzer<'a>) -> IteratedElements<'a> {
 }
 
 pub fn get_to_string<'a>(analyzer: &Analyzer<'a>) -> Entity<'a> {
-  analyzer.factory.unknown_string
+  analyzer.factory.string
 }
 
 pub fn get_to_numeric<'a>(analyzer: &Analyzer<'a>) -> Entity<'a> {

@@ -15,7 +15,7 @@ impl<'a> Analyzer<'a> {
   ) -> Entity<'a> {
     match node {
       AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(node) => {
-        let key = self.factory.string(node.binding.name.as_str());
+        let key = self.factory.string_literal(node.binding.name.as_str());
 
         let value = value.get_property(self, key);
 

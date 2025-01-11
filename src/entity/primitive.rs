@@ -5,17 +5,22 @@ use crate::{analyzer::Analyzer, builtins::Prototype};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PrimitiveEntity {
-  // TODO: NumericString, NoneEmptyString, ...
-  Mixed,
-  String,
-  Number,
+  Any,
   BigInt,
   Boolean,
+  Never,
+  Null,
+  Number,
+  Object,
+  String,
   Symbol,
+  Undefined,
+  Unknown,
+  Void,
 }
 
 impl<'a> EntityTrait<'a> for PrimitiveEntity {
-  fn unknown_mutation(&'a self, _analyzer: &mut Analyzer<'a>) {}
+  fn unknown_mutation(&'a self, _analyzer: &mut Analyzer<'a>) ,
 
   fn get_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) -> Entity<'a> {
     // TODO: PrimitiveEntity::String
@@ -33,7 +38,7 @@ impl<'a> EntityTrait<'a> for PrimitiveEntity {
 
   fn enumerate_properties(&'a self, analyzer: &mut Analyzer<'a>) -> EnumeratedProperties<'a> {
     if *self == PrimitiveEntity::String {
-      vec![(false, analyzer.factory.unknown_string, analyzer.factory.unknown_string)]
+      vec![(false, analyzer.factory.string, analyzer.factory.string)]
     } else {
       vec![]
     }
@@ -72,14 +77,14 @@ impl<'a> EntityTrait<'a> for PrimitiveEntity {
 
   fn get_typeof(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     if let Some(str) = self.test_typeof().to_string() {
-      analyzer.factory.string(str)
+      analyzer.factory.string_literal(str)
     } else {
-      analyzer.factory.unknown_string
+      analyzer.factory.string
     }
   }
 
   fn get_to_string(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.unknown_string
+    analyzer.factory.string
   }
 
   fn get_to_numeric(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -88,8 +93,8 @@ impl<'a> EntityTrait<'a> for PrimitiveEntity {
 
   fn get_to_boolean(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     match self.test_truthy() {
-      Some(val) => analyzer.factory.boolean(val),
-      None => analyzer.factory.unknown_boolean,
+      Some(val) => analyzer.factory.boolean_literal(val),
+      None => analyzer.factory.boolean,
     }
   }
 
@@ -99,9 +104,9 @@ impl<'a> EntityTrait<'a> for PrimitiveEntity {
 
   fn get_to_jsx_child(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     if matches!(self, PrimitiveEntity::Mixed | PrimitiveEntity::String | PrimitiveEntity::Number) {
-      analyzer.factory.unknown_string
+      analyzer.factory.string
     } else {
-      analyzer.factory.string("")
+      analyzer.factory.string_literal("")
     }
   }
 

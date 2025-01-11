@@ -6,23 +6,23 @@ use oxc::ast::ast::{
 
 impl<'a> Analyzer<'a> {
   pub fn exec_string_literal(&mut self, node: &'a StringLiteral) -> Entity<'a> {
-    self.factory.string(node.value.as_str())
+    self.factory.string_literal(&node.value)
   }
 
   pub fn exec_numeric_literal(&mut self, node: &'a NumericLiteral) -> Entity<'a> {
     if node.base == NumberBase::Float {
-      self.factory.unknown_number
+      self.factory.number
     } else {
-      self.factory.number(node.value, None)
+      self.factory.numeric_literal(node.value)
     }
   }
 
   pub fn exc_big_int_literal(&mut self, node: &'a BigIntLiteral) -> Entity<'a> {
-    self.factory.big_int(&node.raw.as_str()[..node.raw.len() - 1])
+    self.factory.big_int_literal(&node.raw)
   }
 
   pub fn exec_boolean_literal(&mut self, node: &'a BooleanLiteral) -> Entity<'a> {
-    self.factory.boolean(node.value)
+    self.factory.boolean_literal(node.value)
   }
 
   pub fn exec_null_literal(&mut self, _node: &'a NullLiteral) -> Entity<'a> {

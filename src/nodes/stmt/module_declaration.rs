@@ -17,7 +17,7 @@ impl<'a> Analyzer<'a> {
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(_node) => known.default,
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(_node) => known.namespace,
                 ImportDeclarationSpecifier::ImportSpecifier(node) => {
-                  let key = self.factory.string(node.imported.name().as_str());
+                  let key = self.factory.string_literal(node.imported.name().as_str());
                   known.namespace.get_property(self, key)
                 }
               }

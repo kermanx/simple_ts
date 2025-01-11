@@ -51,11 +51,11 @@ impl<'a> EntityTrait<'a> for UnknownEntity<'a> {
   }
 
   fn get_typeof(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.unknown_string
+    analyzer.factory.string
   }
 
   fn get_to_string(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.unknown_string
+    analyzer.factory.string
   }
 
   fn get_to_numeric(&'a self, _analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -64,8 +64,8 @@ impl<'a> EntityTrait<'a> for UnknownEntity<'a> {
 
   fn get_to_boolean(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     match self.test_truthy() {
-      Some(val) => analyzer.factory.boolean(val),
-      None => analyzer.factory.unknown_boolean,
+      Some(val) => analyzer.factory.boolean_literal(val),
+      None => analyzer.factory.boolean,
     }
   }
 

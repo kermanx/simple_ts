@@ -27,7 +27,7 @@ impl<'a> Analyzer<'a> {
     self.push_cf_scope(CfScopeKind::BreakableWithoutLabel, labels.clone(), Some(false));
     self.exec_loop(move |analyzer| {
       analyzer.declare_for_statement_left(&node.left);
-      analyzer.init_for_statement_left(&node.left, analyzer.factory.unknown_string);
+      analyzer.init_for_statement_left(&node.left, analyzer.factory.string);
 
       analyzer.push_cf_scope(CfScopeKind::Continuable, labels.clone(), None);
       analyzer.exec_statement(&node.body);

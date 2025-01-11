@@ -9,107 +9,52 @@ use std::cell::Cell;
 
 pub struct EntityFactory<'a> {
   pub allocator: &'a Allocator,
-  instance_id_counter: Cell<usize>,
 
-  pub r#true: Entity<'a>,
-  pub r#false: Entity<'a>,
-  pub nan: Entity<'a>,
+  pub any: Entity<'a>,
+  pub bigint: Entity<'a>,
+  pub boolean: Entity<'a>,
+  pub never: Entity<'a>,
   pub null: Entity<'a>,
+  pub number: Entity<'a>,
+  pub object: Entity<'a>,
+  pub string: Entity<'a>,
+  pub symbol: Entity<'a>,
   pub undefined: Entity<'a>,
-
   pub unknown: Entity<'a>,
+  pub void: Entity<'a>,
 
-  pub unknown_primitive: Entity<'a>,
-  pub unknown_string: Entity<'a>,
-  pub unknown_number: Entity<'a>,
-  pub unknown_bigint: Entity<'a>,
-  pub unknown_boolean: Entity<'a>,
-  pub unknown_symbol: Entity<'a>,
-
-  pub pure_fn_returns_unknown: Entity<'a>,
-  pub pure_fn_returns_string: Entity<'a>,
-  pub pure_fn_returns_number: Entity<'a>,
-  pub pure_fn_returns_bigint: Entity<'a>,
-  pub pure_fn_returns_boolean: Entity<'a>,
-  pub pure_fn_returns_symbol: Entity<'a>,
-  pub pure_fn_returns_null: Entity<'a>,
-  pub pure_fn_returns_undefined: Entity<'a>,
+  pub true_literal: Entity<'a>,
+  pub false_literal: Entity<'a>,
 
   pub empty_arguments: Entity<'a>,
-  pub unmatched_prototype_property: Entity<'a>,
 }
 
 impl<'a> EntityFactory<'a> {
   pub fn new(allocator: &'a Allocator, config: &'a Config) -> EntityFactory<'a> {
-    let r#true = allocator.alloc(LiteralEntity::Boolean(true));
-    let r#false = allocator.alloc(LiteralEntity::Boolean(false));
-    let nan = allocator.alloc(LiteralEntity::NaN);
-    let null = allocator.alloc(LiteralEntity::Null);
-    let undefined = allocator.alloc(LiteralEntity::Undefined);
-
-    let unknown = allocator.alloc(UnknownEntity::new());
-
-    let unknown_primitive = allocator.alloc(PrimitiveEntity::Mixed);
-    let unknown_string = allocator.alloc(PrimitiveEntity::String);
-    let unknown_number = allocator.alloc(PrimitiveEntity::Number);
-    let unknown_bigint = allocator.alloc(PrimitiveEntity::BigInt);
-    let unknown_boolean = allocator.alloc(PrimitiveEntity::Boolean);
-    let unknown_symbol = allocator.alloc(PrimitiveEntity::Symbol);
-
-    let pure_fn_returns_unknown = allocator.alloc(PureBuiltinFnEntity::new(|f| f.unknown));
-
-    let pure_fn_returns_string = allocator.alloc(PureBuiltinFnEntity::new(|f| f.unknown_string));
-    let pure_fn_returns_number = allocator.alloc(PureBuiltinFnEntity::new(|f| f.unknown_number));
-    let pure_fn_returns_bigint = allocator.alloc(PureBuiltinFnEntity::new(|f| f.unknown_bigint));
-    let pure_fn_returns_boolean = allocator.alloc(PureBuiltinFnEntity::new(|f| f.unknown_boolean));
-    let pure_fn_returns_symbol = allocator.alloc(PureBuiltinFnEntity::new(|f| f.unknown_symbol));
-    let pure_fn_returns_null = allocator.alloc(PureBuiltinFnEntity::new(|f| f.null));
-    let pure_fn_returns_undefined = allocator.alloc(PureBuiltinFnEntity::new(|f| f.undefined));
-
-    let empty_arguments = allocator.alloc(ArgumentsEntity::default());
-    let unmatched_prototype_property: Entity<'a> =
-      if config.unmatched_prototype_property_as_undefined { undefined } else { unknown };
-
     EntityFactory {
+      any: allocator.alloc(PrimitiveEntity::Any),
+      bigint: allocator.alloc(PrimitiveEntity::BigInt),
+      boolean: allocator.alloc(PrimitiveEntity::Boolean),
+      never: allocator.alloc(PrimitiveEntity::Never),
+      null: allocator.alloc(PrimitiveEntity::Null),
+      number: allocator.alloc(PrimitiveEntity::Number),
+      object: allocator.alloc(PrimitiveEntity::Object),
+      string: allocator.alloc(PrimitiveEntity::String),
+      symbol: allocator.alloc(PrimitiveEntity::Symbol),
+      undefined: allocator.alloc(PrimitiveEntity::Undefined),
+      unknown: allocator.alloc(PrimitiveEntity::Unknown),
+      void: allocator.alloc(PrimitiveEntity::Void),
+
+      true_literal: allocator.alloc(LiteralEntity::Boolean(true)),
+      false_literal: allocator.alloc(LiteralEntity::Boolean(false)),
+
+      empty_arguments: allocator.alloc(ArgumentsEntity::default()),
+
       allocator,
-      instance_id_counter: Cell::new(0),
-
-      r#true,
-      r#false,
-      nan,
-      null,
-      undefined,
-
-      unknown,
-
-      unknown_primitive,
-      unknown_string,
-      unknown_number,
-      unknown_bigint,
-      unknown_boolean,
-      unknown_symbol,
-
-      pure_fn_returns_unknown,
-      pure_fn_returns_string,
-      pure_fn_returns_number,
-      pure_fn_returns_bigint,
-      pure_fn_returns_boolean,
-      pure_fn_returns_symbol,
-      pure_fn_returns_null,
-      pure_fn_returns_undefined,
-
-      empty_arguments,
-      unmatched_prototype_property,
     }
   }
 
   pub fn alloc<T>(&self, val: T) -> &'a mut T {
     self.allocator.alloc(val)
-  }
-
-  pub fn alloc_instance_id(&self) -> usize {
-    let id = self.instance_id_counter.get();
-    self.instance_id_counter.set(id + 1);
-    id
   }
 }

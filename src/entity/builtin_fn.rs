@@ -85,11 +85,11 @@ impl<'a, T: BuiltinFnEntity<'a>> EntityTrait<'a> for T {
   }
 
   fn get_typeof(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.string("function")
+    analyzer.factory.string_literal("function")
   }
 
   fn get_to_string(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.unknown_string
+    analyzer.factory.string
   }
 
   fn get_to_numeric(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -97,7 +97,7 @@ impl<'a, T: BuiltinFnEntity<'a>> EntityTrait<'a> for T {
   }
 
   fn get_to_boolean(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.boolean(true)
+    analyzer.factory.boolean_literal(true)
   }
 
   fn get_to_property_key(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -106,7 +106,7 @@ impl<'a, T: BuiltinFnEntity<'a>> EntityTrait<'a> for T {
 
   fn get_to_jsx_child(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     // TODO: analyzer.thrown_builtin_error("Functions are not valid JSX children");
-    analyzer.factory.string("")
+    analyzer.factory.string_literal("")
   }
 
   fn test_typeof(&self) -> TypeofResult {

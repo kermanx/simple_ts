@@ -40,7 +40,7 @@ impl<'a> ObjectEntity<'a> {
               rest.delete(true);
             }
           }
-          LiteralEntity::Symbol(_, _) => todo!(),
+          LiteralEntity::Symbol(_) => todo!(),
           _ => unreachable!("Invalid property key"),
         }
       }

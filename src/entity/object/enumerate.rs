@@ -34,7 +34,7 @@ impl<'a> ObjectEntity<'a> {
       }
 
       if let Some(value) = analyzer.factory.try_union(values) {
-        result.push((false, analyzer.factory.unknown_primitive, value));
+        result.push((false, analyzer.factory.unknown, value));
       }
     }
 
@@ -46,7 +46,7 @@ impl<'a> ObjectEntity<'a> {
         let mut string_keyed = self.string_keyed.borrow_mut();
         let properties = string_keyed.get_mut(&key).unwrap();
 
-        let key_entity = analyzer.factory.string(key);
+        let key_entity = analyzer.factory.string_literal(key);
 
         let mut definite = true;
         let mut values = vec![];

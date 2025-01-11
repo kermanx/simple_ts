@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
     node: &'a JSXExpressionContainer<'a>,
   ) -> Entity<'a> {
     match &node.expression {
-      JSXExpression::EmptyExpression(_node) => self.factory.r#true,
+      JSXExpression::EmptyExpression(_node) => self.factory.true_literal,
       node => self.exec_expression(node.to_expression()),
     }
   }
@@ -17,7 +17,7 @@ impl<'a> Analyzer<'a> {
     node: &'a JSXExpressionContainer<'a>,
   ) -> Entity<'a> {
     match &node.expression {
-      JSXExpression::EmptyExpression(_node) => self.factory.string(""),
+      JSXExpression::EmptyExpression(_node) => self.factory.string_literal(""),
       node => self.exec_expression(node.to_expression()).get_to_jsx_child(self),
     }
   }

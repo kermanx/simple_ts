@@ -35,7 +35,7 @@ pub fn create_function_prototype<'a>(factory: &EntityFactory<'a>) -> Prototype<'
     "length" => factory.unknown_number,
     "arguments" => factory.unknown,
     "caller" => factory.unknown,
-    "name" => factory.unknown_string,
+    "name" => factory.string,
     "prototype" => factory.unknown,
   })
 }

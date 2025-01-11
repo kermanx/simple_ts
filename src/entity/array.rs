@@ -157,7 +157,7 @@ impl<'a> EntityTrait<'a> for ArrayEntity<'a> {
     for (i, element) in self.elements.borrow().iter().enumerate() {
       entries.push((
         true,
-        analyzer.factory.string(analyzer.allocator.alloc(i.to_string())),
+        analyzer.factory.string_literal(analyzer.allocator.alloc(i.to_string())),
         *element,
       ));
     }
@@ -165,7 +165,7 @@ impl<'a> EntityTrait<'a> for ArrayEntity<'a> {
     if !rest.is_empty() {
       entries.push((
         true,
-        analyzer.factory.unknown_string,
+        analyzer.factory.string,
         analyzer.factory.union(rest.iter().cloned().collect::<Vec<_>>()),
       ));
     }
@@ -216,14 +216,14 @@ impl<'a> EntityTrait<'a> for ArrayEntity<'a> {
   }
 
   fn get_typeof(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.string("object")
+    analyzer.factory.string_literal("object")
   }
 
   fn get_to_string(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     if self.consumed.get() {
       return consumed_object::get_to_string(analyzer);
     }
-    analyzer.factory.unknown_string
+    analyzer.factory.string
   }
 
   fn get_to_numeric(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -234,7 +234,7 @@ impl<'a> EntityTrait<'a> for ArrayEntity<'a> {
   }
 
   fn get_to_boolean(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.boolean(true)
+    analyzer.factory.boolean_literal(true)
   }
 
   fn get_to_property_key(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {

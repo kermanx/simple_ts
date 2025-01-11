@@ -16,7 +16,7 @@ impl<'a> Analyzer<'a> {
         JSXAttributeValue::Fragment(node) => self.exec_jsx_fragment(node),
       }
     } else {
-      self.factory.r#true
+      self.factory.true_literal
     }
   }
 }

@@ -69,7 +69,7 @@ impl<'a> EntityTrait<'a> for LogicalResultEntity<'a> {
     if self.is_coalesce {
       value
     } else if let Some(result) = self.result {
-      analyzer.factory.boolean(result)
+      analyzer.factory.boolean_literal(result)
     } else {
       value
     }

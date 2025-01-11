@@ -52,7 +52,6 @@ impl hash::Hash for CalleeNode<'_> {
 #[derive(Debug, Clone, Copy)]
 pub struct CalleeInfo<'a> {
   pub node: CalleeNode<'a>,
-  pub instance_id: usize,
   #[cfg(feature = "flame")]
   pub debug_name: &'a str,
 }
@@ -87,7 +86,6 @@ impl<'a> Analyzer<'a> {
   pub fn new_callee_info(&self, node: CalleeNode<'a>) -> CalleeInfo<'a> {
     CalleeInfo {
       node,
-      instance_id: self.factory.alloc_instance_id(),
       #[cfg(feature = "flame")]
       debug_name: {
         let line_col = self.line_index.line_col(node.span().start.into());

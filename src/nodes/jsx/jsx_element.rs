@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
     attributes.init_property(
       self,
       PropertyKind::Init,
-      self.factory.string("children"),
+      self.factory.string_literal("children"),
       children,
       true,
     );

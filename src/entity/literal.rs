@@ -11,14 +11,10 @@ use rustc_hash::FxHashSet;
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub enum LiteralEntity<'a> {
   String(&'a str),
-  Number(F64WithEq, Option<&'a str>),
+  Number(F64WithEq),
   BigInt(&'a str),
   Boolean(bool),
-  Symbol(SymbolId, &'a str),
-  Infinity(bool),
-  NaN,
-  Null,
-  Undefined,
+  Symbol(SymbolId),
 }
 
 impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
@@ -62,7 +58,7 @@ impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
 
   fn enumerate_properties(&'a self, analyzer: &mut Analyzer<'a>) -> EnumeratedProperties<'a> {
     if let LiteralEntity::String(_) = self {
-      analyzer.factory.unknown_string.enumerate_properties(analyzer)
+      analyzer.factory.string.enumerate_properties(analyzer)
     } else {
       // No effect
       vec![]
@@ -98,7 +94,7 @@ impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
   fn iterate(&'a self, analyzer: &mut Analyzer<'a>) -> IteratedElements<'a> {
     match self {
       LiteralEntity::String(value) => {
-        (vec![], (!value.is_empty()).then_some(analyzer.factory.unknown_string))
+        (vec![], (!value.is_empty()).then_some(analyzer.factory.string))
       }
       _ => {
         self.unknown_mutation(analyzer);
@@ -109,7 +105,7 @@ impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
   }
 
   fn get_typeof(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
-    analyzer.factory.string(self.test_typeof().to_string().unwrap())
+    analyzer.factory.string_literal(self.test_typeof().to_string().unwrap())
   }
 
   fn get_to_string(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
@@ -148,8 +144,8 @@ impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
 
   fn get_to_boolean(&'a self, analyzer: &Analyzer<'a>) -> Entity<'a> {
     match self.test_truthy() {
-      Some(value) => analyzer.factory.boolean(value),
-      None => analyzer.factory.unknown_boolean,
+      Some(value) => analyzer.factory.boolean_literal(value),
+      None => analyzer.factory.boolean,
     }
   }
 
@@ -164,7 +160,7 @@ impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
     if (TypeofResult::String | TypeofResult::Number).contains(self.test_typeof()) {
       self.get_to_string(analyzer)
     } else {
-      analyzer.factory.string("")
+      analyzer.factory.string_literal("")
     }
   }
 
@@ -296,7 +292,7 @@ impl<'a> LiteralEntity<'a> {
           Some(
             value
               .get(index..index + 1)
-              .map_or(analyzer.factory.undefined, |v| analyzer.factory.string(v)),
+              .map_or(analyzer.factory.undefined, |v| analyzer.factory.string_literal(v)),
           )
         } else {
           None
@@ -322,35 +318,35 @@ impl<'a> LiteralEntity<'a> {
 }
 
 impl<'a> EntityFactory<'a> {
-  pub fn string(&self, value: &'a str) -> Entity<'a> {
-    self.alloc(LiteralEntity::String(value))
+  pub fn string_literal(&self, value: &'a str) -> Entity<'a> {
+    self.alloc(LiteralEntity::String(value.into()))
   }
 
-  pub fn number(&self, value: impl Into<F64WithEq>, str_rep: Option<&'a str>) -> Entity<'a> {
-    self.alloc(LiteralEntity::Number(value.into(), str_rep))
+  pub fn numeric_literal(&self, value: impl Into<F64WithEq>) -> Entity<'a> {
+    self.alloc(LiteralEntity::Number(value.into()))
   }
 
-  pub fn big_int(&self, value: &'a str) -> Entity<'a> {
-    self.alloc(LiteralEntity::BigInt(value))
+  pub fn big_int_literal(&self, raw: &'a str) -> Entity<'a> {
+    self.alloc(LiteralEntity::BigInt(raw))
   }
 
-  pub fn boolean(&self, value: bool) -> Entity<'a> {
-    self.alloc(LiteralEntity::Boolean(value))
-  }
-
-  pub fn boolean_maybe_unknown(&self, value: Option<bool>) -> Entity<'a> {
-    if let Some(value) = value {
-      self.boolean(value)
+  pub fn boolean_literal(&self, value: bool) -> Entity<'a> {
+    if value {
+      self.true_literal
     } else {
-      self.unknown_boolean
+      self.false_literal
     }
   }
 
-  pub fn infinity(&self, positive: bool) -> Entity<'a> {
-    self.alloc(LiteralEntity::Infinity(positive))
+  pub fn boolean_maybe_unknown_literal(&self, value: Option<bool>) -> Entity<'a> {
+    if let Some(value) = value {
+      self.boolean_literal(value)
+    } else {
+      self.boolean
+    }
   }
 
-  pub fn symbol(&self, id: SymbolId, str_rep: &'a str) -> Entity<'a> {
-    self.alloc(LiteralEntity::Symbol(id, str_rep))
+  pub fn symbol(&self, id: SymbolId) -> Entity<'a> {
+    self.alloc(LiteralEntity::Symbol(id))
   }
 }

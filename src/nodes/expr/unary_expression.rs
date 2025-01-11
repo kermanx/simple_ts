@@ -11,7 +11,7 @@ impl<'a> Analyzer<'a> {
       match &node.argument {
         Expression::StaticMemberExpression(node) => {
           let object = self.exec_expression(&node.object);
-          let property = self.factory.string(&node.property.name);
+          let property = self.factory.string_literal(&node.property.name);
           object.delete_property(self, property)
         }
         Expression::PrivateFieldExpression(node) => {
@@ -31,7 +31,7 @@ impl<'a> Analyzer<'a> {
         }
       };
 
-      return self.factory.r#true;
+      return self.factory.true_literal;
     }
 
     let argument = self.exec_expression(&node.argument);
@@ -41,19 +41,19 @@ impl<'a> Analyzer<'a> {
         if let Some(num) = argument.get_literal(self).and_then(|lit| lit.to_number()) {
           if let Some(num) = num {
             let num = -num.0;
-            self.factory.number(num, None)
+            self.factory.numeric_literal(num)
           } else {
-            self.factory.nan
+            self.factory.number
           }
         } else {
           // Maybe number or bigint
-          self.factory.unknown_primitive
+          self.factory.unknown
         }
       }
       UnaryOperator::UnaryPlus => argument.get_to_numeric(self),
       UnaryOperator::LogicalNot => match argument.test_truthy() {
-        Some(value) => self.factory.boolean(!value),
-        None => self.factory.unknown_boolean,
+        Some(value) => self.factory.boolean_literal(!value),
+        None => self.factory.boolean,
       },
       UnaryOperator::BitwiseNot => {
         if let Some(literals) = argument.get_to_numeric(self).get_to_literals(self) {
@@ -61,17 +61,16 @@ impl<'a> Analyzer<'a> {
             literals
               .into_iter()
               .map(|lit| match lit {
-                LiteralEntity::Number(num, _) => {
+                LiteralEntity::Number(num) => {
                   let num = !num.0.to_int_32();
-                  self.factory.number(num as f64, None)
+                  self.factory.numeric_literal(num as f64)
                 }
-                LiteralEntity::NaN => self.factory.number(-1f64, None),
-                _ => self.factory.unknown_primitive,
+                _ => self.factory.unknown,
               })
               .collect::<Vec<_>>(),
           )
         } else {
-          self.factory.unknown_primitive
+          self.factory.unknown
         }
       }
       UnaryOperator::Typeof => argument.get_typeof(self),
