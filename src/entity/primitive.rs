@@ -15,7 +15,7 @@ pub enum PrimitiveEntity {
 }
 
 impl<'a> EntityTrait<'a> for PrimitiveEntity {
-  fn consume(&'a self, _analyzer: &mut Analyzer<'a>) {}
+  fn unknown_mutation(&'a self, _analyzer: &mut Analyzer<'a>) {}
 
   fn get_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) -> Entity<'a> {
     // TODO: PrimitiveEntity::String
@@ -66,7 +66,7 @@ impl<'a> EntityTrait<'a> for PrimitiveEntity {
       return (vec![], Some(analyzer.factory.unknown));
     }
     analyzer.thrown_builtin_error("Cannot iterate non-object");
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::iterate(analyzer)
   }
 

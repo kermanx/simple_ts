@@ -97,14 +97,14 @@ impl<'a> Analyzer<'a> {
     let node = class.node;
 
     if let Some(super_class) = &class.super_class {
-      super_class.consume(self);
+      super_class.unknown_mutation(self);
     }
 
     // Keys
     for (index, element) in node.body.body.iter().enumerate() {
       if !element.r#static() {
         if let Some(key) = class.keys[index] {
-          key.consume(self);
+          key.unknown_mutation(self);
         }
       }
     }
@@ -120,7 +120,7 @@ impl<'a> Analyzer<'a> {
       if let ClassElement::MethodDefinition(node) = element {
         if !node.r#static {
           let value = self.exec_function(&node.value);
-          value.consume(self);
+          value.unknown_mutation(self);
         }
       }
     }
@@ -147,7 +147,7 @@ impl<'a> Analyzer<'a> {
           if !node.r#static {
             if let Some(value) = &node.value {
               let value = analyzer.exec_expression(value);
-              value.consume(analyzer);
+              value.unknown_mutation(analyzer);
             }
           }
         }

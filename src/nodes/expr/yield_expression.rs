@@ -5,7 +5,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_yield_expression(&mut self, node: &'a YieldExpression<'a>) -> Entity<'a> {
     if let Some(argument) = &node.argument {
       let argument = self.exec_expression(argument);
-      argument.consume(self);
+      argument.unknown_mutation(self);
     }
     self.factory.unknown
   }

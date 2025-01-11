@@ -60,11 +60,11 @@ impl<'a> CallScope<'a> {
           parent_try_scope.thrown_values.push(unknown);
         }
         for value in try_scope.thrown_values {
-          value.consume(analyzer);
+          value.unknown_mutation(analyzer);
         }
       } else if self.is_async {
         for value in try_scope.thrown_values {
-          value.consume(analyzer);
+          value.unknown_mutation(analyzer);
         }
       } else {
         analyzer.forward_throw(try_scope.thrown_values);
@@ -104,7 +104,7 @@ impl<'a> Analyzer<'a> {
     let call_scope = self.call_scope_mut();
     let values = mem::take(&mut call_scope.returned_values);
     for value in values {
-      value.consume(self);
+      value.unknown_mutation(self);
     }
   }
 }

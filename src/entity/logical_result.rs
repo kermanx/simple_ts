@@ -12,8 +12,8 @@ pub struct LogicalResultEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for LogicalResultEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
-    self.value.consume(analyzer);
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
+    self.value.unknown_mutation(analyzer);
   }
 
   fn get_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) -> Entity<'a> {

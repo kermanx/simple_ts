@@ -11,11 +11,11 @@ pub struct ArgumentsEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for ArgumentsEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     use_consumed_flag!(self);
 
     for (_, entity) in &self.arguments {
-      entity.consume(analyzer);
+      entity.unknown_mutation(analyzer);
     }
   }
 

@@ -21,7 +21,7 @@ pub trait BuiltinFnEntity<'a>: Debug {
 }
 
 impl<'a, T: BuiltinFnEntity<'a>> EntityTrait<'a> for T {
-  fn consume(&'a self, _analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, _analyzer: &mut Analyzer<'a>) {
     // No effect
   }
 
@@ -214,8 +214,8 @@ impl<'a> BuiltinFnEntity<'a> for PureBuiltinFnEntity<'a> {
     this: Entity<'a>,
     args: Entity<'a>,
   ) -> Entity<'a> {
-    this.consume(analyzer);
-    args.consume(analyzer);
+    this.unknown_mutation(analyzer);
+    args.unknown_mutation(analyzer);
     (self.return_value)(analyzer.factory)
   }
 }

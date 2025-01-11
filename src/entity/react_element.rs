@@ -13,7 +13,7 @@ pub struct ReactElementEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for ReactElementEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     use_consumed_flag!(self);
 
     let tag = self.tag;
@@ -30,7 +30,7 @@ impl<'a> EntityTrait<'a> for ReactElementEntity<'a> {
   }
 
   fn set_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>, value: Entity<'a>) {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::set_property(analyzer, key, value)
   }
 
@@ -39,7 +39,7 @@ impl<'a> EntityTrait<'a> for ReactElementEntity<'a> {
   }
 
   fn delete_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::delete_property(analyzer, key)
   }
 
@@ -59,12 +59,12 @@ impl<'a> EntityTrait<'a> for ReactElementEntity<'a> {
   }
 
   fn r#await(&'a self, analyzer: &mut Analyzer<'a>) -> Entity<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::r#await(analyzer)
   }
 
   fn iterate(&'a self, analyzer: &mut Analyzer<'a>) -> IteratedElements<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::iterate(analyzer)
   }
 

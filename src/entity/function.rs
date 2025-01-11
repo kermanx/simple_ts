@@ -20,12 +20,12 @@ pub struct FunctionEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for FunctionEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     use_consumed_flag!(self);
 
     self.consume_body(analyzer);
 
-    self.object.consume(analyzer);
+    self.object.unknown_mutation(analyzer);
   }
 
   fn get_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) -> Entity<'a> {
@@ -79,7 +79,7 @@ impl<'a> EntityTrait<'a> for FunctionEntity<'a> {
   }
 
   fn iterate(&'a self, analyzer: &mut Analyzer<'a>) -> IteratedElements<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::iterate(analyzer)
   }
 

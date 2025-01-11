@@ -51,7 +51,7 @@ impl<'a> Analyzer<'a> {
         "Should not write to builtin object, it may cause unexpected tree-shaking behavior",
       );
     } else {
-      value.consume(self);
+      value.unknown_mutation(self);
       self.may_throw();
     }
   }

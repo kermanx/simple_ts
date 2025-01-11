@@ -66,7 +66,7 @@ impl<'a> Analyzer<'a> {
           } else {
             self.may_throw();
           }
-          init.consume(self);
+          init.unknown_mutation(self);
           let data = self.load_data::<ObjectPatternData>(AstKind2::ObjectPattern(node.as_ref()));
           data.need_destruct = true;
         }

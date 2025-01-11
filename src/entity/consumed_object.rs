@@ -10,7 +10,7 @@ pub fn get_property<'a>(
 }
 
 pub fn set_property<'a>(analyzer: &mut Analyzer<'a>, _key: Entity<'a>, value: Entity<'a>) {
-  value.consume(analyzer);
+  value.unknown_mutation(analyzer);
 }
 
 pub fn enumerate_properties<'a>(
@@ -29,8 +29,8 @@ pub fn call<'a>(
   this: Entity<'a>,
   args: Entity<'a>,
 ) -> Entity<'a> {
-  this.consume(analyzer);
-  args.consume(analyzer);
+  this.unknown_mutation(analyzer);
+  args.unknown_mutation(analyzer);
   analyzer.factory.unknown
 }
 
@@ -40,7 +40,7 @@ pub fn construct<'a>(
 
   args: Entity<'a>,
 ) -> Entity<'a> {
-  args.consume(analyzer);
+  args.unknown_mutation(analyzer);
   analyzer.factory.unknown
 }
 

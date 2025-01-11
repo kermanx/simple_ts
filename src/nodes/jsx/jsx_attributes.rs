@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::AstKind2, entity::ObjectEntity};
+use crate::{analyzer::Analyzer, entity::ObjectEntity};
 use oxc::ast::ast::{JSXAttributeItem, JSXOpeningElement, PropertyKind};
 
 impl<'a> Analyzer<'a> {
@@ -9,7 +9,6 @@ impl<'a> Analyzer<'a> {
     let object = self.new_empty_object(&self.builtins.prototypes.object);
 
     for attr in &node.attributes {
-      let dep_id = AstKind2::JSXAttributeItem(attr);
       match attr {
         JSXAttributeItem::Attribute(node) => {
           let key = self.exec_jsx_attribute_name(&node.name);

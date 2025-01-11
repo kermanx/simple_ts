@@ -13,7 +13,7 @@ impl<'a> ObjectEntity<'a> {
     let (has_exhaustive, indeterminate) = analyzer.pre_mutate_object(self.cf_scope, self.object_id);
 
     if has_exhaustive {
-      self.consume(analyzer);
+      self.unknown_mutation(analyzer);
       return consumed_object::delete_property(analyzer, key);
     }
 

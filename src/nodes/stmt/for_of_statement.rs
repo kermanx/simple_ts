@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
 
     let right = self.exec_expression(&node.right);
     let right = if node.r#await {
-      right.consume(self);
+      right.unknown_mutation(self);
       self.factory.unknown
     } else {
       right

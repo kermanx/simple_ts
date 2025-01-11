@@ -2,7 +2,6 @@ mod arguments;
 mod array;
 mod builtin_fn;
 mod class;
-mod collector;
 mod consumed_object;
 mod factory;
 mod function;
@@ -20,7 +19,6 @@ mod utils;
 
 pub use builtin_fn::PureBuiltinFnEntity;
 pub use class::ClassEntity;
-pub use collector::LiteralCollector;
 pub use factory::EntityFactory;
 pub use literal::LiteralEntity;
 pub use object::{ObjectEntity, ObjectProperty, ObjectPropertyValue};
@@ -40,7 +38,7 @@ pub type EnumeratedProperties<'a> = Vec<(bool, Entity<'a>, Entity<'a>)>;
 pub type IteratedElements<'a> = (Vec<Entity<'a>>, Option<Entity<'a>>);
 
 pub trait EntityTrait<'a>: Debug {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>);
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>);
 
   fn get_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) -> Entity<'a>;
   fn set_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>, value: Entity<'a>);

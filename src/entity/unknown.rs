@@ -8,14 +8,14 @@ use std::marker::PhantomData;
 pub struct UnknownEntity<'a>(PhantomData<&'a ()>);
 
 impl<'a> EntityTrait<'a> for UnknownEntity<'a> {
-  fn consume(&'a self, _analyzer: &mut Analyzer<'a>) {}
+  fn unknown_mutation(&'a self, _analyzer: &mut Analyzer<'a>) {}
 
   fn get_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) -> Entity<'a> {
     consumed_object::get_property(self, analyzer, key)
   }
 
   fn set_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>, value: Entity<'a>) {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::set_property(analyzer, key, value)
   }
 
@@ -24,7 +24,7 @@ impl<'a> EntityTrait<'a> for UnknownEntity<'a> {
   }
 
   fn delete_property(&'a self, analyzer: &mut Analyzer<'a>, key: Entity<'a>) {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::delete_property(analyzer, key)
   }
 
@@ -41,12 +41,12 @@ impl<'a> EntityTrait<'a> for UnknownEntity<'a> {
   }
 
   fn r#await(&'a self, analyzer: &mut Analyzer<'a>) -> Entity<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::r#await(analyzer)
   }
 
   fn iterate(&'a self, analyzer: &mut Analyzer<'a>) -> IteratedElements<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::iterate(analyzer)
   }
 

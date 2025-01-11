@@ -72,11 +72,11 @@ impl<'a> Analyzer<'a> {
 
   pub fn consume_exports(&mut self) {
     if let Some(entity) = self.default_export.take() {
-      entity.consume(self)
+      entity.unknown_mutation(self)
     }
     for symbol in self.named_exports.clone() {
       let entity = self.read_symbol(symbol).unwrap();
-      entity.consume(self);
+      entity.unknown_mutation(self);
     }
   }
 }

@@ -36,7 +36,7 @@ pub struct ObjectEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for ObjectEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     if !self.consumable {
       return;
     }
@@ -82,12 +82,12 @@ impl<'a> EntityTrait<'a> for ObjectEntity<'a> {
   }
 
   fn r#await(&'a self, analyzer: &mut Analyzer<'a>) -> Entity<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::r#await(analyzer)
   }
 
   fn iterate(&'a self, analyzer: &mut Analyzer<'a>) -> IteratedElements<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::iterate(analyzer)
   }
 

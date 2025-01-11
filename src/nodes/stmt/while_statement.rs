@@ -19,7 +19,7 @@ impl<'a> Analyzer<'a> {
       analyzer.push_cf_scope(CfScopeKind::Continuable, labels.clone(), None);
 
       analyzer.exec_statement(&node.body);
-      analyzer.exec_expression(&node.test).consume(analyzer);
+      analyzer.exec_expression(&node.test).unknown_mutation(analyzer);
 
       analyzer.pop_cf_scope();
 

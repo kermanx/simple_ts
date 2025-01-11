@@ -83,10 +83,10 @@ impl<'a> ObjectProperty<'a> {
   pub fn consume(self, analyzer: &mut Analyzer<'a>) {
     for possible_value in self.possible_values {
       match possible_value {
-        ObjectPropertyValue::Field(value, _) => value.consume(analyzer),
+        ObjectPropertyValue::Field(value, _) => value.unknown_mutation(analyzer),
         ObjectPropertyValue::Property(getter, setter) => {
-          getter.map(|v| v.consume(analyzer));
-          setter.map(|v| v.consume(analyzer));
+          getter.map(|v| v.unknown_mutation(analyzer));
+          setter.map(|v| v.unknown_mutation(analyzer));
         }
       }
     }

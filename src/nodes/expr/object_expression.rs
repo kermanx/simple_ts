@@ -32,7 +32,7 @@ impl<'a> Analyzer<'a> {
 
     if has_proto {
       // Deoptimize the object
-      object.consume(self);
+      object.unknown_mutation(self);
     }
 
     object

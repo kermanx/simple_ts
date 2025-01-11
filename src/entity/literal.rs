@@ -22,7 +22,7 @@ pub enum LiteralEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     // No effect
   }
 
@@ -101,7 +101,7 @@ impl<'a> EntityTrait<'a> for LiteralEntity<'a> {
         (vec![], (!value.is_empty()).then_some(analyzer.factory.unknown_string))
       }
       _ => {
-        self.consume(analyzer);
+        self.unknown_mutation(analyzer);
         analyzer.thrown_builtin_error("Cannot iterate over a non-iterable object");
         consumed_object::iterate(analyzer)
       }

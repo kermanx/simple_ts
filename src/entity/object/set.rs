@@ -14,7 +14,7 @@ impl<'a> ObjectEntity<'a> {
       analyzer.pre_mutate_object(self.cf_scope, self.object_id);
 
     if has_exhaustive {
-      self.consume(analyzer);
+      self.unknown_mutation(analyzer);
       return consumed_object::set_property(analyzer, key, value);
     }
 

@@ -39,8 +39,8 @@ impl<'a> Analyzer<'a> {
       analyzer.push_try_scope();
       let ret_val = runner(analyzer);
       let thrown_val = analyzer.pop_try_scope().thrown_val(analyzer);
-      ret_val.consume(analyzer);
-      thrown_val.map(|v| v.consume(analyzer));
+      ret_val.unknown_mutation(analyzer);
+      thrown_val.map(|v| v.unknown_mutation(analyzer));
       analyzer.pop_cf_scope();
     });
     let deps = self.exec_exhaustively(kind, runner.clone(), false);

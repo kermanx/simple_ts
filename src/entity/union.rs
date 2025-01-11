@@ -15,11 +15,11 @@ pub struct UnionEntity<'a, V: UnionLike<'a, Entity<'a>> + Debug + 'a> {
 }
 
 impl<'a, V: UnionLike<'a, Entity<'a>> + Debug + 'a> EntityTrait<'a> for UnionEntity<'a, V> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     use_consumed_flag!(self);
 
     for value in self.values.iter() {
-      value.consume(analyzer);
+      value.unknown_mutation(analyzer);
     }
   }
 

@@ -28,16 +28,16 @@ impl<'a> fmt::Debug for ArrayEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for ArrayEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     use_consumed_flag!(self);
 
     analyzer.mark_object_consumed(self.cf_scope, self.object_id);
 
     for element in self.elements.borrow().iter() {
-      element.consume(analyzer);
+      element.unknown_mutation(analyzer);
     }
     for rest in self.rest.borrow().iter() {
-      rest.consume(analyzer);
+      rest.unknown_mutation(analyzer);
     }
   }
 
@@ -93,7 +93,7 @@ impl<'a> EntityTrait<'a> for ArrayEntity<'a> {
     let (has_exhaustive, indeterminate) = analyzer.pre_mutate_object(self.cf_scope, self.object_id);
 
     if has_exhaustive {
-      self.consume(analyzer);
+      self.unknown_mutation(analyzer);
       return consumed_object::set_property(analyzer, key, value);
     }
 
@@ -181,7 +181,7 @@ impl<'a> EntityTrait<'a> for ArrayEntity<'a> {
     let (has_exhaustive, _) = analyzer.pre_mutate_object(self.cf_scope, self.object_id);
 
     if has_exhaustive {
-      self.consume(analyzer);
+      self.unknown_mutation(analyzer);
       return consumed_object::delete_property(analyzer, key);
     }
   }

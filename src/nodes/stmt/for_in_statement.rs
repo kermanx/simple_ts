@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
     let right = self.exec_expression(&node.right);
 
     // FIXME: enumerate keys!
-    right.consume(self);
+    right.unknown_mutation(self);
 
     let types_have_no_keys: TypeofResult = TypeofResult::Undefined
       | TypeofResult::Boolean

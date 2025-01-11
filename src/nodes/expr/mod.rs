@@ -24,22 +24,13 @@ mod unary_expression;
 mod update_expression;
 mod yield_expression;
 
-use crate::{
-  analyzer::Analyzer,
-  ast::AstKind2,
-  entity::{Entity, LiteralCollector},
-};
+use crate::{analyzer::Analyzer, entity::Entity};
 use oxc::ast::{ast::Expression, match_member_expression};
-
-#[derive(Debug, Default)]
-struct Data<'a> {
-  collector: LiteralCollector<'a>,
-}
 
 impl<'a> Analyzer<'a> {
   pub fn exec_expression(&mut self, node: &'a Expression<'a>) -> Entity<'a> {
     self.push_span(node);
-    let entity = match node {
+    let value = match node {
       match_member_expression!(Expression) => {
         self.exec_member_expression_read(node.to_member_expression()).0
       }
@@ -86,7 +77,6 @@ impl<'a> Analyzer<'a> {
       | Expression::TSSatisfiesExpression(_) => unreachable!(),
     };
     self.pop_span();
-    let data = self.load_data::<Data>(AstKind2::Expression(node));
-    data.collector.collect(self, entity)
+    value
   }
 }

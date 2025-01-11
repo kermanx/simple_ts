@@ -17,10 +17,10 @@ pub struct ClassEntity<'a> {
 }
 
 impl<'a> EntityTrait<'a> for ClassEntity<'a> {
-  fn consume(&'a self, analyzer: &mut Analyzer<'a>) {
+  fn unknown_mutation(&'a self, analyzer: &mut Analyzer<'a>) {
     use_consumed_flag!(self);
 
-    self.statics.consume(analyzer);
+    self.statics.unknown_mutation(analyzer);
     analyzer.construct_class(self);
   }
 
@@ -34,7 +34,7 @@ impl<'a> EntityTrait<'a> for ClassEntity<'a> {
       analyzer.factory.string("prototype"),
     ) != Some(false)
     {
-      self.consume(analyzer);
+      self.unknown_mutation(analyzer);
       return consumed_object::get_property(self, analyzer, key);
     }
     self.statics.get_property(analyzer, key)
@@ -67,12 +67,12 @@ impl<'a> EntityTrait<'a> for ClassEntity<'a> {
 
   fn r#await(&'a self, analyzer: &mut Analyzer<'a>) -> Entity<'a> {
     // In case of `class A { static then() {} }`
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::r#await(analyzer)
   }
 
   fn iterate(&'a self, analyzer: &mut Analyzer<'a>) -> IteratedElements<'a> {
-    self.consume(analyzer);
+    self.unknown_mutation(analyzer);
     consumed_object::iterate(analyzer)
   }
 

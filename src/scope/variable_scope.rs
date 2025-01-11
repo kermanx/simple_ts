@@ -53,7 +53,7 @@ impl<'a> Analyzer<'a> {
 
       if old_kind.is_untracked() {
         if let Some(val) = fn_value {
-          val.consume(self)
+          val.unknown_mutation(self)
         }
         return;
       }
@@ -144,10 +144,10 @@ impl<'a> Analyzer<'a> {
     if let Some(variable) = self.scope_context.variable.get(id).variables.get(&symbol).copied() {
       let kind = variable.borrow().kind;
       if kind.is_untracked() {
-        new_val.consume(self);
+        new_val.unknown_mutation(self);
       } else if kind.is_const() {
         self.thrown_builtin_error("Cannot assign to const variable");
-        new_val.consume(self);
+        new_val.unknown_mutation(self);
       } else {
         let variable_ref = variable.borrow();
         let target_cf_scope = self.find_first_different_cf_scope(variable_ref.cf_scope);
@@ -194,7 +194,7 @@ impl<'a> Analyzer<'a> {
       let variable_ref = variable.borrow();
       if !variable_ref.exhausted {
         if let Some(value) = &variable_ref.value {
-          value.consume(self);
+          value.unknown_mutation(self);
         }
         drop(variable_ref);
 
@@ -224,7 +224,7 @@ impl<'a> Analyzer<'a> {
   pub fn consume_arguments_on_scope(&mut self, id: ScopeId) -> bool {
     if let Some((args_entity, args_symbols)) = self.scope_context.variable.get(id).arguments.clone()
     {
-      args_entity.consume(self);
+      args_entity.unknown_mutation(self);
       let mut arguments_consumed = true;
       for symbol in args_symbols {
         if !self.consume_on_scope(id, symbol) {
@@ -285,7 +285,7 @@ impl<'a> Analyzer<'a> {
         return;
       }
     }
-    new_val.consume(self);
+    new_val.unknown_mutation(self);
     self.mark_unresolved_reference(symbol);
   }
 

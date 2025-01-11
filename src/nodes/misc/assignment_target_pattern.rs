@@ -29,7 +29,7 @@ impl<'a> Analyzer<'a> {
           } else {
             self.may_throw();
           }
-          value.consume(self);
+          value.unknown_mutation(self);
         }
 
         let mut enumerated = vec![];
