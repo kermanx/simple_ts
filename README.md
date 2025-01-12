@@ -1,3 +1,3 @@
-# ecma_analyzer
+# simple_ts
 
 WIP.

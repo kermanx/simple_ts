@@ -1,5 +1,5 @@
 [package]
-name = "ecma_analyzer"
+name = "simple_ts"
 version = "0.1.0"
 edition = "2021"
 

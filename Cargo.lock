@@ -81,21 +81,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "417bef24afe1460300965a25ff4a24b8b45ad011948302ec221e8a0a81eb2c79"
 
 [[package]]
-name = "ecma_analyzer"
-version = "0.1.0"
-dependencies = [
- "bitflags",
- "flame",
- "flamescope",
- "line-index",
- "oxc",
- "oxc_ecmascript",
- "oxc_index",
- "oxc_syntax",
- "rustc-hash",
-]
-
-[[package]]
 name = "either"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -757,6 +742,21 @@ name = "simdutf8"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3a9fe34e3e7a50316060351f37187a3f546bce95496156754b601a5fa71b76e"
+
+[[package]]
+name = "simple_ts"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+ "flame",
+ "flamescope",
+ "line-index",
+ "oxc",
+ "oxc_ecmascript",
+ "oxc_index",
+ "oxc_syntax",
+ "rustc-hash",
+]
 
 [[package]]
 name = "siphasher"

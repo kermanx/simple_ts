@@ -1,8 +1,8 @@
 
 - ✅ = Implemented in Oxc
-- ➕ = Can be implemented without ecma_analyzer, but not implemented yet
-- ✨ = Will be implementable with ecma_analyzer
-- ❌ = Can't be implemented with ecma_analyzer
+- ➕ = Can be implemented without simple_ts, but not implemented yet
+- ✨ = Will be implementable with simple_ts
+- ❌ = Can't be implemented with simple_ts
 
 ---
 
