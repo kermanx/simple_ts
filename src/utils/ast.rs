@@ -278,6 +278,7 @@ pub enum DeclarationKind {
   Caught,
   FunctionParameter,
   ArrowFunctionParameter,
+  GenericParameter,
 }
 
 impl DeclarationKind {

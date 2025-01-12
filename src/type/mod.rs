@@ -1,15 +1,15 @@
-mod callable;
-mod facts;
-mod generic;
-mod namespace;
-mod record;
+pub mod callable;
+pub mod facts;
+pub mod generic;
+pub mod namespace;
+pub mod record;
 
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use callable::Callable;
 use facts::Facts;
 use generic::Generic;
 use namespace::Namespace;
-use oxc::span::Atom;
+use oxc::{ast::ast::TSType, semantic::SymbolId, span::Atom};
 use record::Record;
 
 #[derive(Debug, Clone, Copy)]
@@ -30,7 +30,7 @@ pub enum Type<'a> {
 
   /* Literals */
   StringLiteral(&'a Atom<'a>),
-  NumberLiteral(F64WithEq),
+  NumericLiteral(F64WithEq),
   BigIntLiteral(&'a Atom<'a>),
   BooleanLiteral(bool),
 
@@ -38,7 +38,8 @@ pub enum Type<'a> {
 
   /* Object like */
   Record(&'a Record<'a>),
-  Callable(&'a Callable<'a>),
+  Callable(&'a Callable<'a, false>),
+  Constructor(&'a Callable<'a, true>),
   Namespace(&'a Namespace<'a>),
 
   /* Compound */
@@ -48,11 +49,13 @@ pub enum Type<'a> {
   /* Generic */
   Generic(&'a Generic<'a>),
   Intrinsic(fn(Type<'a>) -> Type<'a>),
+  /// Can only appear in inferred types
+  Unresolved(&'a TSType<'a>),
 }
 
-impl<'a> Type<'a> {
-  pub fn get_facts(self) -> Facts {
-    match self {
+impl<'a> Analyzer<'a> {
+  pub fn get_facts(&mut self, ty: Type<'a>) -> Facts {
+    match ty {
       Type::Any => Facts::NONE,
       Type::BigInt => Facts::T_EQ_BIGINT | Facts::T_NE_ALL & !Facts::T_EQ_BIGINT,
       Type::Boolean => Facts::T_EQ_BOOLEAN | Facts::T_NE_ALL & !Facts::T_EQ_BOOLEAN,
@@ -77,38 +80,47 @@ impl<'a> Type<'a> {
       Type::Unknown => Facts::NONE,
       Type::Void => Facts::FALSY | Facts::T_NE_ALL,
 
-      Type::StringLiteral(s) => Type::String.get_facts() | Facts::truthy(s.len() > 0),
-      Type::NumberLiteral(n) => Type::Number.get_facts() | Facts::truthy(n.0 != 0.0),
-      Type::BigIntLiteral(_) => Type::BigInt.get_facts(),
-      Type::BooleanLiteral(b) => Type::Boolean.get_facts() | Facts::truthy(b),
+      Type::StringLiteral(s) => self.get_facts(Type::String) | Facts::truthy(s.len() > 0),
+      Type::NumericLiteral(n) => self.get_facts(Type::Number) | Facts::truthy(n.0 != 0.0),
+      Type::BigIntLiteral(_) => self.get_facts(Type::BigInt),
+      Type::BooleanLiteral(b) => self.get_facts(Type::Boolean) | Facts::truthy(b),
 
-      Type::Record(r) => Type::Object.get_facts(),
-      Type::Callable(c) => {
+      Type::Record(_) => self.get_facts(Type::Object),
+      Type::Callable(_) | Type::Constructor(_) => {
         Facts::T_EQ_FUNCTION | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_FUNCTION
       }
-      Type::Namespace(n) => Type::Object.get_facts(),
+      Type::Namespace(_) => self.get_facts(Type::Object),
 
       Type::Union(vals) => {
         let mut facts = Facts::all();
         for val in vals {
-          facts &= val.get_facts();
+          facts &= self.get_facts(*val);
         }
         facts
       }
       Type::Intersection(vals) => {
         let mut facts = Facts::empty();
         for val in vals {
-          facts |= val.get_facts();
+          facts |= self.get_facts(*val);
         }
         facts
       }
 
-      Type::Generic(_) | Type::Intrinsic(_) => unreachable!(),
+      Type::Generic(_) | Type::Intrinsic(_) => {
+        unreachable!("Cannot get facts of {ty:?}")
+      }
+      Type::Unresolved(node) => {
+        if let Some(resolved) = self.resolve_type(node) {
+          self.get_facts(resolved)
+        } else {
+          Facts::NONE
+        }
+      }
     }
   }
 
-  pub fn test_truthy(self) -> Option<bool> {
-    let facts = self.get_facts();
+  pub fn test_truthy(&mut self, ty: Type<'a>) -> Option<bool> {
+    let facts = self.get_facts(ty);
     match (facts.contains(Facts::TRUTHY), facts.contains(Facts::FALSY)) {
       (true, false) => Some(true),
       (false, true) => Some(false),
@@ -117,8 +129,8 @@ impl<'a> Type<'a> {
     }
   }
 
-  pub fn test_nullish(self) -> Option<bool> {
-    let facts = self.get_facts();
+  pub fn test_nullish(&mut self, ty: Type<'a>) -> Option<bool> {
+    let facts = self.get_facts(ty);
     match (facts.contains(Facts::IS_NULLISH), facts.contains(Facts::NOT_NULLISH)) {
       (true, false) => Some(true),
       (false, true) => Some(false),
@@ -127,8 +139,8 @@ impl<'a> Type<'a> {
     }
   }
 
-  pub fn test_is_undefined(self) -> Option<bool> {
-    let facts = self.get_facts();
+  pub fn test_is_undefined(&mut self, ty: Type<'a>) -> Option<bool> {
+    let facts = self.get_facts(ty);
     match (facts.contains(Facts::EQ_UNDEFINED), facts.contains(Facts::NE_UNDEFINED)) {
       (true, false) => Some(true),
       (false, true) => Some(false),
@@ -137,15 +149,15 @@ impl<'a> Type<'a> {
     }
   }
 
-  pub fn get_property(self, analyzer: &mut Analyzer<'a>, key: Type<'a>) -> Type<'a> {
+  pub fn get_property(&mut self, target: Type<'a>, key: Type<'a>) -> Type<'a> {
     todo!()
   }
 
-  pub fn set_property(self, analyzer: &mut Analyzer<'a>, key: Type<'a>, value: Type<'a>) {
+  pub fn set_property(&mut self, target: Type<'a>, key: Type<'a>, value: Type<'a>) {
     todo!()
   }
 
-  pub fn delete_property(self, analyzer: &mut Analyzer<'a>, key: Type<'a>) {
+  pub fn delete_property(&mut self, target: Type<'a>, key: Type<'a>) {
     todo!()
   }
 
@@ -156,32 +168,36 @@ impl<'a> Type<'a> {
     todo!()
   }
 
-  pub fn iterate_result_union(self, analyzer: &mut Analyzer<'a>) -> Option<Type<'a>> {
+  pub fn iterate_result_union(&mut self, target: Type<'a>) -> Option<Type<'a>> {
     todo!()
   }
 
   pub fn destruct_as_array(
-    self,
-    analyzer: &mut Analyzer<'a>,
+    &mut self,
+    target: Type<'a>,
     len: usize,
     need_rest: bool,
   ) -> (Vec<Type<'a>>, Option<Type<'a>>) {
     todo!()
   }
 
-  pub fn get_to_numeric(self, analyzer: &mut Analyzer<'a>) -> Type<'a> {
+  pub fn get_to_numeric(&mut self, target: Type<'a>) -> Type<'a> {
     todo!()
   }
 
-  pub fn get_to_string(self, analyzer: &mut Analyzer<'a>) -> Type<'a> {
+  pub fn get_to_string(&mut self, target: Type<'a>) -> Type<'a> {
     todo!()
   }
 
-  pub fn get_to_boolean(self, analyzer: &mut Analyzer<'a>) -> Type<'a> {
-    self.test_nullish().map_or(Type::Boolean, Type::BooleanLiteral)
+  pub fn get_to_boolean(&mut self, target: Type<'a>) -> Type<'a> {
+    self.test_nullish(target).map_or(Type::Boolean, Type::BooleanLiteral)
   }
 
-  pub fn get_to_property_key(self, analyzer: &mut Analyzer<'a>) -> Type<'a> {
+  pub fn get_to_property_key(&mut self, target: Type<'a>) -> Type<'a> {
+    todo!()
+  }
+
+  pub fn get_to_awaited(&mut self, target: Type<'a>) -> Type<'a> {
     todo!()
   }
 }

@@ -1,14 +1,12 @@
 use crate::{
   analyzer::Analyzer,
-  r#type::{EntityTrait, Type},
+  r#type::{record::Record, Type},
 };
 use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKey};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_object_expression(&mut self, node: &'a ObjectExpression) -> Type<'a> {
-    let object = self.new_empty_object(&self.builtins.prototypes.object);
-
-    let mut has_proto = false;
+    let object = self.new_empty_record();
 
     for property in &node.properties {
       match property {
@@ -18,9 +16,9 @@ impl<'a> Analyzer<'a> {
           let value = value;
 
           if matches!(&node.key, PropertyKey::StaticIdentifier(node) if node.name == "__proto__") {
-            has_proto = true;
+            object.init_proto(value);
           } else {
-            object.init_property(self, node.kind, key, value, true);
+            object.init_property(node.kind, key, value, true);
           }
         }
         ObjectPropertyKind::SpreadProperty(node) => {
@@ -28,11 +26,6 @@ impl<'a> Analyzer<'a> {
           object.init_spread(self, argument);
         }
       }
-    }
-
-    if has_proto {
-      // Deoptimize the object
-      object.unknown_mutation(self);
     }
 
     object

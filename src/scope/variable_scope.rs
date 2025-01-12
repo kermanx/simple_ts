@@ -10,7 +10,6 @@ pub struct Variable<'a> {
   pub cf_scope: ScopeId,
   pub exhausted: bool,
   pub value: Option<Type<'a>>,
-  pub decl_node: AstKind2<'a>,
 }
 
 #[derive(Default)]
@@ -44,7 +43,6 @@ impl<'a> Analyzer<'a> {
     id: ScopeId,
     kind: DeclarationKind,
     symbol: SymbolId,
-    decl_node: AstKind2<'a>,
     fn_value: Option<Type<'a>>,
   ) {
     if let Some(variable) = self.scope_context.variable.get(id).variables.get(&symbol) {
@@ -64,8 +62,6 @@ impl<'a> Analyzer<'a> {
         // function f(x) { var x }
         let mut variable = variable.borrow_mut();
         variable.kind = kind;
-        // FIXME: Not sure if this is correct - how to handle the first declaration?
-        variable.decl_node = decl_node;
         drop(variable);
         if let Some(new_val) = fn_value {
           self.write_on_scope(id, symbol, new_val);
@@ -84,7 +80,6 @@ impl<'a> Analyzer<'a> {
         },
         exhausted: false,
         value: fn_value,
-        decl_node,
       }));
       self.scope_context.variable.get_mut(id).variables.insert(symbol, variable);
       if has_fn_value {
@@ -114,26 +109,14 @@ impl<'a> Analyzer<'a> {
   /// None: not in this scope
   /// Some(None): in this scope, but TDZ
   /// Some(Some(val)): in this scope, and val is the value
-  fn read_on_scope(&mut self, id: ScopeId, symbol: SymbolId) -> Option<Option<Type<'a>>> {
+  fn read_on_scope(&self, id: ScopeId, symbol: SymbolId) -> Option<Option<Type<'a>>> {
     self.scope_context.variable.get(id).variables.get(&symbol).copied().map(|variable| {
       let variable_ref = variable.borrow();
       let value =
-        variable_ref.value.or_else(|| variable_ref.kind.is_var().then(|| self.factory.undefined));
-
-      let value = if variable_ref.exhausted {
-        value
-      } else {
-        let target_cf_scope = self.find_first_different_cf_scope(variable_ref.cf_scope);
-        drop(variable_ref);
-        self.mark_exhaustive_read((id, symbol), target_cf_scope);
-        value
-      };
+        variable_ref.value.or_else(|| variable_ref.kind.is_var().then_some(Type::Undefined));
 
       if value.is_none() {
-        // TDZ
-        let variable_ref = variable.borrow();
-        let target_cf_scope = self.find_first_different_cf_scope(variable_ref.cf_scope);
-        self.handle_tdz(target_cf_scope);
+        todo!("TDZ");
       }
 
       value
@@ -215,7 +198,6 @@ impl<'a> Analyzer<'a> {
       kind: DeclarationKind::UntrackedVar,
       cf_scope: self.scope_context.cf.stack[cf_scope_depth],
       value: Some(self.factory.unknown),
-      decl_node: AstKind2::Environment,
     }));
     let old = self.variable_scope_mut().variables.insert(symbol, variable);
     assert!(old.is_none());
@@ -243,7 +225,6 @@ impl<'a> Analyzer<'a> {
   pub fn declare_symbol(
     &mut self,
     symbol: SymbolId,
-    decl_node: AstKind2<'a>,
     exporting: bool,
     kind: DeclarationKind,
     fn_value: Option<Type<'a>>,
@@ -258,7 +239,7 @@ impl<'a> Analyzer<'a> {
     }
 
     let variable_scope = self.scope_context.variable.current_id();
-    self.declare_on_scope(variable_scope, kind, symbol, decl_node, fn_value);
+    self.declare_on_scope(variable_scope, kind, symbol, fn_value);
   }
 
   pub fn init_symbol(&mut self, symbol: SymbolId, value: Option<Type<'a>>) {
@@ -267,15 +248,14 @@ impl<'a> Analyzer<'a> {
   }
 
   /// `None` for TDZ
-  pub fn read_symbol(&mut self, symbol: SymbolId) -> Option<Type<'a>> {
-    for depth in (0..self.scope_context.variable.stack.len()).rev() {
-      let id = self.scope_context.variable.stack[depth];
+  pub fn read_symbol(&self, symbol: SymbolId) -> Option<Type<'a>> {
+    for id in self.scope_context.variable.stack.iter().rev() {
       if let Some(value) = self.read_on_scope(id, symbol) {
         return value;
       }
     }
     self.mark_unresolved_reference(symbol);
-    Some(self.factory.unknown)
+    Some(Type::Any)
   }
 
   pub fn write_symbol(&mut self, symbol: SymbolId, new_val: Type<'a>) {

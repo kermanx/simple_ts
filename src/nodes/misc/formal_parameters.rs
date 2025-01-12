@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
     kind: DeclarationKind,
   ) {
     let (elements_init, rest_init) =
-      args.destruct_as_array(self, node.items.len(), node.rest.is_some());
+      self.destruct_as_array(args, node.items.len(), node.rest.is_some());
 
     for param in &node.items {
       self.declare_binding_pattern(&param.pattern, false, kind);

@@ -5,18 +5,16 @@ mod known_modules;
 mod prototypes;
 mod utils;
 
-use crate::{
-  config::Config,
-  r#type::{EntityFactory, Type},
-};
+use crate::{config::Config, r#type::Type};
 use known_modules::KnownModule;
+use oxc::allocator::Allocator;
 use prototypes::BuiltinPrototypes;
 pub use prototypes::Prototype;
 use rustc_hash::FxHashMap;
 
 pub struct Builtins<'a> {
   pub config: &'a Config,
-  pub factory: &'a EntityFactory<'a>,
+  pub allocator: &'a Allocator,
 
   pub prototypes: &'a BuiltinPrototypes<'a>,
   pub globals: FxHashMap<&'static str, Type<'a>>,
@@ -25,11 +23,11 @@ pub struct Builtins<'a> {
 }
 
 impl<'a> Builtins<'a> {
-  pub fn new(config: &'a Config, factory: &'a EntityFactory<'a>) -> Self {
+  pub fn new(config: &'a Config, allocator: &'a Allocator) -> Self {
     let prototypes = Self::create_builtin_prototypes(factory);
     let mut builtins = Self {
       config,
-      factory,
+      allocator,
 
       prototypes,
       import_meta: Self::create_import_meta(factory, prototypes),

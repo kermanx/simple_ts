@@ -21,10 +21,7 @@ impl<'a> Analyzer<'a> {
         }
         Some(init)
       }
-      None => node.init.as_ref().map(|init| {
-        let val = self.exec_expression(init);
-        val
-      }),
+      None => node.init.as_ref().map(|init| self.exec_expression(init)),
     };
 
     self.init_binding_pattern(&node.id, init);

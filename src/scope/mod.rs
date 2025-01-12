@@ -8,7 +8,7 @@ pub mod variable_scope;
 
 use crate::{
   analyzer::Analyzer,
-  r#type::{EntityFactory, Type},
+  r#type::{ Type},
   utils::{CalleeInfo, CalleeNode},
 };
 use call_scope::CallScope;

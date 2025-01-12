@@ -2,7 +2,7 @@ use crate::{
   ast::AstKind2,
   builtins::Builtins,
   config::Config,
-  r#type::{EntityFactory, EntityOpHost, Type},
+  r#type::{ EntityOpHost, Type},
   scope::{exhaustive::ExhaustiveCallback, ScopeContext},
 };
 use line_index::LineIndex;
@@ -18,7 +18,6 @@ use std::{collections::BTreeSet, marker::PhantomData, mem, rc::Rc};
 pub struct Analyzer<'a> {
   pub allocator: &'a Allocator,
   pub config: &'a Config,
-  pub factory: &'a EntityFactory<'a>,
   pub line_index: LineIndex,
   pub semantic: Semantic<'a>,
   pub span_stack: Vec<Span>,
@@ -36,12 +35,10 @@ pub struct Analyzer<'a> {
 impl<'a> Analyzer<'a> {
   pub fn new(allocator: &'a Allocator, config: Config, semantic: Semantic<'a>) -> Self {
     let config = allocator.alloc(config);
-    let factory = allocator.alloc(EntityFactory::new(allocator, config));
 
     Analyzer {
       allocator,
       config,
-      factory,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
       span_stack: vec![],

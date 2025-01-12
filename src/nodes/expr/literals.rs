@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn exec_numeric_literal(&mut self, node: &'a NumericLiteral) -> Type<'a> {
-    Type::NumberLiteral(node.value.into())
+    Type::NumericLiteral(node.value.into())
   }
 
   pub fn exc_big_int_literal(&mut self, node: &'a BigIntLiteral) -> Type<'a> {

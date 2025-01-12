@@ -9,6 +9,6 @@ impl<'a> Analyzer<'a> {
     }
 
     let value = self.exec_expression(&node.argument);
-    value.r#await(self)
+    value.get_to_awaited(self)
   }
 }

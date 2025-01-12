@@ -48,12 +48,10 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, init: Option<Type<'a>>) {
-    let init = if let Some(annotation) = &node.type_annotation {
-      Some(self.exec_ts_type_annotation(annotation))
-    } else {
-      init
-    };
+  pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, mut init: Option<Type<'a>>) {
+    if let Some(annotation) = &node.type_annotation {
+      init = Some(self.resolve_type_annotation(annotation));
+    }
     match &node.kind {
       BindingPatternKind::BindingIdentifier(node) => {
         self.init_binding_identifier(node, init);
@@ -61,17 +59,15 @@ impl<'a> Analyzer<'a> {
       BindingPatternKind::ObjectPattern(node) => {
         let init = init.unwrap_or_else(|| {
           self.thrown_builtin_error("Missing initializer in destructuring declaration");
-          self.factory.unknown
+          Type::Any
         });
-
-        let is_nullish = init.test_nullish();
+        let is_nullish = self.test_nullish(init);
         if is_nullish != Some(false) {
           if is_nullish == Some(true) {
             self.thrown_builtin_error("Cannot destructure nullish value");
           } else {
             self.may_throw();
           }
-          init.unknown_mutation(self);
           let data = self.load_data::<ObjectPatternData>(AstKind2::ObjectPattern(node.as_ref()));
           data.need_destruct = true;
         }
@@ -81,7 +77,7 @@ impl<'a> Analyzer<'a> {
           let key = self.exec_property_key(&property.key);
 
           enumerated.push(key);
-          let init = init.get_property(self, key);
+          let init = self.get_property(init, key);
           self.init_binding_pattern(&property.value, Some(init));
         }
         if let Some(rest) = &node.rest {
@@ -92,11 +88,11 @@ impl<'a> Analyzer<'a> {
       BindingPatternKind::ArrayPattern(node) => {
         let init = init.unwrap_or_else(|| {
           self.thrown_builtin_error("Missing initializer in destructuring declaration");
-          self.factory.unknown
+          Type::Any
         });
 
         let (element_values, rest_value) =
-          init.destruct_as_array(self, node.elements.len(), node.rest.is_some());
+          self.destruct_as_array(init, node.elements.len(), node.rest.is_some());
 
         for (element, value) in node.elements.iter().zip(element_values) {
           if let Some(element) = element {
@@ -109,10 +105,6 @@ impl<'a> Analyzer<'a> {
       }
       BindingPatternKind::AssignmentPattern(node) => {
         let (need_right, binding_val) = self.exec_with_default(&node.right, init.unwrap());
-
-        let data =
-          self.load_data::<AssignmentPatternData>(AstKind2::AssignmentPattern(node.as_ref()));
-        data.need_right |= need_right;
 
         self.init_binding_pattern(&node.left, Some(binding_val));
       }
