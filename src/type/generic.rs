@@ -1,5 +1,3 @@
-use std::result;
-
 use super::Type;
 use crate::{analyzer::Analyzer, ast::DeclarationKind};
 use oxc::{ast::ast::TSType, semantic::SymbolId};

@@ -11,17 +11,17 @@ impl<'a> Analyzer<'a> {
       let (left, cache) = self.exec_assignment_target_read(&node.left);
 
       let (maybe_left, maybe_right) = match &node.operator {
-        AssignmentOperator::LogicalAnd => match left.test_truthy() {
+        AssignmentOperator::LogicalAnd => match self.test_truthy(left) {
           Some(true) => (false, true),
           Some(false) => (true, false),
           None => (true, true),
         },
-        AssignmentOperator::LogicalOr => match left.test_truthy() {
+        AssignmentOperator::LogicalOr => match self.test_truthy(left) {
           Some(true) => (true, false),
           Some(false) => (false, true),
           None => (true, true),
         },
-        AssignmentOperator::LogicalNullish => match left.test_nullish() {
+        AssignmentOperator::LogicalNullish => match self.test_nullish(left) {
           Some(true) => (false, true),
           Some(false) => (true, false),
           None => (true, true),

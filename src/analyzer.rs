@@ -1,9 +1,5 @@
 use crate::{
-  ast::AstKind2,
-  builtins::Builtins,
-  config::Config,
-  r#type::{ EntityOpHost, Type},
-  scope::{exhaustive::ExhaustiveCallback, ScopeContext},
+  ast::AstKind2, builtins::Builtins, config::Config, scope::{variable::VariableScope, tree::ScopeTree}, r#type::Type
 };
 use line_index::LineIndex;
 use oxc::{
@@ -12,7 +8,7 @@ use oxc::{
   semantic::{Semantic, SymbolId},
   span::{GetSpan, Span},
 };
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::FxHashMap;
 use std::{collections::BTreeSet, marker::PhantomData, mem, rc::Rc};
 
 pub struct Analyzer<'a> {
@@ -20,16 +16,14 @@ pub struct Analyzer<'a> {
   pub config: &'a Config,
   pub line_index: LineIndex,
   pub semantic: Semantic<'a>,
-  pub span_stack: Vec<Span>,
   pub data: FxHashMap<(usize, usize), Box<PhantomData<&'a ()>>>,
-  pub named_exports: Vec<SymbolId>,
-  pub default_export: Option<Type<'a>>,
-  pub scope_context: ScopeContext<'a>,
-  pub pending_labels: Vec<&'a LabeledStatement<'a>>,
-  pub pending_deps: FxHashSet<ExhaustiveCallback<'a>>,
   pub builtins: Builtins<'a>,
-  pub entity_op: EntityOpHost<'a>,
   pub diagnostics: BTreeSet<String>,
+
+  pub span_stack: Vec<Span>,
+  pub variable_scopes: ScopeTree<VariableScope<'a>>,
+  pub variables: FxHashMap<SymbolId, Type<'a>>,
+  pub types: FxHashMap<SymbolId, Type<'a>>,
 }
 
 impl<'a> Analyzer<'a> {
@@ -37,20 +31,19 @@ impl<'a> Analyzer<'a> {
     let config = allocator.alloc(config);
 
     Analyzer {
-      allocator,
       config,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
       span_stack: vec![],
       data: Default::default(),
-      named_exports: Vec::new(),
-      default_export: None,
-      scope_context: ScopeContext::new(factory),
-      pending_labels: Vec::new(),
-      pending_deps: Default::default(),
-      builtins: Builtins::new(config, factory),
-      entity_op: EntityOpHost::new(allocator),
+      builtins: Builtins::new(config, allocator),
       diagnostics: Default::default(),
+
+      variable_scopes: ScopeTree::new_1(),
+      variables: Default::default(),
+      types: Default::default(),
+
+      allocator,
     }
   }
 
@@ -59,7 +52,7 @@ impl<'a> Analyzer<'a> {
 
     self.consume_exports();
 
-    self.scope_context.assert_final_state();
+    assert_eq!(self.variable_scopes.stack.len(), 1);
 
     // println!("debug: {:?}", self.debug);
 

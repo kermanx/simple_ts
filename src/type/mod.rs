@@ -50,7 +50,8 @@ pub enum Type<'a> {
   Generic(&'a Generic<'a>),
   Intrinsic(fn(Type<'a>) -> Type<'a>),
   /// Can only appear in inferred types
-  Unresolved(&'a TSType<'a>),
+  UnresolvedType(&'a TSType<'a>),
+  UnresolvedSymbol(SymbolId),
 }
 
 impl<'a> Analyzer<'a> {
@@ -109,13 +110,20 @@ impl<'a> Analyzer<'a> {
       Type::Generic(_) | Type::Intrinsic(_) => {
         unreachable!("Cannot get facts of {ty:?}")
       }
-      Type::Unresolved(node) => {
+      Type::UnresolvedType(node) => {
         if let Some(resolved) = self.resolve_type(node) {
           self.get_facts(resolved)
         } else {
           Facts::NONE
         }
       }
+      Type::UnresolvedSymbol(symbol) => {
+        if let Some(resolved) = self.resolve_symbol(symbol) {
+          self.get_facts(resolved)
+        } else {
+          Facts::NONE
+        }
+      },
     }
   }
 

@@ -24,7 +24,7 @@ pub struct Builtins<'a> {
 
 impl<'a> Builtins<'a> {
   pub fn new(config: &'a Config, allocator: &'a Allocator) -> Self {
-    let prototypes = Self::create_builtin_prototypes(factory);
+    let prototypes = Self::create_builtin_prototypes(allocator);
     let mut builtins = Self {
       config,
       allocator,
