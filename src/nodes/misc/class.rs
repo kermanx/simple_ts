@@ -46,9 +46,7 @@ impl<'a> Analyzer<'a> {
 
     let variable_scope_stack = self.scope_context.variable.stack.clone();
     self.push_call_scope(
-      self.new_callee_info(CalleeNode::ClassStatics(node)),
       variable_scope_stack,
-      false,
       false,
       false,
     );

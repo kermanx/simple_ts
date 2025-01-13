@@ -23,7 +23,7 @@ impl<'a> Analyzer<'a> {
     args: Type<'a>,
     consume: bool,
   ) -> Type<'a> {
-    self.push_call_scope(callee, variable_scopes.as_ref().clone(), node.r#async, false, consume);
+    self.push_call_scope(variable_scopes.as_ref().clone(), node.r#async, false);
 
     self.exec_formal_parameters(&node.params, args, DeclarationKind::ArrowFunctionParameter);
     if node.expression {

@@ -24,8 +24,8 @@ pub struct VariableScope<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn push_variable_scope(&mut self) {
-    self.variable_scopes.push(VariableScope::default());
+  pub fn push_variable_scope(&mut self) -> ScopeId {
+    self.variable_scopes.push(VariableScope::default())
   }
 
   pub fn pop_variable_scope(&mut self) -> ScopeId {
@@ -118,7 +118,7 @@ impl<'a> Analyzer<'a> {
       if !overrides || values.len() != len {
         values.push(self.read_variable(symbol));
       }
-      let value = Type::Union(self.allocator.alloc(values));
+      let value = self.into_union(values);
       self.write_variable(symbol, value);
     }
   }

@@ -3,6 +3,7 @@ pub mod facts;
 pub mod generic;
 pub mod namespace;
 pub mod record;
+pub mod union;
 
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use callable::Callable;
@@ -123,7 +124,7 @@ impl<'a> Analyzer<'a> {
         } else {
           Facts::NONE
         }
-      },
+      }
     }
   }
 

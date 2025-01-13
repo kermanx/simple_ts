@@ -1,15 +1,19 @@
 use crate::{
-  ast::AstKind2, builtins::Builtins, config::Config, scope::{variable::VariableScope, tree::ScopeTree}, r#type::Type
+  ast::AstKind2,
+  builtins::Builtins,
+  config::Config,
+  r#type::Type,
+  scope::{call::CallScope, tree::ScopeTree, variable::VariableScope},
 };
 use line_index::LineIndex;
 use oxc::{
   allocator::Allocator,
-  ast::ast::{LabeledStatement, Program},
+  ast::ast::Program,
   semantic::{Semantic, SymbolId},
   span::{GetSpan, Span},
 };
 use rustc_hash::FxHashMap;
-use std::{collections::BTreeSet, marker::PhantomData, mem, rc::Rc};
+use std::{collections::BTreeSet, marker::PhantomData, mem};
 
 pub struct Analyzer<'a> {
   pub allocator: &'a Allocator,
@@ -22,6 +26,8 @@ pub struct Analyzer<'a> {
 
   pub span_stack: Vec<Span>,
   pub variable_scopes: ScopeTree<VariableScope<'a>>,
+  pub call_scopes: Vec<CallScope<'a>>,
+
   pub variables: FxHashMap<SymbolId, Type<'a>>,
   pub types: FxHashMap<SymbolId, Type<'a>>,
 }
@@ -30,16 +36,21 @@ impl<'a> Analyzer<'a> {
   pub fn new(allocator: &'a Allocator, config: Config, semantic: Semantic<'a>) -> Self {
     let config = allocator.alloc(config);
 
+    let (variable_scopes, root_variable_scope) = ScopeTree::new_with_root();
+    let root_call_scope = CallScope::new(vec![], root_variable_scope, true, false);
+
     Analyzer {
       config,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
-      span_stack: vec![],
       data: Default::default(),
       builtins: Builtins::new(config, allocator),
       diagnostics: Default::default(),
 
-      variable_scopes: ScopeTree::new_1(),
+      span_stack: Vec::new(),
+      variable_scopes,
+      call_scopes: Vec::from([root_call_scope]),
+
       variables: Default::default(),
       types: Default::default(),
 
@@ -50,24 +61,12 @@ impl<'a> Analyzer<'a> {
   pub fn exec_program(&mut self, node: &'a Program<'a>) {
     self.exec_statement_vec(&node.body);
 
-    self.consume_exports();
-
     assert_eq!(self.variable_scopes.stack.len(), 1);
 
     // println!("debug: {:?}", self.debug);
 
     #[cfg(feature = "flame")]
     flamescope::dump(&mut std::fs::File::create("flamescope.json").unwrap()).unwrap();
-  }
-
-  pub fn consume_exports(&mut self) {
-    if let Some(entity) = self.default_export.take() {
-      entity.unknown_mutation(self)
-    }
-    for symbol in self.named_exports.clone() {
-      let entity = self.read_symbol(symbol).unwrap();
-      entity.unknown_mutation(self);
-    }
   }
 }
 
@@ -88,15 +87,6 @@ impl<'a> Analyzer<'a> {
 
   pub fn load_data<D: Default + 'a>(&mut self, key: AstKind2<'a>) -> &'a mut D {
     self.get_data_or_insert_with(key, Default::default)
-  }
-
-  #[allow(clippy::rc_buffer)]
-  pub fn take_labels(&mut self) -> Option<Rc<Vec<&'a LabeledStatement<'a>>>> {
-    if self.pending_labels.is_empty() {
-      None
-    } else {
-      Some(Rc::new(mem::take(&mut self.pending_labels)))
-    }
   }
 
   pub fn current_span(&self) -> Span {

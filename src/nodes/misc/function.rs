@@ -41,11 +41,9 @@ impl<'a> Analyzer<'a> {
     let runner: Box<dyn Fn(&mut Analyzer<'a>) -> Type<'a> + 'a> =
       Box::new(move |analyzer: &mut Analyzer<'a>| {
         analyzer.push_call_scope(
-          callee,
           variable_scopes.as_ref().clone(),
           node.r#async,
           node.generator,
-          consume,
         );
 
         let variable_scope = analyzer.variable_scope_mut();

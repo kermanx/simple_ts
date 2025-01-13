@@ -7,7 +7,6 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn exec_labeled_statement(&mut self, node: &'a LabeledStatement<'a>) {
-    self.pending_labels.push(node);
     self.exec_statement(&node.body);
   }
 }

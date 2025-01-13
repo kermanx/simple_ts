@@ -23,11 +23,14 @@ impl<T> ScopeTree<T> {
   pub fn new() -> Self {
     ScopeTree { nodes: IndexVec::new(), stack: vec![] }
   }
-  
-  pub fn new_1() -> Self where T: Default {
+
+  pub fn new_with_root() -> (Self, ScopeId)
+  where
+    T: Default,
+  {
     let mut tree = ScopeTree::new();
-    tree.push(T::default());
-    tree
+    let root = tree.push(T::default());
+    (tree, root)
   }
 
   pub fn current_id(&self) -> ScopeId {
