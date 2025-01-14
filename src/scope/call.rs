@@ -1,9 +1,12 @@
+use super::cf::CfScopeKind;
 use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::semantic::ScopeId;
 
 pub struct CallScope<'a> {
   pub old_variable_scope_stack: Vec<ScopeId>,
   pub body_variable_scope: ScopeId,
+  pub cf_scope_depth: usize,
+
   pub is_async: bool,
   pub is_generator: bool,
 
@@ -17,12 +20,15 @@ impl<'a> CallScope<'a> {
   pub fn new(
     old_variable_scope_stack: Vec<ScopeId>,
     body_variable_scope: ScopeId,
+    cf_scope_depth: usize,
     is_async: bool,
     is_generator: bool,
   ) -> Self {
     CallScope {
       old_variable_scope_stack,
       body_variable_scope,
+      cf_scope_depth,
+
       is_async,
       is_generator,
 
@@ -43,9 +49,11 @@ impl<'a> Analyzer<'a> {
   ) {
     let old_variable_scope_stack = self.variable_scopes.replace_stack(variable_scope_stack);
     let body_variable_scope = self.push_variable_scope();
+    let body_cf_scope_depth = self.push_cf_scope(CfScopeKind::Function);
     self.call_scopes.push(CallScope::new(
       old_variable_scope_stack,
       body_variable_scope,
+      body_cf_scope_depth,
       is_async,
       is_generator,
     ));

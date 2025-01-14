@@ -3,7 +3,12 @@ use crate::{
   builtins::Builtins,
   config::Config,
   r#type::Type,
-  scope::{call::CallScope, tree::ScopeTree, variable::VariableScope},
+  scope::{
+    call::CallScope,
+    cf::{CfScope, CfScopeKind},
+    tree::ScopeTree,
+    variable::VariableScope,
+  },
 };
 use line_index::LineIndex;
 use oxc::{
@@ -25,8 +30,9 @@ pub struct Analyzer<'a> {
   pub diagnostics: BTreeSet<String>,
 
   pub span_stack: Vec<Span>,
-  pub variable_scopes: ScopeTree<VariableScope<'a>>,
   pub call_scopes: Vec<CallScope<'a>>,
+  pub cf_scopes: ScopeTree<CfScope<'a>>,
+  pub variable_scopes: ScopeTree<VariableScope<'a>>,
 
   pub variables: FxHashMap<SymbolId, Type<'a>>,
   pub types: FxHashMap<SymbolId, Type<'a>>,
@@ -36,8 +42,13 @@ impl<'a> Analyzer<'a> {
   pub fn new(allocator: &'a Allocator, config: Config, semantic: Semantic<'a>) -> Self {
     let config = allocator.alloc(config);
 
-    let (variable_scopes, root_variable_scope) = ScopeTree::new_with_root();
-    let root_call_scope = CallScope::new(vec![], root_variable_scope, true, false);
+    let mut cf_scopes = ScopeTree::new();
+    cf_scopes.push(CfScope { kind: CfScopeKind::Module, exited: None });
+
+    let mut variable_scopes = ScopeTree::new();
+    let root_variable_scope = variable_scopes.push(VariableScope::default());
+
+    let root_call_scope = CallScope::new(vec![], root_variable_scope, 0, true, false);
 
     Analyzer {
       config,
@@ -48,8 +59,9 @@ impl<'a> Analyzer<'a> {
       diagnostics: Default::default(),
 
       span_stack: Vec::new(),
-      variable_scopes,
       call_scopes: Vec::from([root_call_scope]),
+      cf_scopes,
+      variable_scopes,
 
       variables: Default::default(),
       types: Default::default(),
