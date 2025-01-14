@@ -14,11 +14,11 @@ impl<'a> Analyzer<'a> {
   pub fn init_variable_declarator(&mut self, node: &'a VariableDeclarator, init: Option<Type<'a>>) {
     let init = match init {
       Some(init) => {
-        if node.init.is_some() {
-          self.thrown_builtin_error(
-            "for-in/for-of loop variable declaration may not have an initializer",
-          );
-        }
+        // if node.init.is_some() {
+        //   self.thrown_builtin_error(
+        //     "for-in/for-of loop variable declaration may not have an initializer",
+        //   );
+        // }
         Some(init)
       }
       None => node.init.as_ref().map(|init| self.exec_expression(init)),

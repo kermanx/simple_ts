@@ -1,5 +1,8 @@
 use super::cf::CfScopeKind;
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{
+  analyzer::Analyzer,
+  r#type::{union::into_union, Type},
+};
 use oxc::semantic::ScopeId;
 
 pub struct CallScope<'a> {
@@ -67,7 +70,11 @@ impl<'a> Analyzer<'a> {
     if call_scope.is_async || call_scope.is_generator {
       todo!()
     } else {
-      self.into_union(call_scope.returned_values)
+      into_union(self.allocator, call_scope.returned_values)
     }
+  }
+
+  pub fn add_returned_value(&mut self, value: Type<'a>) {
+    self.call_scopes.last_mut().unwrap().returned_values.push(value);
   }
 }

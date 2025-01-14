@@ -8,9 +8,6 @@ impl<'a> Analyzer<'a> {
     }
 
     for statement in statements {
-      if self.cf_scope().must_exited() {
-        break;
-      }
       self.init_statement(statement);
     }
   }

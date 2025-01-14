@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind};
+use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
 use oxc::ast::ast::{
   ExportDefaultDeclarationKind, ImportDeclarationSpecifier, ModuleDeclaration, ModuleExportName,
 };
@@ -17,12 +17,16 @@ impl<'a> Analyzer<'a> {
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(_node) => known.default,
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(_node) => known.namespace,
                 ImportDeclarationSpecifier::ImportSpecifier(node) => {
-                  let key = self.factory.string_literal(node.imported.name().as_str());
-                  known.namespace.get_property(self, key)
+                  let key = Type::StringLiteral(match &node.imported {
+                    ModuleExportName::IdentifierName(identifier) => &identifier.name,
+                    ModuleExportName::IdentifierReference(identifier) => &identifier.name,
+                    ModuleExportName::StringLiteral(literal) => &literal.value,
+                  });
+                  self.get_property(known.namespace, key)
                 }
               }
             } else {
-              self.builtins.factory.unknown
+              Type::Unknown
             };
 
             let local = specifier.local();
@@ -39,17 +43,6 @@ impl<'a> Analyzer<'a> {
         }
         if let Some(declaration) = &node.declaration {
           self.declare_declaration(declaration, true);
-        }
-        for specifier in &node.specifiers {
-          match &specifier.local {
-            ModuleExportName::IdentifierReference(node) => {
-              let reference = self.semantic.symbols().get_reference(node.reference_id());
-              if let Some(symbol) = reference.symbol_id() {
-                self.named_exports.push(symbol);
-              }
-            }
-            _ => unreachable!(),
-          }
         }
       }
       ModuleDeclaration::ExportDefaultDeclaration(node) => {
@@ -105,10 +98,6 @@ impl<'a> Analyzer<'a> {
           }
           node => self.exec_expression(node.to_expression()),
         };
-        if self.default_export.is_some() {
-          self.add_diagnostic("Duplicate default export");
-        }
-        self.default_export = Some(value);
       }
       ModuleDeclaration::ExportAllDeclaration(_node) => {
         // Nothing to do

@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
       TSTypeName::IdentifierReference(node) => {
         let reference = self.semantic.symbols().get_reference(node.reference_id());
         if let Some(symbol) = reference.symbol_id() {
-          self.read_symbol(symbol)?
+          *self.types.get(&symbol)?
         } else {
           // Unresolved symbol
           Type::Any
