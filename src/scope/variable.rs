@@ -1,4 +1,7 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{
+  analyzer::Analyzer,
+  r#type::{union::into_union, Type},
+};
 use oxc::semantic::{ScopeId, SymbolId};
 use rustc_hash::FxHashMap;
 
@@ -18,14 +21,17 @@ impl<'a> Variable<'a> {
   }
 }
 
-#[derive(Default)]
 pub struct VariableScope<'a> {
+  pub cf_scope: ScopeId,
   pub variables: FxHashMap<SymbolId, Variable<'a>>,
 }
 
 impl<'a> Analyzer<'a> {
   pub fn push_variable_scope(&mut self) -> ScopeId {
-    self.variable_scopes.push(VariableScope::default())
+    self.variable_scopes.push(VariableScope {
+      cf_scope: self.cf_scopes.current_id(),
+      variables: FxHashMap::default(),
+    })
   }
 
   pub fn pop_variable_scope(&mut self) -> ScopeId {
@@ -92,13 +98,26 @@ impl<'a> Analyzer<'a> {
       // Do nothing
       // CHECKER: Should check type compatibility
     } else {
-      self
-        .variable_scopes
-        .get_current_mut()
-        .variables
-        .entry(symbol)
-        .and_modify(|variable| variable.value = value)
-        .or_insert(Variable::shadow(value));
+      let indeterminate = self.is_indeterminate_to(self.variable_scopes.get_current().cf_scope);
+
+      if indeterminate {
+        let allocator = self.allocator;
+        if let Some(variable) = self.variable_scopes.get_current_mut().variables.get_mut(&symbol) {
+          variable.value = into_union(allocator, vec![variable.value, value]);
+        } else {
+          let parent = self.read_variable(symbol);
+          let value = into_union(allocator, vec![parent, value]);
+          self.variable_scopes.get_current_mut().variables.insert(symbol, Variable::shadow(value));
+        }
+      } else {
+        self
+          .variable_scopes
+          .get_current_mut()
+          .variables
+          .entry(symbol)
+          .and_modify(|variable| variable.value = value)
+          .or_insert(Variable::shadow(value));
+      }
     }
   }
 
@@ -118,7 +137,7 @@ impl<'a> Analyzer<'a> {
       if !overrides || values.len() != len {
         values.push(self.read_variable(symbol));
       }
-      let value = self.into_union(values);
+      let value = into_union(self.allocator, values);
       self.write_variable(symbol, value);
     }
   }

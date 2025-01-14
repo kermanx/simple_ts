@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, scope::cf::CfScopeKind};
+use crate::analyzer::Analyzer;
 use oxc::ast::ast::IfStatement;
 
 impl<'a> Analyzer<'a> {
@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
     self.exec_expression(&node.test);
 
     if node.alternate.is_some() {
-      self.push_indeterminate_cf_scope(CfScopeKind::ExitBlocker(None));
+      self.push_exit_blocker_cf_scope();
     }
 
     self.push_variable_scope();
@@ -15,7 +15,7 @@ impl<'a> Analyzer<'a> {
 
     if let Some(alternate) = &node.alternate {
       let blocked_1 = self.pop_cf_scope_and_get_blocked_exit();
-      self.push_indeterminate_cf_scope(CfScopeKind::ExitBlocker(None));
+      self.push_exit_blocker_cf_scope();
 
       self.push_variable_scope();
       self.exec_statement(alternate);

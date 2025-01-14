@@ -1,5 +1,5 @@
 use crate::analyzer::Analyzer;
-use oxc::{ast::ast::LabeledStatement, span::Atom};
+use oxc::{ast::ast::LabeledStatement, semantic::ScopeId, span::Atom};
 
 #[derive(Debug, Clone, Copy)]
 pub enum CfScopeKind<'a> {
@@ -50,8 +50,18 @@ impl<'a> Analyzer<'a> {
     self.cf_scopes.current_depth()
   }
 
-  pub fn push_indeterminate_cf_scope(&mut self, kind: CfScopeKind<'a>) -> usize {
-    self.cf_scopes.push(CfScope { kind, exited: None });
+  pub fn push_indeterminate_cf_scope(&mut self) -> usize {
+    self.cf_scopes.push(CfScope { kind: CfScopeKind::Indeterminate, exited: None });
+    self.cf_scopes.current_depth()
+  }
+
+  pub fn push_exit_blocker_cf_scope(&mut self) -> usize {
+    self.cf_scopes.push(CfScope { kind: CfScopeKind::ExitBlocker(None), exited: None });
+    self.cf_scopes.current_depth()
+  }
+
+  pub fn push_loop_cf_scope(&mut self) -> usize {
+    self.cf_scopes.push(CfScope { kind: CfScopeKind::Loop, exited: None });
     self.cf_scopes.current_depth()
   }
 
@@ -161,5 +171,15 @@ impl<'a> Analyzer<'a> {
     }
     self.exit_to(target_depth.unwrap());
     label_used
+  }
+
+  pub fn is_indeterminate_to(&self, target: ScopeId) -> bool {
+    let first_different = self.cf_scopes.find_lca(target).0 + 1;
+    for depth in first_different..self.cf_scopes.stack.len() {
+      if self.cf_scopes.get_from_depth(depth).exited.is_none() {
+        return true;
+      }
+    }
+    false
   }
 }
