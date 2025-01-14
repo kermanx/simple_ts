@@ -1,26 +1,15 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{
+  analyzer::Analyzer,
+  r#type::{union::into_union, Type},
+};
 use oxc::ast::ast::Expression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_with_default(
-    &mut self,
-    default: &'a Expression<'a>,
-    value: Type<'a>,
-  ) -> (bool, Type<'a>) {
-    let is_undefined = value.test_is_undefined();
+  pub fn exec_with_default(&mut self, default: &'a Expression<'a>, value: Type<'a>) -> Type<'a> {
+    self.push_indeterminate_cf_scope();
+    let default_val = self.exec_expression(default);
+    self.pop_cf_scope();
 
-    let binding_val = match is_undefined {
-      Some(true) => self.exec_expression(default),
-      Some(false) => value,
-      None => {
-        self.push_indeterminate_cf_scope();
-        let default_val = self.exec_expression(default);
-        let value = self.factory.union((default_val, value));
-        self.pop_cf_scope();
-        value
-      }
-    };
-
-    (is_undefined != Some(false), binding_val)
+    into_union(self.allocator, vec![default_val, value])
   }
 }

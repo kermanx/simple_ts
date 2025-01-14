@@ -177,7 +177,7 @@ impl<'a> Analyzer<'a> {
     todo!()
   }
 
-  pub fn iterate_result_union(&mut self, target: Type<'a>) -> Option<Type<'a>> {
+  pub fn iterate_result_union(&mut self, target: Type<'a>) -> Type<'a> {
     todo!()
   }
 

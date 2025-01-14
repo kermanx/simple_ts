@@ -11,16 +11,16 @@ impl<'a> Analyzer<'a> {
 
     self.push_variable_scope();
     self.exec_statement(&node.consequent);
-    let shadow_1 = self.pop_variable_scope();
 
     if let Some(alternate) = &node.alternate {
+      let shadow_1 = self.pop_variable_scope_no_apply_shadow();
       let blocked_1 = self.pop_cf_scope_and_get_blocked_exit();
       self.push_exit_blocker_cf_scope();
 
       self.push_variable_scope();
       self.exec_statement(alternate);
-      let shadow_2 = self.pop_variable_scope();
-      self.apply_shadows([shadow_1, shadow_2], true);
+      let shadow_2 = self.pop_variable_scope_no_apply_shadow();
+      self.apply_complementary_shadows([shadow_1, shadow_2]);
 
       let blocked_2 = self.pop_cf_scope_and_get_blocked_exit();
       match (blocked_1, blocked_2) {
@@ -36,7 +36,7 @@ impl<'a> Analyzer<'a> {
         (None, None) => {}
       }
     } else {
-      self.apply_shadows([shadow_1], false);
+      self.pop_variable_scope();
     }
   }
 }

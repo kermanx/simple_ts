@@ -8,7 +8,6 @@ mod binding_identifier;
 mod binding_pattern;
 mod binding_rest_element;
 mod callee;
-mod catch_clause;
 mod class;
 mod for_statement_left;
 mod formal_parameters;

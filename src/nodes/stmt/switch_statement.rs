@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::AstKind2, scope::CfScopeKind};
+use crate::{analyzer::Analyzer, ast::AstKind2};
 use oxc::ast::ast::SwitchStatement;
 use rustc_hash::FxHashSet;
 

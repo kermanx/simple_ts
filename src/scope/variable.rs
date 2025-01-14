@@ -35,6 +35,12 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn pop_variable_scope(&mut self) -> ScopeId {
+    let id = self.variable_scopes.pop();
+    self.apply_shadows([id], false);
+    id
+  }
+
+  pub fn pop_variable_scope_no_apply_shadow(&mut self) -> ScopeId {
     self.variable_scopes.pop()
   }
 
@@ -121,7 +127,11 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn apply_shadows(&mut self, scopes: impl IntoIterator<Item = ScopeId>, overrides: bool) {
+  pub fn apply_complementary_shadows(&mut self, scopes: impl IntoIterator<Item = ScopeId>) {
+    self.apply_shadows(scopes, true);
+  }
+
+  fn apply_shadows(&mut self, scopes: impl IntoIterator<Item = ScopeId>, complementary: bool) {
     let mut shadows: FxHashMap<SymbolId, Vec<Type<'a>>> = FxHashMap::default();
     let mut len = 0;
     for scope in scopes {
@@ -134,7 +144,7 @@ impl<'a> Analyzer<'a> {
       }
     }
     for (symbol, mut values) in shadows {
-      if !overrides || values.len() != len {
+      if !complementary || values.len() != len {
         values.push(self.read_variable(symbol));
       }
       let value = into_union(self.allocator, values);

@@ -1,31 +1,24 @@
-use crate::{analyzer::Analyzer, scope::CfScopeKind};
+use crate::analyzer::Analyzer;
 use oxc::ast::ast::ForOfStatement;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_for_of_statement(&mut self, node: &'a ForOfStatement<'a>) {
     let right = self.exec_expression(&node.right);
-    let right = if node.r#await {
-      right.unknown_mutation(self);
-      self.factory.unknown
-    } else {
-      right
-    };
+    let iterated = self.iterate_result_union(right);
+
+    // FIXME: node.r#await
+
+    self.push_variable_scope();
 
     self.declare_for_statement_left(&node.left);
 
-    let Some(iterated) = right.iterate_result_union(self) else {
-      return;
-    };
+    self.push_loop_cf_scope();
 
-    self.push_cf_scope(CfScopeKind::BreakableWithoutLabel, labels.clone(), Some(false));
-    self.exec_loop(move |analyzer| {
-      analyzer.declare_for_statement_left(&node.left);
-      analyzer.init_for_statement_left(&node.left, iterated);
+    self.init_for_statement_left(&node.left, iterated);
+    self.exec_statement(&node.body);
 
-      analyzer.push_cf_scope(CfScopeKind::Continuable, labels.clone(), None);
-      analyzer.exec_statement(&node.body);
-      analyzer.pop_cf_scope();
-    });
     self.pop_cf_scope();
+
+    self.pop_variable_scope();
   }
 }
