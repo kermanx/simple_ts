@@ -3,7 +3,6 @@ use oxc::ast::ast::TryStatement;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_try_statement(&mut self, node: &'a TryStatement<'a>) {
-    let labels = self.take_labels();
     self.push_cf_scope(CfScopeKind::Labeled, labels, Some(false));
 
     self.push_try_scope();

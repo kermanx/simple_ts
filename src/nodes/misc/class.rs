@@ -45,11 +45,7 @@ impl<'a> Analyzer<'a> {
     );
 
     let variable_scope_stack = self.scope_context.variable.stack.clone();
-    self.push_call_scope(
-      variable_scope_stack,
-      false,
-      false,
-    );
+    self.push_call_scope(variable_scope_stack, false, false);
 
     let variable_scope = self.variable_scope_mut();
     variable_scope.this = Some(class);

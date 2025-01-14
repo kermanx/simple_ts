@@ -3,8 +3,6 @@ use oxc::ast::ast::ForOfStatement;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_for_of_statement(&mut self, node: &'a ForOfStatement<'a>) {
-    let labels = self.take_labels();
-
     let right = self.exec_expression(&node.right);
     let right = if node.r#await {
       right.unknown_mutation(self);

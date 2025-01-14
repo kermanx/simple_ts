@@ -3,8 +3,6 @@ use oxc::ast::ast::WhileStatement;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_while_statement(&mut self, node: &'a WhileStatement<'a>) {
-    let labels = self.take_labels();
-
     // This may be indeterminate. However, we can't know it until we execute the test.
     // And there should be no same level break/continue statement in test.
     // `a: while(() => { break a }) { }` is illegal.

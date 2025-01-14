@@ -7,28 +7,9 @@ impl<'a> Analyzer<'a> {
     let symbol = reference.symbol_id();
 
     if let Some(symbol) = symbol {
-      // Known symbol
-      if let Some(value) = self.read_symbol(symbol) {
-        value
-      } else {
-        // TDZ
-        self.factory.unknown
-      }
-    } else if node.name == "arguments" {
-      // The `arguments` object
-      let arguments_consumed = self.consume_arguments();
-      self.call_scope_mut().need_consume_arguments = !arguments_consumed;
-      self.factory.unknown
-    } else if let Some(global) = self.builtins.globals.get(node.name.as_str()) {
-      // Known global
-      *global
+      self.read_variable(symbol)
     } else {
-      // Unknown global
-      if self.is_inside_pure() {
-        self.factory.unknown
-      } else {
-        self.factory.unknown
-      }
+      todo!("globals and `arguments`");
     }
   }
 
@@ -42,14 +23,9 @@ impl<'a> Analyzer<'a> {
     let symbol = reference.symbol_id();
 
     if let Some(symbol) = symbol {
-      self.write_symbol(symbol, value);
-    } else if self.builtins.globals.contains_key(node.name.as_str()) {
-      self.add_diagnostic(
-        "Should not write to builtin object, it may cause unexpected tree-shaking behavior",
-      );
+      self.write_variable(symbol, value);
     } else {
-      value.unknown_mutation(self);
-      self.may_throw();
+      todo!("globals and `arguments`");
     }
   }
 }

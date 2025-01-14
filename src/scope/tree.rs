@@ -23,7 +23,7 @@ impl<T> ScopeTree<T> {
   pub fn new() -> Self {
     ScopeTree { nodes: IndexVec::new(), stack: vec![] }
   }
-  
+
   pub fn current_id(&self) -> ScopeId {
     *self.stack.last().unwrap()
   }

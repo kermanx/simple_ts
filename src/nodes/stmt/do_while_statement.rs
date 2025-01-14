@@ -9,7 +9,6 @@ pub struct Data {
 
 impl<'a> Analyzer<'a> {
   pub fn exec_do_while_statement(&mut self, node: &'a DoWhileStatement<'a>) {
-    let labels = self.take_labels();
     self.push_cf_scope(CfScopeKind::BreakableWithoutLabel, labels.clone(), Some(false));
 
     // Execute the first round.

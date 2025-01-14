@@ -2,17 +2,8 @@ use crate::{analyzer::Analyzer, ast::AstKind2, scope::CfScopeKind};
 use oxc::ast::ast::SwitchStatement;
 use rustc_hash::FxHashSet;
 
-#[derive(Debug, Default)]
-pub struct Data {
-  need_test: FxHashSet<usize>,
-  need_consequent: FxHashSet<usize>,
-}
-
 impl<'a> Analyzer<'a> {
   pub fn exec_switch_statement(&mut self, node: &'a SwitchStatement<'a>) {
-    let labels = self.take_labels();
-    let data = self.load_data::<Data>(AstKind2::SwitchStatement(node));
-
     // 1. discriminant
     let discriminant = self.exec_expression(&node.discriminant);
 
