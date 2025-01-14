@@ -24,29 +24,19 @@ fn unwrap_to_member_expression<'a>(
 }
 
 impl<'a> Analyzer<'a> {
-  /// Returns: Ok((scope_count, callee, undefined, this)) or Err(forwarded_undefined) for should not call due to ?. operator
-  pub fn exec_callee(
-    &mut self,
-    node: &'a Expression<'a>,
-  ) -> Result<(usize, Type<'a>, Option<Type<'a>>, Type<'a>), Type<'a>> {
+  pub fn exec_callee(&mut self, node: &'a Expression<'a>) -> (bool, Type<'a>, Type<'a>) {
     if let Some((member_expr, same_chain)) = unwrap_to_member_expression(node) {
       if same_chain {
-        let (scope_count, callee, undefined, (object, _)) =
-          self.exec_member_expression_read_in_chain(member_expr)?;
-        Ok((scope_count, callee, undefined, object))
+        let ((indeterminate, callee), (object, _)) =
+          self.exec_member_expression_read_in_chain(member_expr);
+        (indeterminate, callee, object)
       } else {
-        let result = self.exec_member_expression_read_in_chain(member_expr);
-        Ok(match result {
-          Ok((scope_count, value, undefined, (object, _))) => {
-            self.pop_multiple_cf_scopes(scope_count);
-            (0, self.factory.optional_union(value, undefined), None, object)
-          }
-          Err(value) => (0, value, None, self.factory.unknown),
-        })
+        let (callee, (object, _)) = self.exec_member_expression_read(member_expr);
+        (false, callee, object)
       }
     } else {
-      let (scope_count, callee, undefined) = self.exec_expression_in_chain(node)?;
-      Ok((scope_count, callee, undefined, self.factory.undefined))
+      let (indeterminate, callee) = self.exec_expression_in_chain(node);
+      (indeterminate, callee, Type::Undefined)
     }
   }
 }

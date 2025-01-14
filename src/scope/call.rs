@@ -13,6 +13,7 @@ pub struct CallScope<'a> {
   pub is_async: bool,
   pub is_generator: bool,
 
+  pub this: Type<'a>,
   pub returned_values: Vec<Type<'a>>,
 
   #[cfg(feature = "flame")]
@@ -26,6 +27,7 @@ impl<'a> CallScope<'a> {
     cf_scope_depth: usize,
     is_async: bool,
     is_generator: bool,
+    this: Type<'a>,
   ) -> Self {
     CallScope {
       old_variable_scope_stack,
@@ -35,6 +37,7 @@ impl<'a> CallScope<'a> {
       is_async,
       is_generator,
 
+      this,
       returned_values: Vec::new(),
 
       #[cfg(feature = "flame")]
@@ -49,6 +52,7 @@ impl<'a> Analyzer<'a> {
     variable_scope_stack: Vec<ScopeId>,
     is_async: bool,
     is_generator: bool,
+    this: Type<'a>,
   ) {
     let old_variable_scope_stack = self.variable_scopes.replace_stack(variable_scope_stack);
     let body_variable_scope = self.push_variable_scope();
@@ -59,6 +63,7 @@ impl<'a> Analyzer<'a> {
       body_cf_scope_depth,
       is_async,
       is_generator,
+      this,
     ));
   }
 

@@ -25,7 +25,7 @@ impl<'a> Analyzer<'a> {
     match node {
       match_declaration!(Statement) => {
         let node = node.to_declaration();
-        self.declare_declaration(node, false);
+        self.declare_declaration(node);
       }
       match_module_declaration!(Statement) => {
         let node = node.to_module_declaration();

@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type, scope::CfScopeKind};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::MemberExpression;
 
 impl<'a> Analyzer<'a> {
@@ -7,49 +7,32 @@ impl<'a> Analyzer<'a> {
     &mut self,
     node: &'a MemberExpression<'a>,
   ) -> (Type<'a>, (Type<'a>, Type<'a>)) {
-    let (scope_count, value, undefined, cache) =
-      self.exec_member_expression_read_in_chain(node).unwrap();
+    let ((indeterminate, value), cache) = self.exec_member_expression_read_in_chain(node);
 
-    assert_eq!(scope_count, 0);
-    assert!(undefined.is_none());
+    if indeterminate {
+      self.pop_cf_scope();
+    }
 
     (value, cache)
   }
 
-  /// Returns (scope_count, value, forwarded_undefined, cache)
+  /// Returns ((indeterminate, value), cache)
   pub fn exec_member_expression_read_in_chain(
     &mut self,
     node: &'a MemberExpression<'a>,
-  ) -> Result<(usize, Type<'a>, Option<Type<'a>>, (Type<'a>, Type<'a>)), Type<'a>> {
-    let (mut scope_count, object, mut undefined) = self.exec_expression_in_chain(node.object())?;
+  ) -> ((bool, Type<'a>), (Type<'a>, Type<'a>)) {
+    let (mut indeterminate, object) = self.exec_expression_in_chain(node.object());
 
-    if node.optional() {
-      let maybe_left = match object.test_nullish() {
-        Some(true) => {
-          self.pop_multiple_cf_scopes(scope_count);
-          return Err(self.factory.undefined);
-        }
-        Some(false) => false,
-        None => {
-          undefined = Some(self.factory.undefined);
-          true
-        }
-      };
-
-      self.push_cf_scope(
-        CfScopeKind::LogicalRight,
-        None,
-        if maybe_left { None } else { Some(false) },
-      );
-
-      scope_count += 1;
+    if !indeterminate && node.optional() {
+      self.push_indeterminate_cf_scope();
+      indeterminate = true;
     }
 
     let key = self.exec_key(node);
 
-    let value = object.get_property(self, key);
+    let value = self.get_property(object, key);
 
-    Ok((scope_count, value, undefined, (object, key)))
+    ((indeterminate, value), (object, key))
   }
 
   pub fn exec_member_expression_write(
@@ -66,7 +49,7 @@ impl<'a> Analyzer<'a> {
       (object, key)
     });
 
-    object.set_property(self, key, value);
+    self.set_property(object, key, value);
   }
 
   fn exec_key(&mut self, node: &'a MemberExpression<'a>) -> Type<'a> {

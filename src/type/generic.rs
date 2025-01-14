@@ -1,5 +1,5 @@
 use super::Type;
-use crate::{analyzer::Analyzer, ast::DeclarationKind};
+use crate::analyzer::Analyzer;
 use oxc::{ast::ast::TSType, semantic::SymbolId};
 
 #[derive(Debug, Clone)]

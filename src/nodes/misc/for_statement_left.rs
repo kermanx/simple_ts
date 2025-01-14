@@ -4,7 +4,7 @@ use oxc::ast::ast::ForStatementLeft;
 impl<'a> Analyzer<'a> {
   pub fn declare_for_statement_left(&mut self, node: &'a ForStatementLeft<'a>) {
     if let ForStatementLeft::VariableDeclaration(node) = node {
-      self.declare_variable_declaration(node, false);
+      self.declare_variable_declaration(node);
     }
   }
 

@@ -1,14 +1,9 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::VariableDeclarator;
 
 impl<'a> Analyzer<'a> {
-  pub fn declare_variable_declarator(
-    &mut self,
-    node: &'a VariableDeclarator,
-    exporting: bool,
-    kind: DeclarationKind,
-  ) {
-    self.declare_binding_pattern(&node.id, exporting, kind);
+  pub fn declare_variable_declarator(&mut self, node: &'a VariableDeclarator) {
+    self.declare_binding_pattern(&node.id, node.init.is_some());
   }
 
   pub fn init_variable_declarator(&mut self, node: &'a VariableDeclarator, init: Option<Type<'a>>) {

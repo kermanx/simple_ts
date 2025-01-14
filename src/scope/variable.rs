@@ -47,8 +47,8 @@ impl<'a> Analyzer<'a> {
     self.variable_scopes.pop()
   }
 
-  pub fn declare_variable(&mut self, symbol: SymbolId, resolvable: bool) {
-    if resolvable {
+  pub fn declare_variable(&mut self, symbol: SymbolId, typed: bool) {
+    if typed {
       self.variables.insert(symbol, Type::UnresolvedVariable(symbol));
     } else {
       self

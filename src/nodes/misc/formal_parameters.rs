@@ -1,32 +1,21 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::FormalParameters;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_formal_parameters(
-    &mut self,
-    node: &'a FormalParameters<'a>,
-    args: Type<'a>,
-    kind: DeclarationKind,
-  ) {
+  pub fn exec_formal_parameters(&mut self, node: &'a FormalParameters<'a>, args: Type<'a>) {
     let (elements_init, rest_init) =
       self.destruct_as_array(args, node.items.len(), node.rest.is_some());
 
     for param in &node.items {
-      self.declare_binding_pattern(&param.pattern, false, kind);
+      self.declare_binding_pattern(&param.pattern, false);
     }
 
     for (param, init) in node.items.iter().zip(elements_init) {
       self.init_binding_pattern(&param.pattern, Some(init));
     }
 
-    // In case of `function(x=arguments, y)`, `y` should also be consumed
-    if self.call_scope_mut().need_consume_arguments {
-      let arguments_consumed = self.consume_arguments();
-      assert!(arguments_consumed);
-    }
-
     if let Some(rest) = &node.rest {
-      self.declare_binding_rest_element(rest, false, kind);
+      self.declare_binding_rest_element(rest, false);
       self.init_binding_rest_element(rest, rest_init.unwrap());
     }
   }

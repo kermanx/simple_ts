@@ -1,21 +1,10 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{VariableDeclaration, VariableDeclarationKind};
 
 impl<'a> Analyzer<'a> {
-  pub fn declare_variable_declaration(
-    &mut self,
-    node: &'a VariableDeclaration<'a>,
-    exporting: bool,
-  ) {
-    let kind = match &node.kind {
-      VariableDeclarationKind::Var => DeclarationKind::Var,
-      VariableDeclarationKind::Let => DeclarationKind::Let,
-      VariableDeclarationKind::Const => DeclarationKind::Const,
-      _ => unimplemented!("using statement"),
-    };
-
+  pub fn declare_variable_declaration(&mut self, node: &'a VariableDeclaration<'a>) {
     for declarator in &node.declarations {
-      self.declare_variable_declarator(declarator, exporting, kind);
+      self.declare_variable_declarator(declarator);
     }
   }
 

@@ -18,7 +18,7 @@ impl<'a> Analyzer<'a> {
           if matches!(&node.key, PropertyKey::StaticIdentifier(node) if node.name == "__proto__") {
             object.init_proto(value);
           } else {
-            object.init_property(node.kind, key, value, true);
+            object.init_property(self, node.kind, key, value, true);
           }
         }
         ObjectPropertyKind::SpreadProperty(node) => {

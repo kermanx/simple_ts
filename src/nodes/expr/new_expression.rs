@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
 
     let arguments = self.exec_arguments(&node.arguments);
 
-    let value = callee.construct(self, arguments);
+    let value = self.get_instantiation_return(callee, arguments);
 
     value
   }

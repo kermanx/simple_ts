@@ -1,4 +1,7 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{
+  analyzer::Analyzer,
+  r#type::{union::into_union, Type},
+};
 use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator, LogicalOperator};
 
 impl<'a> Analyzer<'a> {
@@ -10,52 +13,19 @@ impl<'a> Analyzer<'a> {
     } else if node.operator.is_logical() {
       let (left, cache) = self.exec_assignment_target_read(&node.left);
 
-      let (maybe_left, maybe_right) = match &node.operator {
-        AssignmentOperator::LogicalAnd => match self.test_truthy(left) {
-          Some(true) => (false, true),
-          Some(false) => (true, false),
-          None => (true, true),
-        },
-        AssignmentOperator::LogicalOr => match self.test_truthy(left) {
-          Some(true) => (true, false),
-          Some(false) => (false, true),
-          None => (true, true),
-        },
-        AssignmentOperator::LogicalNullish => match self.test_nullish(left) {
-          Some(true) => (false, true),
-          Some(false) => (true, false),
-          None => (true, true),
-        },
-        _ => unreachable!(),
-      };
+      self.push_indeterminate_cf_scope();
+      let right = self.exec_expression(&node.right);
+      let value = into_union(self.allocator, vec![left, right]);
+      self.pop_cf_scope();
 
-      let exec_right = |analyzer: &mut Analyzer<'a>| {
-        analyzer.exec_optional_indeterminately(maybe_left && maybe_right, |analyzer| {
-          analyzer.exec_expression(&node.right)
-        })
-      };
-
-      let value = match (maybe_left, maybe_right) {
-        (false, true) => exec_right(self),
-        (true, false) => left,
-        (true, true) => {
-          let right = exec_right(self);
-          self.factory.logical_result(left, right, to_logical_operator(node.operator))
-        }
-        (false, false) => {
-          unreachable!("Logical assignment expression should have at least one side")
-        }
-      };
-
-      if maybe_right {
-        self.exec_assignment_target_write(&node.left, value, cache);
-      }
+      // Execute write outside of the indeterminate scope, because the value is already an union
+      self.exec_assignment_target_write(&node.left, value, cache);
 
       value
     } else {
       let (lhs, cache) = self.exec_assignment_target_read(&node.left);
       let rhs = self.exec_expression(&node.right);
-      let value = self.entity_op.binary_op(self, to_binary_operator(node.operator), lhs, rhs);
+      let value = self.binary_operation(to_binary_operator(node.operator), lhs, rhs);
       self.exec_assignment_target_write(&node.left, value, cache);
       value
     }

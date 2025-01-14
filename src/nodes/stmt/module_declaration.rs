@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{
   ExportDefaultDeclarationKind, ImportDeclarationSpecifier, ModuleDeclaration, ModuleExportName,
 };
@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
       ModuleDeclaration::ImportDeclaration(node) => {
         if let Some(specifiers) = &node.specifiers {
           let name = node.source.value.as_str();
-          let known = self.builtins.get_known_module(name);
+          let known = self.get_known_module(name);
 
           for specifier in specifiers {
             let value = if let Some(known) = known {
@@ -30,8 +30,7 @@ impl<'a> Analyzer<'a> {
             };
 
             let local = specifier.local();
-            self.declare_binding_identifier(local, false, DeclarationKind::Import);
-
+            self.declare_binding_identifier(local, true);
             self.init_binding_identifier(local, Some(value));
           }
         }
@@ -42,7 +41,7 @@ impl<'a> Analyzer<'a> {
           return;
         }
         if let Some(declaration) = &node.declaration {
-          self.declare_declaration(declaration, true);
+          self.declare_declaration(declaration);
         }
       }
       ModuleDeclaration::ExportDefaultDeclaration(node) => {
@@ -52,16 +51,14 @@ impl<'a> Analyzer<'a> {
               // Patch `export default function(){}`
               return;
             }
-            // Pass `exporting` as `false` because it is actually used as an expression
-            self.declare_function(node, false);
+            self.declare_function(node);
           }
           ExportDefaultDeclarationKind::ClassDeclaration(node) => {
             if node.id.is_none() {
               // Patch `export default class{}`
               return;
             }
-            // Pass `exporting` as `false` because it is actually used as an expression
-            self.declare_class(node, false);
+            self.declare_class(node);
           }
           _expr => {}
         };

@@ -1,9 +1,4 @@
-use crate::{
-  analyzer::Analyzer,
-  ast::DeclarationKind,
-  r#type::{ClassEntity, Type},
-  utils::CalleeNode,
-};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::{Class, ClassElement, MethodDefinitionKind, PropertyKind};
 
 impl<'a> Analyzer<'a> {
@@ -75,8 +70,8 @@ impl<'a> Analyzer<'a> {
     class
   }
 
-  pub fn declare_class(&mut self, node: &'a Class<'a>, exporting: bool) {
-    self.declare_binding_identifier(node.id.as_ref().unwrap(), exporting, DeclarationKind::Class);
+  pub fn declare_class(&mut self, node: &'a Class<'a>) {
+    self.declare_binding_identifier(node.id.as_ref().unwrap(), true);
   }
 
   pub fn init_class(&mut self, node: &'a Class<'a>) -> Type<'a> {
@@ -101,12 +96,6 @@ impl<'a> Analyzer<'a> {
           key.unknown_mutation(self);
         }
       }
-    }
-
-    if let Some(id) = &node.id {
-      self.push_variable_scope();
-      self.declare_binding_identifier(id, false, DeclarationKind::NamedFunctionInBody);
-      self.init_binding_identifier(id, Some(self.factory.unknown));
     }
 
     // Non-static methods
@@ -151,9 +140,5 @@ impl<'a> Analyzer<'a> {
 
       analyzer.factory.undefined
     });
-
-    if node.id.is_some() {
-      self.pop_variable_scope();
-    }
   }
 }

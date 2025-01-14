@@ -3,16 +3,12 @@ use oxc::ast::ast::ImportExpression;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_import_expression(&mut self, node: &'a ImportExpression<'a>) -> Type<'a> {
-    let mut deps = vec![];
-
-    deps.push(self.exec_expression(&node.source).get_to_string(self));
+    let source = self.exec_expression(&node.source);
 
     for argument in &node.arguments {
-      deps.push(self.exec_expression(argument));
+      self.exec_expression(argument);
     }
 
-    // FIXME: if have side effects, then consume all deps
-
-    self.factory.unknown
+    todo!()
   }
 }

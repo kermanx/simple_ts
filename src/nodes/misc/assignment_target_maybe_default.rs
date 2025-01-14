@@ -1,10 +1,5 @@
-use crate::{analyzer::Analyzer, ast::AstKind2, r#type::Type};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::AssignmentTargetMaybeDefault;
-
-#[derive(Debug, Default)]
-pub struct WithDefaultData {
-  need_init: bool,
-}
 
 impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_maybe_default(
@@ -14,10 +9,7 @@ impl<'a> Analyzer<'a> {
   ) {
     match node {
       AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(node) => {
-        let (need_init, value) = self.exec_with_default(&node.init, value);
-
-        let data = self.load_data::<WithDefaultData>(AstKind2::AssignmentTargetWithDefault(node));
-        data.need_init |= need_init;
+        let value = self.exec_with_default(&node.init, value);
 
         self.exec_assignment_target_write(&node.binding, value, None);
       }

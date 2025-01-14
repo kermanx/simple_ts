@@ -1,6 +1,4 @@
 use crate::{
-  ast::AstKind2,
-  builtins::Builtins,
   config::Config,
   r#type::Type,
   scope::{
@@ -25,8 +23,6 @@ pub struct Analyzer<'a> {
   pub config: &'a Config,
   pub line_index: LineIndex,
   pub semantic: Semantic<'a>,
-  pub data: FxHashMap<(usize, usize), Box<PhantomData<&'a ()>>>,
-  pub builtins: Builtins<'a>,
   pub diagnostics: BTreeSet<String>,
 
   pub span_stack: Vec<Span>,
@@ -48,14 +44,13 @@ impl<'a> Analyzer<'a> {
     let mut variable_scopes = ScopeTree::new();
     let root_variable_scope = variable_scopes.push(VariableScope::new(root_cf_scope));
 
-    let root_call_scope = CallScope::new(vec![], root_variable_scope, 0, true, false);
+    let root_call_scope =
+      CallScope::new(vec![], root_variable_scope, 0, true, false, todo!("globalThis"));
 
     Analyzer {
       config,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
-      data: Default::default(),
-      builtins: Builtins::new(config, allocator),
       diagnostics: Default::default(),
 
       span_stack: Vec::new(),
@@ -75,32 +70,12 @@ impl<'a> Analyzer<'a> {
 
     assert_eq!(self.variable_scopes.stack.len(), 1);
 
-    // println!("debug: {:?}", self.debug);
-
     #[cfg(feature = "flame")]
     flamescope::dump(&mut std::fs::File::create("flamescope.json").unwrap()).unwrap();
   }
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn set_data(&mut self, key: AstKind2<'a>, data: impl Default + 'a) {
-    self.data.insert(key.into(), unsafe { mem::transmute(Box::new(data)) });
-  }
-
-  pub fn get_data_or_insert_with<D: 'a>(
-    &mut self,
-    key: AstKind2<'a>,
-    default: impl FnOnce() -> D,
-  ) -> &'a mut D {
-    let boxed =
-      self.data.entry(key.into()).or_insert_with(|| unsafe { mem::transmute(Box::new(default())) });
-    unsafe { mem::transmute(boxed.as_mut()) }
-  }
-
-  pub fn load_data<D: Default + 'a>(&mut self, key: AstKind2<'a>) -> &'a mut D {
-    self.get_data_or_insert_with(key, Default::default)
-  }
-
   pub fn current_span(&self) -> Span {
     *self.span_stack.last().unwrap()
   }
@@ -120,11 +95,5 @@ impl<'a> Analyzer<'a> {
 
   pub fn pop_span(&mut self) {
     self.span_stack.pop();
-  }
-}
-
-impl<'a> From<Analyzer<'a>> for &'a Allocator {
-  fn from(val: Analyzer<'a>) -> Self {
-    val.allocator
   }
 }

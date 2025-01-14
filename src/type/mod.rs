@@ -2,6 +2,7 @@ pub mod callable;
 pub mod facts;
 pub mod generic;
 pub mod namespace;
+pub mod operations;
 pub mod record;
 pub mod union;
 
@@ -209,6 +210,19 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn get_to_awaited(&mut self, target: Type<'a>) -> Type<'a> {
+    todo!()
+  }
+
+  pub fn get_call_return(
+    &mut self,
+    target: Type<'a>,
+    this: Type<'a>,
+    arguments: Type<'a>,
+  ) -> Type<'a> {
+    todo!()
+  }
+
+  pub fn get_instantiation_return(&mut self, target: Type<'a>, arguments: Type<'a>) -> Type<'a> {
     todo!()
   }
 }

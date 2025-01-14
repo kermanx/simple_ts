@@ -6,20 +6,19 @@ impl<'a> Analyzer<'a> {
     &mut self,
     node: &'a TaggedTemplateExpression<'a>,
   ) -> Type<'a> {
-    let (_, tag, _, this) = match self.exec_callee(&node.tag) {
-      Ok(v) => v,
-      Err(v) => return v,
-    };
+    let (indeterminate, tag, this) = self.exec_callee(&node.tag);
 
-    let mut arguments = vec![(false, self.factory.unknown)];
+    if indeterminate {
+      self.pop_cf_scope();
+    }
+
+    let mut arguments = vec![todo!()];
 
     for expr in &node.quasi.expressions {
       let value = self.exec_expression(expr);
       arguments.push((false, value));
     }
 
-    let value = tag.call(self, this, self.factory.arguments(arguments));
-
-    value
+    self.get_call_return(tag, this, todo!())
   }
 }

@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ast::DeclarationKind, r#type::Type};
+use crate::{analyzer::Analyzer, r#type::Type};
 use oxc::ast::ast::TryStatement;
 
 impl<'a> Analyzer<'a> {
@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
       self.push_indeterminate_cf_scope();
 
       if let Some(param) = &handler.param {
-        self.declare_binding_pattern(&param.pattern, false, DeclarationKind::Caught);
+        self.declare_binding_pattern(&param.pattern, true);
         self.init_binding_pattern(&param.pattern, Some(Type::Unknown));
       }
 
