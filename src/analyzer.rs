@@ -43,10 +43,10 @@ impl<'a> Analyzer<'a> {
     let config = allocator.alloc(config);
 
     let mut cf_scopes = ScopeTree::new();
-    cf_scopes.push(CfScope { kind: CfScopeKind::Module, exited: None });
+    let root_cf_scope = cf_scopes.push(CfScope { kind: CfScopeKind::Module, exited: None });
 
     let mut variable_scopes = ScopeTree::new();
-    let root_variable_scope = variable_scopes.push(VariableScope::default());
+    let root_variable_scope = variable_scopes.push(VariableScope::new(root_cf_scope));
 
     let root_call_scope = CallScope::new(vec![], root_variable_scope, 0, true, false);
 

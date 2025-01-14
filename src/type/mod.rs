@@ -17,17 +17,20 @@ use record::Record;
 pub enum Type<'a> {
   /* Intrinsics */
   Any,
+  Unknown,
+  Never,
+  Void,
+  Error,
+
+  /* Primitives */
   BigInt,
   Boolean,
-  Never,
   Null,
   Number,
   Object,
   String,
   Symbol,
   Undefined,
-  Unknown,
-  Void,
 
   /* Literals */
   StringLiteral(&'a Atom<'a>),
@@ -52,16 +55,20 @@ pub enum Type<'a> {
   Intrinsic(fn(Type<'a>) -> Type<'a>),
   /// Can only appear in inferred types
   UnresolvedType(&'a TSType<'a>),
-  UnresolvedSymbol(SymbolId),
+  UnresolvedVariable(SymbolId),
 }
 
 impl<'a> Analyzer<'a> {
   pub fn get_facts(&mut self, ty: Type<'a>) -> Facts {
     match ty {
       Type::Any => Facts::NONE,
+      Type::Unknown => Facts::NONE,
+      Type::Never => Facts::T_NE_ALL,
+      Type::Void => Facts::FALSY | Facts::T_NE_ALL,
+      Type::Error => Facts::NONE,
+
       Type::BigInt => Facts::T_EQ_BIGINT | Facts::T_NE_ALL & !Facts::T_EQ_BIGINT,
       Type::Boolean => Facts::T_EQ_BOOLEAN | Facts::T_NE_ALL & !Facts::T_EQ_BOOLEAN,
-      Type::Never => Facts::T_NE_ALL,
       Type::Null => {
         Facts::EQ_NULL
           | Facts::IS_NULLISH
@@ -79,8 +86,6 @@ impl<'a> Analyzer<'a> {
           | Facts::FALSY
           | Facts::T_NE_ALL & !Facts::NE_UNDEFINED
       }
-      Type::Unknown => Facts::NONE,
-      Type::Void => Facts::FALSY | Facts::T_NE_ALL,
 
       Type::StringLiteral(s) => self.get_facts(Type::String) | Facts::truthy(s.len() > 0),
       Type::NumericLiteral(n) => self.get_facts(Type::Number) | Facts::truthy(n.0 != 0.0),
@@ -118,13 +123,10 @@ impl<'a> Analyzer<'a> {
           Facts::NONE
         }
       }
-      Type::UnresolvedSymbol(symbol) => {
-        if let Some(resolved) = self.resolve_symbol(symbol) {
-          self.get_facts(resolved)
-        } else {
-          Facts::NONE
-        }
-      }
+      Type::UnresolvedVariable(symbol) => match *self.variables.get(&symbol).unwrap() {
+        Type::UnresolvedVariable(s) if s == symbol => Facts::NONE,
+        ty => self.get_facts(ty),
+      },
     }
   }
 

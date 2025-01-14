@@ -26,12 +26,15 @@ pub struct VariableScope<'a> {
   pub variables: FxHashMap<SymbolId, Variable<'a>>,
 }
 
+impl<'a> VariableScope<'a> {
+  pub fn new(cf_scope: ScopeId) -> Self {
+    Self { cf_scope, variables: FxHashMap::default() }
+  }
+}
+
 impl<'a> Analyzer<'a> {
   pub fn push_variable_scope(&mut self) -> ScopeId {
-    self.variable_scopes.push(VariableScope {
-      cf_scope: self.cf_scopes.current_id(),
-      variables: FxHashMap::default(),
-    })
+    self.variable_scopes.push(VariableScope::new(self.cf_scopes.current_id()))
   }
 
   pub fn pop_variable_scope(&mut self) -> ScopeId {
@@ -46,7 +49,7 @@ impl<'a> Analyzer<'a> {
 
   pub fn declare_variable(&mut self, symbol: SymbolId, resolvable: bool) {
     if resolvable {
-      self.variables.insert(symbol, Type::UnresolvedSymbol(symbol));
+      self.variables.insert(symbol, Type::UnresolvedVariable(symbol));
     } else {
       self
         .variable_scopes

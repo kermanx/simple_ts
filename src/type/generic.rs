@@ -24,8 +24,8 @@ impl<'a> Analyzer<'a> {
       Type::Generic(generic) => {
         self.push_variable_scope();
         for (index, param) in generic.params.iter().enumerate() {
-          let arg = args.get(index).copied().or(param.default);
-          self.declare_symbol(param.symbol_id, false, DeclarationKind::GenericParameter, arg);
+          let arg = args.get(index).copied().or(param.default).unwrap_or(Type::Error);
+          self.types.insert(param.symbol_id, arg);
         }
         for param in generic.params.iter() {
           if let Some(constraint) = param.constraint {
