@@ -13,18 +13,19 @@ impl<'a> Analyzer<'a> {
 
           for specifier in specifiers {
             let value = if let Some(known) = known {
-              match specifier {
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(_node) => known.default,
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(_node) => known.namespace,
-                ImportDeclarationSpecifier::ImportSpecifier(node) => {
-                  let key = Ty::StringLiteral(match &node.imported {
-                    ModuleExportName::IdentifierName(identifier) => &identifier.name,
-                    ModuleExportName::IdentifierReference(identifier) => &identifier.name,
-                    ModuleExportName::StringLiteral(literal) => &literal.value,
-                  });
-                  self.get_property(known.namespace, key)
-                }
-              }
+              // match specifier {
+              //   ImportDeclarationSpecifier::ImportDefaultSpecifier(_node) => known.default,
+              //   ImportDeclarationSpecifier::ImportNamespaceSpecifier(_node) => known.namespace,
+              //   ImportDeclarationSpecifier::ImportSpecifier(node) => {
+              //     let key = Ty::StringLiteral(match &node.imported {
+              //       ModuleExportName::IdentifierName(identifier) => &identifier.name,
+              //       ModuleExportName::IdentifierReference(identifier) => &identifier.name,
+              //       ModuleExportName::StringLiteral(literal) => &literal.value,
+              //     });
+              //     self.get_property(known.namespace, key)
+              //   }
+              // }
+              todo!()
             } else {
               Ty::Unknown
             };

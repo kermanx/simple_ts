@@ -70,4 +70,8 @@ impl<'a> Record<'a> {
   pub fn init_spread(&mut self, analyzer: &mut Analyzer<'a>, value: Ty<'a>) {
     todo!()
   }
+
+  pub fn delete_property(&mut self, analyzer: &mut Analyzer<'a>, value: Ty<'a>) {
+    todo!()
+  }
 }

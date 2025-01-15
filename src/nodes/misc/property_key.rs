@@ -6,10 +6,7 @@ impl<'a> Analyzer<'a> {
     match node {
       PropertyKey::StaticIdentifier(node) => self.exec_identifier_name(node),
       PropertyKey::PrivateIdentifier(node) => self.exec_private_identifier(node),
-      node => {
-        let value = self.exec_expression(node.to_expression());
-        self.to_property_key(value)
-      }
+      node => self.exec_expression(node.to_expression())
     }
   }
 }

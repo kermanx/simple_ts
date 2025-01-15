@@ -97,9 +97,9 @@ impl<'a> Analyzer<'a> {
     self.span_stack.pop();
   }
 
-  // pub fn resolve_module(&mut self, specifier: &'a str) -> Option<!> {
-  //   todo!()
-  // }
+  pub fn resolve_module(&mut self, specifier: &'a str) -> Option<()> {
+    todo!()
+  }
 
   pub fn resolve_global_variable(&mut self, id: &'a str) -> Ty<'a> {
     todo!()

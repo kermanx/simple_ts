@@ -2,7 +2,7 @@ use crate::{
   analyzer::Analyzer,
   ty::{record::Record, Ty},
 };
-use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKey, PropertyKind};
+use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_object_expression(&mut self, node: &'a ObjectExpression) -> Ty<'a> {
