@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::ObjectEntity};
+use crate::{analyzer::Analyzer, ty::ObjectEntity};
 use oxc::ast::ast::{JSXAttributeItem, JSXOpeningElement, PropertyKind};
 
 impl<'a> Analyzer<'a> {

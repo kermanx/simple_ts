@@ -1,11 +1,11 @@
 use crate::{
   analyzer::Analyzer,
-  r#type::{union::into_union, Type},
+  ty::{union::into_union, Ty},
 };
 use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator, LogicalOperator};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_assignment_expression(&mut self, node: &'a AssignmentExpression<'a>) -> Type<'a> {
+  pub fn exec_assignment_expression(&mut self, node: &'a AssignmentExpression<'a>) -> Ty<'a> {
     if node.operator == AssignmentOperator::Assign {
       let rhs = self.exec_expression(&node.right);
       self.exec_assignment_target_write(&node.left, rhs, None);

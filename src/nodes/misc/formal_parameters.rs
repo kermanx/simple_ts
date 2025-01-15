@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::FormalParameters;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_formal_parameters(&mut self, node: &'a FormalParameters<'a>, args: Type<'a>) {
+  pub fn exec_formal_parameters(&mut self, node: &'a FormalParameters<'a>, args: Ty<'a>) {
     let (elements_init, rest_init) =
       self.destruct_as_array(args, node.items.len(), node.rest.is_some());
 

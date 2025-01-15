@@ -1,13 +1,13 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{JSXExpression, JSXExpressionContainer};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_jsx_expression_container_as_attribute_value(
     &mut self,
     node: &'a JSXExpressionContainer<'a>,
-  ) -> Type<'a> {
+  ) -> Ty<'a> {
     match &node.expression {
-      JSXExpression::EmptyExpression(_node) => Type::Boolean,
+      JSXExpression::EmptyExpression(_node) => Ty::Boolean,
       node => self.exec_expression(node.to_expression()),
     }
   }

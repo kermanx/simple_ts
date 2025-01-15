@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::JSXAttributeValue;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_jsx_attribute_value(&mut self, node: &'a Option<JSXAttributeValue<'a>>) -> Type<'a> {
+  pub fn exec_jsx_attribute_value(&mut self, node: &'a Option<JSXAttributeValue<'a>>) -> Ty<'a> {
     if let Some(node) = node {
       match node {
         JSXAttributeValue::StringLiteral(node) => self.exec_string_literal(node),
@@ -13,7 +13,7 @@ impl<'a> Analyzer<'a> {
         JSXAttributeValue::Fragment(node) => self.exec_jsx_fragment(node),
       }
     } else {
-      Type::Boolean
+      Ty::Boolean
     }
   }
 }

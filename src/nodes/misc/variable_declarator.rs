@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::VariableDeclarator;
 
 impl<'a> Analyzer<'a> {
@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
     self.declare_binding_pattern(&node.id, node.init.is_some());
   }
 
-  pub fn init_variable_declarator(&mut self, node: &'a VariableDeclarator, init: Option<Type<'a>>) {
+  pub fn init_variable_declarator(&mut self, node: &'a VariableDeclarator, init: Option<Ty<'a>>) {
     let init = match init {
       Some(init) => {
         // if node.init.is_some() {

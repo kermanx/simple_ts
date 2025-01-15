@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::BindingIdentifier;
 
 impl<'a> Analyzer<'a> {
@@ -7,11 +7,7 @@ impl<'a> Analyzer<'a> {
     self.declare_variable(symbol, typed);
   }
 
-  pub fn init_binding_identifier(
-    &mut self,
-    node: &'a BindingIdentifier<'a>,
-    init: Option<Type<'a>>,
-  ) {
+  pub fn init_binding_identifier(&mut self, node: &'a BindingIdentifier<'a>, init: Option<Ty<'a>>) {
     let symbol = node.symbol_id.get().unwrap();
     self.init_variable(symbol, init);
   }

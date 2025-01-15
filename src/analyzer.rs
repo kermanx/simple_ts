@@ -1,12 +1,12 @@
 use crate::{
   config::Config,
-  r#type::Type,
   scope::{
     call::CallScope,
     cf::{CfScope, CfScopeKind},
     tree::ScopeTree,
     variable::VariableScope,
   },
+  ty::Ty,
 };
 use line_index::LineIndex;
 use oxc::{
@@ -30,8 +30,8 @@ pub struct Analyzer<'a> {
   pub cf_scopes: ScopeTree<CfScope<'a>>,
   pub variable_scopes: ScopeTree<VariableScope<'a>>,
 
-  pub variables: FxHashMap<SymbolId, Type<'a>>,
-  pub types: FxHashMap<SymbolId, Type<'a>>,
+  pub variables: FxHashMap<SymbolId, Ty<'a>>,
+  pub types: FxHashMap<SymbolId, Ty<'a>>,
 }
 
 impl<'a> Analyzer<'a> {
@@ -101,11 +101,11 @@ impl<'a> Analyzer<'a> {
   //   todo!()
   // }
 
-  pub fn resolve_global_variable(&mut self, id: &'a str) -> Type<'a> {
+  pub fn resolve_global_variable(&mut self, id: &'a str) -> Ty<'a> {
     todo!()
   }
 
-  pub fn resolve_global_type(&mut self, id: &'a str) -> Type<'a> {
+  pub fn resolve_global_type(&mut self, id: &'a str) -> Ty<'a> {
     todo!()
   }
 }

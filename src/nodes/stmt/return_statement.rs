@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::ReturnStatement;
 
 impl<'a> Analyzer<'a> {
@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
     let argument = if let Some(argument) = &node.argument {
       self.exec_expression(argument)
     } else {
-      Type::Undefined
+      Ty::Undefined
     };
     self.add_returned_value(argument);
   }

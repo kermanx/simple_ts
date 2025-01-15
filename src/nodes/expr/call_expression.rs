@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::CallExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_call_expression(&mut self, node: &'a CallExpression) -> Type<'a> {
+  pub fn exec_call_expression(&mut self, node: &'a CallExpression) -> Ty<'a> {
     let (indeterminate, value) = self.exec_call_expression_in_chain(node);
 
     if indeterminate {
@@ -12,7 +12,7 @@ impl<'a> Analyzer<'a> {
     value
   }
 
-  pub fn exec_call_expression_in_chain(&mut self, node: &'a CallExpression) -> (bool, Type<'a>) {
+  pub fn exec_call_expression_in_chain(&mut self, node: &'a CallExpression) -> (bool, Ty<'a>) {
     let (mut indeterminate, callee, this) = self.exec_callee(&node.callee);
 
     if !indeterminate && node.optional {

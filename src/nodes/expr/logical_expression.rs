@@ -1,11 +1,11 @@
 use crate::{
   analyzer::Analyzer,
-  r#type::{union::into_union, Type},
+  ty::{union::into_union, Ty},
 };
 use oxc::ast::ast::LogicalExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_logical_expression(&mut self, node: &'a LogicalExpression<'a>) -> Type<'a> {
+  pub fn exec_logical_expression(&mut self, node: &'a LogicalExpression<'a>) -> Ty<'a> {
     let left = self.exec_expression(&node.left);
 
     self.push_indeterminate_cf_scope();

@@ -1,12 +1,12 @@
-use super::Type;
+use super::Ty;
 use crate::analyzer::Analyzer;
 use oxc::{ast::ast::TSType, semantic::SymbolId};
 
 #[derive(Debug, Clone)]
 pub struct GenericParam<'a> {
   pub symbol_id: SymbolId,
-  pub constraint: Option<Type<'a>>,
-  pub default: Option<Type<'a>>,
+  pub constraint: Option<Ty<'a>>,
+  pub default: Option<Ty<'a>>,
   pub r#in: bool,
   pub out: bool,
   pub r#const: bool,
@@ -19,12 +19,12 @@ pub struct Generic<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn instantiate_generic(&mut self, ty: Type<'a>, args: Vec<Type<'a>>) -> Option<Type<'a>> {
+  pub fn instantiate_generic(&mut self, ty: Ty<'a>, args: Vec<Ty<'a>>) -> Option<Ty<'a>> {
     match ty {
-      Type::Generic(generic) => {
+      Ty::Generic(generic) => {
         self.push_variable_scope();
         for (index, param) in generic.params.iter().enumerate() {
-          let arg = args.get(index).copied().or(param.default).unwrap_or(Type::Error);
+          let arg = args.get(index).copied().or(param.default).unwrap_or(Ty::Error);
           self.types.insert(param.symbol_id, arg);
         }
         for param in generic.params.iter() {

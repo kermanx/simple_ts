@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{TSTypeName, TSTypeReference};
 
 impl<'a> Analyzer<'a> {
-  pub fn resolve_type_reference(&mut self, node: &'a TSTypeReference<'a>) -> Option<Type<'a>> {
+  pub fn resolve_type_reference(&mut self, node: &'a TSTypeReference<'a>) -> Option<Ty<'a>> {
     let base = match &node.type_name {
       TSTypeName::IdentifierReference(node) => {
         let reference = self.semantic.symbols().get_reference(node.reference_id());
@@ -10,7 +10,7 @@ impl<'a> Analyzer<'a> {
           *self.types.get(&symbol)?
         } else {
           // Unresolved symbol
-          Type::Any
+          Ty::Any
         }
       }
       TSTypeName::QualifiedName(_node) => todo!(),

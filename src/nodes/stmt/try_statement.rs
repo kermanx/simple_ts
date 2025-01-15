@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::TryStatement;
 
 impl<'a> Analyzer<'a> {
@@ -10,7 +10,7 @@ impl<'a> Analyzer<'a> {
 
       if let Some(param) = &handler.param {
         self.declare_binding_pattern(&param.pattern, true);
-        self.init_binding_pattern(&param.pattern, Some(Type::Unknown));
+        self.init_binding_pattern(&param.pattern, Some(Ty::Unknown));
       }
 
       self.exec_block_statement(&handler.body);

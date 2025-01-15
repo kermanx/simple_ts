@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::{allocator, ast::ast::JSXChild};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_jsx_children(&mut self, node: &'a allocator::Vec<'a, JSXChild<'a>>) -> Type<'a> {
+  pub fn exec_jsx_children(&mut self, node: &'a allocator::Vec<'a, JSXChild<'a>>) -> Ty<'a> {
     for child in node.iter() {
       match child {
         JSXChild::Text(node) => self.exec_jsx_text(node),

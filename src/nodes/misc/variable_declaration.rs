@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{VariableDeclaration, VariableDeclarationKind};
 
 impl<'a> Analyzer<'a> {
@@ -11,7 +11,7 @@ impl<'a> Analyzer<'a> {
   pub fn init_variable_declaration(
     &mut self,
     node: &'a VariableDeclaration<'a>,
-    init: Option<Type<'a>>,
+    init: Option<Ty<'a>>,
   ) {
     if init.is_some() {
       assert_eq!(node.declarations.len(), 1);

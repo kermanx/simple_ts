@@ -1,11 +1,11 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::AssignmentTargetMaybeDefault;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_maybe_default(
     &mut self,
     node: &'a AssignmentTargetMaybeDefault<'a>,
-    value: Type<'a>,
+    value: Ty<'a>,
   ) {
     match node {
       AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(node) => {

@@ -1,9 +1,9 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::PrivateInExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_private_in_expression(&mut self, node: &'a PrivateInExpression<'a>) -> Type<'a> {
+  pub fn exec_private_in_expression(&mut self, node: &'a PrivateInExpression<'a>) -> Ty<'a> {
     self.exec_expression(&node.right);
-    Type::Boolean
+    Ty::Boolean
   }
 }

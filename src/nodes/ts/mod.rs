@@ -4,25 +4,25 @@ mod ts_type_parameter_instantiation;
 mod ts_type_query;
 mod ts_type_reference;
 
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::TSType;
 
 impl<'a> Analyzer<'a> {
-  pub fn resolve_type(&mut self, node: &'a TSType<'a>) -> Option<Type<'a>> {
+  pub fn resolve_type(&mut self, node: &'a TSType<'a>) -> Option<Ty<'a>> {
     match node {
-      TSType::TSAnyKeyword(_) => Some(Type::Any),
-      TSType::TSBigIntKeyword(_) => Some(Type::BigInt),
-      TSType::TSBooleanKeyword(_) => Some(Type::Boolean),
+      TSType::TSAnyKeyword(_) => Some(Ty::Any),
+      TSType::TSBigIntKeyword(_) => Some(Ty::BigInt),
+      TSType::TSBooleanKeyword(_) => Some(Ty::Boolean),
       TSType::TSIntrinsicKeyword(_) => todo!(),
-      TSType::TSNeverKeyword(_) => Some(Type::Never),
-      TSType::TSNullKeyword(_) => Some(Type::Null),
-      TSType::TSNumberKeyword(_) => Some(Type::Number),
-      TSType::TSObjectKeyword(_) => Some(Type::Object),
-      TSType::TSStringKeyword(_) => Some(Type::String),
-      TSType::TSSymbolKeyword(_) => Some(Type::Symbol),
-      TSType::TSUndefinedKeyword(_) => Some(Type::Undefined),
-      TSType::TSUnknownKeyword(_) => Some(Type::Unknown),
-      TSType::TSVoidKeyword(_) => Some(Type::Void),
+      TSType::TSNeverKeyword(_) => Some(Ty::Never),
+      TSType::TSNullKeyword(_) => Some(Ty::Null),
+      TSType::TSNumberKeyword(_) => Some(Ty::Number),
+      TSType::TSObjectKeyword(_) => Some(Ty::Object),
+      TSType::TSStringKeyword(_) => Some(Ty::String),
+      TSType::TSSymbolKeyword(_) => Some(Ty::Symbol),
+      TSType::TSUndefinedKeyword(_) => Some(Ty::Undefined),
+      TSType::TSUnknownKeyword(_) => Some(Ty::Unknown),
+      TSType::TSVoidKeyword(_) => Some(Ty::Void),
 
       TSType::TSLiteralType(node) => Some(self.resolve_literal(&node.literal)),
       TSType::TSTypeReference(node) => self.resolve_type_reference(node),

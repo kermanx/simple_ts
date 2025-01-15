@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{BindingPattern, BindingPatternKind};
 
 impl<'a> Analyzer<'a> {
@@ -30,7 +30,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, mut init: Option<Type<'a>>) {
+  pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, mut init: Option<Ty<'a>>) {
     if let Some(annotation) = &node.type_annotation {
       init = Some(self.resolve_type_annotation(annotation));
     }
@@ -39,7 +39,7 @@ impl<'a> Analyzer<'a> {
         self.init_binding_identifier(node, init);
       }
       BindingPatternKind::ObjectPattern(node) => {
-        let init = init.unwrap_or(Type::Undefined);
+        let init = init.unwrap_or(Ty::Undefined);
 
         let mut enumerated = vec![];
         for property in &node.properties {
@@ -55,7 +55,7 @@ impl<'a> Analyzer<'a> {
         }
       }
       BindingPatternKind::ArrayPattern(node) => {
-        let init = init.unwrap_or(Type::Undefined);
+        let init = init.unwrap_or(Ty::Undefined);
 
         let (element_values, rest_value) =
           self.destruct_as_array(init, node.elements.len(), node.rest.is_some());

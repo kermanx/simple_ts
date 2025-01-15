@@ -1,6 +1,6 @@
 use crate::{
   analyzer::Analyzer,
-  r#type::{union::into_union, Type},
+  ty::{union::into_union, Ty},
 };
 use oxc::semantic::{ScopeId, SymbolId};
 use rustc_hash::FxHashMap;
@@ -8,15 +8,15 @@ use rustc_hash::FxHashMap;
 #[derive(Debug, Clone, Copy)]
 pub struct Variable<'a> {
   pub is_shadow: bool,
-  pub value: Type<'a>,
+  pub value: Ty<'a>,
 }
 
 impl<'a> Variable<'a> {
-  pub fn inferred(value: Type<'a>) -> Self {
+  pub fn inferred(value: Ty<'a>) -> Self {
     Self { is_shadow: false, value }
   }
 
-  pub fn shadow(value: Type<'a>) -> Self {
+  pub fn shadow(value: Ty<'a>) -> Self {
     Self { is_shadow: true, value }
   }
 }
@@ -49,23 +49,23 @@ impl<'a> Analyzer<'a> {
 
   pub fn declare_variable(&mut self, symbol: SymbolId, typed: bool) {
     if typed {
-      self.variables.insert(symbol, Type::UnresolvedVariable(symbol));
+      self.variables.insert(symbol, Ty::UnresolvedVariable(symbol));
     } else {
       self
         .variable_scopes
         .get_current_mut()
         .variables
-        .insert(symbol, Variable::inferred(Type::Undefined));
+        .insert(symbol, Variable::inferred(Ty::Undefined));
     }
   }
 
-  pub fn init_variable(&mut self, symbol: SymbolId, value: Option<Type<'a>>) {
+  pub fn init_variable(&mut self, symbol: SymbolId, value: Option<Ty<'a>>) {
     let value = if let Some(value) = value {
       value
     } else if self.is_symbol_var(symbol) {
       return;
     } else {
-      Type::Undefined
+      Ty::Undefined
     };
     if let Some(resolved) = self.variables.get_mut(&symbol) {
       *resolved = value;
@@ -80,7 +80,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn read_variable(&self, symbol: SymbolId) -> Type<'a> {
+  pub fn read_variable(&self, symbol: SymbolId) -> Ty<'a> {
     if let Some(resolved) = self.variables.get(&symbol) {
       *resolved
     } else {
@@ -95,14 +95,14 @@ impl<'a> Analyzer<'a> {
         // read(a)
         // while (a) { var a; }
         // ```
-        Type::Any
+        Ty::Any
       } else {
         unreachable!("Variable not found: {:?}", self.semantic.symbols().get_name(symbol));
       }
     }
   }
 
-  pub fn write_variable(&mut self, symbol: SymbolId, value: Type<'a>) {
+  pub fn write_variable(&mut self, symbol: SymbolId, value: Ty<'a>) {
     if let Some(_resolved) = self.variables.get_mut(&symbol) {
       // Do nothing
       // CHECKER: Should check type compatibility
@@ -135,7 +135,7 @@ impl<'a> Analyzer<'a> {
   }
 
   fn apply_shadows(&mut self, scopes: impl IntoIterator<Item = ScopeId>, complementary: bool) {
-    let mut shadows: FxHashMap<SymbolId, Vec<Type<'a>>> = FxHashMap::default();
+    let mut shadows: FxHashMap<SymbolId, Vec<Ty<'a>>> = FxHashMap::default();
     let mut len = 0;
     for scope in scopes {
       len += 1;

@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::BindingRestElement;
 
 impl<'a> Analyzer<'a> {
@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
     self.declare_binding_pattern(&node.argument, typed);
   }
 
-  pub fn init_binding_rest_element(&mut self, node: &'a BindingRestElement<'a>, init: Type<'a>) {
+  pub fn init_binding_rest_element(&mut self, node: &'a BindingRestElement<'a>, init: Ty<'a>) {
     self.init_binding_pattern(&node.argument, Some(init));
   }
 }

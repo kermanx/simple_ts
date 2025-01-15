@@ -1,4 +1,4 @@
-use super::{property_key::PropertyKeyType, Type};
+use super::{property_key::PropertyKeyType, Ty};
 use crate::analyzer::Analyzer;
 use oxc::semantic::SymbolId;
 use oxc_syntax::number::ToJsString;
@@ -6,20 +6,20 @@ use rustc_hash::FxHashMap;
 
 #[derive(Debug, Clone)]
 struct KeyedProperty<'a> {
-  value: Type<'a>,
+  value: Ty<'a>,
   optional: bool,
   readonly: bool,
 }
 
 #[derive(Debug, Default, Clone)]
 struct MappedProperty<'a> {
-  values: Vec<Type<'a>>,
+  values: Vec<Ty<'a>>,
   readonly: bool,
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct Record<'a> {
-  pub proto: Option<Type<'a>>,
+  pub proto: Option<Ty<'a>>,
 
   pub string_keyed: FxHashMap<&'a str, KeyedProperty<'a>>,
   pub symbol_keyed: FxHashMap<SymbolId, KeyedProperty<'a>>,
@@ -30,15 +30,15 @@ pub struct Record<'a> {
 }
 
 impl<'a> Record<'a> {
-  pub fn init_proto(&mut self, proto: Type<'a>) {
+  pub fn init_proto(&mut self, proto: Ty<'a>) {
     self.proto = Some(proto);
   }
 
   pub fn init_property(
     &mut self,
     analyzer: &mut Analyzer<'a>,
-    key: Type<'a>,
-    value: Type<'a>,
+    key: Ty<'a>,
+    value: Ty<'a>,
     optional: bool,
     readonly: bool,
   ) {
@@ -67,7 +67,7 @@ impl<'a> Record<'a> {
     }
   }
 
-  pub fn init_spread(&mut self, analyzer: &mut Analyzer<'a>, value: Type<'a>) {
+  pub fn init_spread(&mut self, analyzer: &mut Analyzer<'a>, value: Ty<'a>) {
     todo!()
   }
 }

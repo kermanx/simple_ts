@@ -1,11 +1,11 @@
 use crate::{
   analyzer::Analyzer,
-  r#type::{union::into_union, Type},
+  ty::{union::into_union, Ty},
 };
 use oxc::ast::ast::ConditionalExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_conditional_expression(&mut self, node: &'a ConditionalExpression<'a>) -> Type<'a> {
+  pub fn exec_conditional_expression(&mut self, node: &'a ConditionalExpression<'a>) -> Ty<'a> {
     self.exec_expression(&node.test);
 
     self.push_indeterminate_cf_scope();

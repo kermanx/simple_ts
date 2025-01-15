@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::ForStatementLeft;
 
 impl<'a> Analyzer<'a> {
@@ -8,7 +8,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn init_for_statement_left(&mut self, node: &'a ForStatementLeft<'a>, init: Type<'a>) {
+  pub fn init_for_statement_left(&mut self, node: &'a ForStatementLeft<'a>, init: Ty<'a>) {
     match node {
       ForStatementLeft::VariableDeclaration(node) => {
         self.init_variable_declaration(node, Some(init));

@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{Class, ClassElement, MethodDefinitionKind, PropertyKind};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_class(&mut self, node: &'a Class<'a>) -> Type<'a> {
+  pub fn exec_class(&mut self, node: &'a Class<'a>) -> Ty<'a> {
     let super_class = node.super_class.as_ref().map(|node| self.exec_expression(node));
 
     let mut keys = vec![];
@@ -74,7 +74,7 @@ impl<'a> Analyzer<'a> {
     self.declare_binding_identifier(node.id.as_ref().unwrap(), true);
   }
 
-  pub fn init_class(&mut self, node: &'a Class<'a>) -> Type<'a> {
+  pub fn init_class(&mut self, node: &'a Class<'a>) -> Ty<'a> {
     let value = self.exec_class(node);
 
     self.init_binding_identifier(node.id.as_ref().unwrap(), Some(value));

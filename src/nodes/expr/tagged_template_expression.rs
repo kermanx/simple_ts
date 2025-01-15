@@ -1,11 +1,11 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::TaggedTemplateExpression;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_tagged_template_expression(
     &mut self,
     node: &'a TaggedTemplateExpression<'a>,
-  ) -> Type<'a> {
+  ) -> Ty<'a> {
     let (indeterminate, tag, this) = self.exec_callee(&node.tag);
 
     if indeterminate {

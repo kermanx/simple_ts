@@ -1,6 +1,6 @@
 use crate::{
   analyzer::Analyzer,
-  r#type::{facts::Facts, union::into_union, Type},
+  ty::{facts::Facts, union::into_union, Ty},
 };
 use oxc::{
   ast::ast::{Expression, UnaryExpression, UnaryOperator},
@@ -8,12 +8,12 @@ use oxc::{
 };
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_unary_expression(&mut self, node: &'a UnaryExpression) -> Type<'a> {
+  pub fn exec_unary_expression(&mut self, node: &'a UnaryExpression) -> Ty<'a> {
     if node.operator == UnaryOperator::Delete {
       match &node.argument {
         Expression::StaticMemberExpression(node) => {
           let object = self.exec_expression(&node.object);
-          let property = Type::StringLiteral(&node.property.name);
+          let property = Ty::StringLiteral(&node.property.name);
           self.delete_property(object, property)
         }
         Expression::PrivateFieldExpression(node) => {
@@ -33,7 +33,7 @@ impl<'a> Analyzer<'a> {
         }
       };
 
-      return Type::Boolean;
+      return Ty::Boolean;
     }
 
     let argument = self.exec_expression(&node.argument);
@@ -41,17 +41,17 @@ impl<'a> Analyzer<'a> {
     match &node.operator {
       UnaryOperator::UnaryNegation => todo!(),
       UnaryOperator::UnaryPlus => self.get_to_numeric(argument),
-      UnaryOperator::LogicalNot => Type::Boolean,
+      UnaryOperator::LogicalNot => Ty::Boolean,
       UnaryOperator::BitwiseNot => self.get_to_numeric(argument),
       UnaryOperator::Typeof => {
         let facts = self.get_facts(argument);
         let values = TYPEOF_VALUES
           .iter()
-          .filter_map(|(fact, value)| facts.contains(*fact).then_some(Type::StringLiteral(value)))
+          .filter_map(|(fact, value)| facts.contains(*fact).then_some(Ty::StringLiteral(value)))
           .collect::<Vec<_>>();
         into_union(self.allocator, values)
       }
-      UnaryOperator::Void => Type::Undefined,
+      UnaryOperator::Void => Ty::Undefined,
       UnaryOperator::Delete => unreachable!(),
     }
   }

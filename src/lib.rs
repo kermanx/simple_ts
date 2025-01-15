@@ -3,5 +3,5 @@ mod builtins;
 mod config;
 mod nodes;
 mod scope;
-mod r#type;
+mod ty;
 mod utils;

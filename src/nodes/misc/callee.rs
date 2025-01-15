@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::{
   ast::{ChainElement, Expression, MemberExpression},
   match_member_expression,
@@ -24,7 +24,7 @@ fn unwrap_to_member_expression<'a>(
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_callee(&mut self, node: &'a Expression<'a>) -> (bool, Type<'a>, Type<'a>) {
+  pub fn exec_callee(&mut self, node: &'a Expression<'a>) -> (bool, Ty<'a>, Ty<'a>) {
     if let Some((member_expr, same_chain)) = unwrap_to_member_expression(node) {
       if same_chain {
         let ((indeterminate, callee), (object, _)) =
@@ -36,7 +36,7 @@ impl<'a> Analyzer<'a> {
       }
     } else {
       let (indeterminate, callee) = self.exec_expression_in_chain(node);
-      (indeterminate, callee, Type::Undefined)
+      (indeterminate, callee, Ty::Undefined)
     }
   }
 }

@@ -1,8 +1,8 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   /// const { enumerated_1, enumerated_2, ...rest } = object;
-  pub fn exec_object_rest(&mut self, object: Type<'a>, enumerated: Vec<Type<'a>>) -> Type<'a> {
+  pub fn exec_object_rest(&mut self, object: Ty<'a>, enumerated: Vec<Ty<'a>>) -> Ty<'a> {
     let rest = self.new_empty_object();
 
     rest.init_spread(self, object);
@@ -11,6 +11,6 @@ impl<'a> Analyzer<'a> {
       rest.delete_property(self, key);
     }
 
-    Type::Record(rest)
+    Ty::Record(rest)
   }
 }

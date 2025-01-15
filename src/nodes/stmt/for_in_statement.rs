@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::ForInStatement;
 
 impl<'a> Analyzer<'a> {
@@ -11,7 +11,7 @@ impl<'a> Analyzer<'a> {
 
     self.push_loop_cf_scope();
 
-    self.init_for_statement_left(&node.left, Type::String);
+    self.init_for_statement_left(&node.left, Ty::String);
     self.exec_statement(&node.body);
 
     self.pop_cf_scope();

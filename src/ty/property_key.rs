@@ -1,4 +1,4 @@
-use super::Type;
+use super::Ty;
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use oxc::{semantic::SymbolId, span::Atom};
 
@@ -16,31 +16,29 @@ pub enum PropertyKeyType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn to_property_key(&mut self, from: Type<'a>) -> PropertyKeyType<'a> {
+  pub fn to_property_key(&mut self, from: Ty<'a>) -> PropertyKeyType<'a> {
     match from {
-      Type::Any => {
+      Ty::Any => {
         // This is weird, but somehow TypeScript does this.
         PropertyKeyType::AnyNumber
       }
-      Type::Unknown | Type::Never | Type::Void | Type::Error => PropertyKeyType::Error,
+      Ty::Unknown | Ty::Never | Ty::Void | Ty::Error => PropertyKeyType::Error,
 
-      Type::String => PropertyKeyType::AnyString,
-      Type::Number => PropertyKeyType::AnyNumber,
-      Type::Symbol => PropertyKeyType::AnySymbol,
-      Type::BigInt | Type::Boolean | Type::Null | Type::Object | Type::Undefined => {
+      Ty::String => PropertyKeyType::AnyString,
+      Ty::Number => PropertyKeyType::AnyNumber,
+      Ty::Symbol => PropertyKeyType::AnySymbol,
+      Ty::BigInt | Ty::Boolean | Ty::Null | Ty::Object | Ty::Undefined => PropertyKeyType::Error,
+
+      Ty::StringLiteral(s) => PropertyKeyType::StringLiteral(s),
+      Ty::NumericLiteral(n) => PropertyKeyType::NumericLiteral(n),
+      Ty::UniqueSymbol(s) => PropertyKeyType::UniqueSymbol(s),
+      Ty::BigIntLiteral(_) | Ty::BooleanLiteral(_) => PropertyKeyType::Error,
+
+      Ty::Record(_) | Ty::Function(_) | Ty::Constructor(_) | Ty::Namespace(_) => {
         PropertyKeyType::Error
       }
 
-      Type::StringLiteral(s) => PropertyKeyType::StringLiteral(s),
-      Type::NumericLiteral(n) => PropertyKeyType::NumericLiteral(n),
-      Type::UniqueSymbol(s) => PropertyKeyType::UniqueSymbol(s),
-      Type::BigIntLiteral(_) | Type::BooleanLiteral(_) => PropertyKeyType::Error,
-
-      Type::Record(_) | Type::Function(_) | Type::Constructor(_) | Type::Namespace(_) => {
-        PropertyKeyType::Error
-      }
-
-      Type::Union(values) => {
+      Ty::Union(values) => {
         let mut any_string = false;
         let mut any_number = false;
         let mut any_symbol = false;
@@ -59,7 +57,7 @@ impl<'a> Analyzer<'a> {
           (false, false, false) => PropertyKeyType::Error,
         }
       }
-      Type::Intersection(values) => {
+      Ty::Intersection(values) => {
         let mut any_string = false;
         let mut any_number = false;
         let mut any_symbol = false;
@@ -82,8 +80,8 @@ impl<'a> Analyzer<'a> {
         }
       }
 
-      Type::UnresolvedType(_) | Type::UnresolvedVariable(_) => todo!(),
-      Type::Generic(_) | Type::Intrinsic(_) => unreachable!(),
+      Ty::UnresolvedType(_) | Ty::UnresolvedVariable(_) => todo!(),
+      Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!(),
     }
   }
 }

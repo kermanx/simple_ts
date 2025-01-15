@@ -1,11 +1,11 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::AssignmentTargetPattern;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_assignment_target_pattern_write(
     &mut self,
     node: &'a AssignmentTargetPattern<'a>,
-    value: Type<'a>,
+    value: Ty<'a>,
   ) {
     match node {
       AssignmentTargetPattern::ArrayAssignmentTarget(node) => {

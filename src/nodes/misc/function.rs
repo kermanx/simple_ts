@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::{
   ast::ast::{Function, FunctionType},
   semantic::ScopeId,
@@ -6,7 +6,7 @@ use oxc::{
 use std::rc::Rc;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_function(&mut self, node: &'a Function<'a>) -> Type<'a> {
+  pub fn exec_function(&mut self, node: &'a Function<'a>) -> Ty<'a> {
     todo!()
   }
 

@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, r#type::Type};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{
   ExportDefaultDeclarationKind, ImportDeclarationSpecifier, ModuleDeclaration, ModuleExportName,
 };
@@ -17,7 +17,7 @@ impl<'a> Analyzer<'a> {
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(_node) => known.default,
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(_node) => known.namespace,
                 ImportDeclarationSpecifier::ImportSpecifier(node) => {
-                  let key = Type::StringLiteral(match &node.imported {
+                  let key = Ty::StringLiteral(match &node.imported {
                     ModuleExportName::IdentifierName(identifier) => &identifier.name,
                     ModuleExportName::IdentifierReference(identifier) => &identifier.name,
                     ModuleExportName::StringLiteral(literal) => &literal.value,
@@ -26,7 +26,7 @@ impl<'a> Analyzer<'a> {
                 }
               }
             } else {
-              Type::Unknown
+              Ty::Unknown
             };
 
             let local = specifier.local();
