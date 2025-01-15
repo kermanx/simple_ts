@@ -1,0 +1,7 @@
+---
+source: tests/mod.rs
+input_file: tests/fixtures/union.ts
+---
+type A = 3 | boolean;
+type B = string;
+type C = string | bigint | symbol;

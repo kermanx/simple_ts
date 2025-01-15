@@ -29,6 +29,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSTypeReference(node) => self.resolve_type_reference(node),
       TSType::TSTypeQuery(node) => self.resolve_type_query(node),
       TSType::TSUnionType(node) => self.resolve_union_type(node),
+      TSType::TSParenthesizedType(node) => self.resolve_type(&node.type_annotation),
 
       _ => todo!(),
     }
