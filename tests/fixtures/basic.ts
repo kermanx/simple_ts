@@ -5,3 +5,7 @@ let a: string = 'a';
 let b: number = 2;
   b
 //^? B
+
+let c: boolean | 3 = 3;
+  c
+//^? C

@@ -1,6 +1,11 @@
 use super::Ty;
 use crate::{analyzer::Analyzer, utils::F64WithEq};
-use oxc::{allocator::Allocator, ast::ast::TSType, semantic::SymbolId, span::Atom};
+use oxc::{
+  allocator::Allocator,
+  ast::ast::TSType,
+  semantic::SymbolId,
+  span::{Atom, SPAN},
+};
 use rustc_hash::FxHashSet;
 use std::{hash::Hash, mem};
 
@@ -222,6 +227,8 @@ where
 
 impl<'a> Analyzer<'a> {
   pub fn print_union_type(&self, union: &UnionType<'a>) -> TSType<'a> {
-    todo!()
+    let mut types = self.ast_builder.vec();
+    union.for_each(|ty| types.push(self.print_type(ty)));
+    self.ast_builder.ts_type_union_type(SPAN, types)
   }
 }

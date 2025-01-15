@@ -3,6 +3,7 @@ mod ts_type_annotation;
 mod ts_type_parameter_instantiation;
 mod ts_type_query;
 mod ts_type_reference;
+mod ts_union_type;
 
 use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::TSType;
@@ -26,6 +27,8 @@ impl<'a> Analyzer<'a> {
 
       TSType::TSLiteralType(node) => Some(self.resolve_literal(&node.literal)),
       TSType::TSTypeReference(node) => self.resolve_type_reference(node),
+      TSType::TSTypeQuery(node) => self.resolve_type_query(node),
+      TSType::TSUnionType(node) => self.resolve_union_type(node),
 
       _ => todo!(),
     }
