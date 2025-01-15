@@ -1,5 +1,6 @@
 use super::{generic::GenericParam, Ty};
-use oxc::semantic::SymbolId;
+use crate::analyzer::Analyzer;
+use oxc::{ast::ast::TSType, semantic::SymbolId};
 
 #[derive(Debug, Clone)]
 pub enum ReturnType<'a> {
@@ -14,12 +15,21 @@ pub enum ReturnType<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Callable<'a, const CTOR: bool> {
+pub struct CallableType<'a, const CTOR: bool> {
   pub this_type: Option<Ty<'a>>,
   pub type_params: Vec<GenericParam<'a>>,
   pub params: Vec<(bool, Ty<'a>)>,
   pub return_type: Ty<'a>,
 }
 
-pub type Function<'a> = Callable<'a, false>;
-pub type Constructor<'a> = Callable<'a, true>;
+pub type FunctionType<'a> = CallableType<'a, false>;
+pub type ConstructorType<'a> = CallableType<'a, true>;
+
+impl<'a> Analyzer<'a> {
+  pub fn print_callable_type<const CTOR: bool>(
+    &self,
+    callable: &CallableType<'a, CTOR>,
+  ) -> TSType<'a> {
+    todo!()
+  }
+}

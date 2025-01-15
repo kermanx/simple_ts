@@ -13,7 +13,7 @@ pub struct GenericParam<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct Generic<'a> {
+pub struct GenericType<'a> {
   pub params: Vec<GenericParam<'a>>,
   pub body: &'a TSType<'a>,
 }
@@ -38,5 +38,9 @@ impl<'a> Analyzer<'a> {
       }
       _ => unreachable!("Cannot instantiate non-generic type"),
     }
+  }
+
+  pub fn print_generic_type(&self, generic: &GenericType<'a>) -> TSType<'a> {
+    todo!()
   }
 }

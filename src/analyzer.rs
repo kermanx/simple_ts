@@ -6,12 +6,12 @@ use crate::{
     tree::ScopeTree,
     variable::VariableScope,
   },
-  ty::{ union::UnionType, Ty},
+  ty::{accumulator::TypeAccumulator, Ty},
 };
 use line_index::LineIndex;
 use oxc::{
   allocator::Allocator,
-  ast::ast::Program,
+  ast::{ast::Program, AstBuilder},
   semantic::{Semantic, SymbolId},
   span::{GetSpan, Span},
 };
@@ -23,7 +23,7 @@ pub struct Analyzer<'a> {
   pub config: &'a Config,
   pub line_index: LineIndex,
   pub semantic: Semantic<'a>,
-  pub diagnostics: BTreeSet<String>,
+  pub ast_builder: AstBuilder<'a>,
 
   pub span_stack: Vec<Span>,
   pub call_scopes: Vec<CallScope<'a>>,
@@ -33,7 +33,8 @@ pub struct Analyzer<'a> {
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
   pub types: FxHashMap<SymbolId, Ty<'a>>,
 
-  pub expr_types: FxHashMap<Span, UnionType<'a>>,
+  pub diagnostics: BTreeSet<String>,
+  pub expr_types: FxHashMap<Span, TypeAccumulator<'a>>,
   pub pos_to_expr: &'a mut [Span],
 }
 
@@ -54,7 +55,7 @@ impl<'a> Analyzer<'a> {
       config,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
-      diagnostics: Default::default(),
+      ast_builder: AstBuilder::new(allocator),
 
       span_stack: Vec::new(),
       call_scopes: Vec::from([root_call_scope]),
@@ -64,6 +65,7 @@ impl<'a> Analyzer<'a> {
       variables: Default::default(),
       types: Default::default(),
 
+      diagnostics: Default::default(),
       expr_types: Default::default(),
       pos_to_expr: allocator.alloc_slice_fill_default(semantic.source_text().len()),
 
@@ -113,5 +115,10 @@ impl<'a> Analyzer<'a> {
 
   pub fn resolve_global_type(&mut self, id: &'a str) -> Ty<'a> {
     todo!()
+  }
+
+  pub fn get_type_by_pos(&mut self, pos: usize) -> Ty<'a> {
+    let span = self.pos_to_expr[pos];
+    self.expr_types.get_mut(&span).unwrap().to_ty()
   }
 }

@@ -1,12 +1,12 @@
 use crate::{
   analyzer::Analyzer,
-  ty::{record::Record, Ty},
+  ty::{record::RecordType, Ty},
 };
 use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_object_expression(&mut self, node: &'a ObjectExpression) -> Ty<'a> {
-    let object = self.allocator.alloc(Record::default());
+    let object = self.allocator.alloc(RecordType::default());
 
     for property in &node.properties {
       match property {

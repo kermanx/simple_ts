@@ -1,3 +1,5 @@
+use super::Ty;
+use crate::analyzer::Analyzer;
 use bitflags::bitflags;
 
 bitflags! {
@@ -52,6 +54,109 @@ impl Facts {
       Self::TRUTHY
     } else {
       Self::FALSY
+    }
+  }
+}
+
+impl<'a> Analyzer<'a> {
+  pub fn get_facts(&mut self, ty: Ty<'a>) -> Facts {
+    match ty {
+      Ty::Error => Facts::NONE,
+
+      Ty::Any => Facts::NONE,
+      Ty::Unknown => Facts::NONE,
+      Ty::Never => Facts::T_NE_ALL,
+      Ty::Void => Facts::FALSY | Facts::T_NE_ALL,
+
+      Ty::BigInt => Facts::T_EQ_BIGINT | Facts::T_NE_ALL & !Facts::T_EQ_BIGINT,
+      Ty::Boolean => Facts::T_EQ_BOOLEAN | Facts::T_NE_ALL & !Facts::T_EQ_BOOLEAN,
+      Ty::Null => {
+        Facts::EQ_NULL
+          | Facts::IS_NULLISH
+          | Facts::FALSY
+          | Facts::T_EQ_OBJECT
+          | Facts::T_NE_ALL & !Facts::NE_NULL & !Facts::T_NE_OBJECT
+      }
+      Ty::Number => Facts::T_EQ_NUMBER | Facts::T_NE_ALL & !Facts::T_EQ_NUMBER,
+      Ty::Object => Facts::T_EQ_OBJECT | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_OBJECT,
+      Ty::String => Facts::T_EQ_STRING | Facts::T_NE_ALL & !Facts::T_EQ_STRING,
+      Ty::Symbol => Facts::T_EQ_SYMBOL | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_SYMBOL,
+      Ty::Undefined => {
+        Facts::EQ_UNDEFINED
+          | Facts::IS_NULLISH
+          | Facts::FALSY
+          | Facts::T_NE_ALL & !Facts::NE_UNDEFINED
+      }
+
+      Ty::StringLiteral(s) => self.get_facts(Ty::String) | Facts::truthy(s.len() > 0),
+      Ty::NumericLiteral(n) => self.get_facts(Ty::Number) | Facts::truthy(n.0 != 0.0),
+      Ty::BigIntLiteral(_) => self.get_facts(Ty::BigInt),
+      Ty::BooleanLiteral(b) => self.get_facts(Ty::Boolean) | Facts::truthy(b),
+      Ty::UniqueSymbol(_) => self.get_facts(Ty::Symbol),
+
+      Ty::Record(_) => self.get_facts(Ty::Object),
+      Ty::Function(_) | Ty::Constructor(_) => {
+        Facts::T_EQ_FUNCTION | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_FUNCTION
+      }
+      Ty::Namespace(_) => self.get_facts(Ty::Object),
+
+      Ty::Union(union) => {
+        let mut facts = Facts::all();
+        union.for_each(|ty| facts &= self.get_facts(ty));
+        facts
+      }
+      Ty::Intersection(intersection) => {
+        let mut facts = Facts::empty();
+        for val in &intersection.types {
+          facts |= self.get_facts(*val);
+        }
+        facts
+      }
+
+      Ty::Generic(_) | Ty::Intrinsic(_) => {
+        unreachable!("Cannot get facts of {ty:?}")
+      }
+      Ty::UnresolvedType(node) => {
+        if let Some(resolved) = self.resolve_type(node) {
+          self.get_facts(resolved)
+        } else {
+          Facts::NONE
+        }
+      }
+      Ty::UnresolvedVariable(symbol) => match *self.variables.get(&symbol).unwrap() {
+        Ty::UnresolvedVariable(s) if s == symbol => Facts::NONE,
+        ty => self.get_facts(ty),
+      },
+    }
+  }
+
+  pub fn test_truthy(&mut self, ty: Ty<'a>) -> Option<bool> {
+    let facts = self.get_facts(ty);
+    match (facts.contains(Facts::TRUTHY), facts.contains(Facts::FALSY)) {
+      (true, false) => Some(true),
+      (false, true) => Some(false),
+      (false, false) => None,
+      (true, true) => unreachable!("TRUTHY and FALSY are mutually exclusive"),
+    }
+  }
+
+  pub fn test_nullish(&mut self, ty: Ty<'a>) -> Option<bool> {
+    let facts = self.get_facts(ty);
+    match (facts.contains(Facts::IS_NULLISH), facts.contains(Facts::NOT_NULLISH)) {
+      (true, false) => Some(true),
+      (false, true) => Some(false),
+      (false, false) => None,
+      (true, true) => unreachable!("IS_NULLISH and NOT_NULLISH are mutually exclusive"),
+    }
+  }
+
+  pub fn test_is_undefined(&mut self, ty: Ty<'a>) -> Option<bool> {
+    let facts = self.get_facts(ty);
+    match (facts.contains(Facts::EQ_UNDEFINED), facts.contains(Facts::NE_UNDEFINED)) {
+      (true, false) => Some(true),
+      (false, true) => Some(false),
+      (false, false) => None,
+      (true, true) => unreachable!("EQ_UNDEFINED and NE_UNDEFINED are mutually exclusive"),
     }
   }
 }

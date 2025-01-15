@@ -1,7 +1,15 @@
 use super::Ty;
+use crate::analyzer::Analyzer;
+use oxc::ast::ast::TSType;
 use rustc_hash::FxHashMap;
 
 #[derive(Debug, Clone)]
-pub struct Namespace<'a> {
+pub struct NamespaceType<'a> {
   pub members: FxHashMap<&'a str, Ty<'a>>,
+}
+
+impl<'a> Analyzer<'a> {
+  pub fn print_namespace_type(&self, namespace: &NamespaceType<'a>) -> TSType<'a> {
+    todo!()
+  }
 }

@@ -1,24 +1,24 @@
 use super::{property_key::PropertyKeyType, Ty};
 use crate::analyzer::Analyzer;
-use oxc::semantic::SymbolId;
+use oxc::{ast::ast::TSType, semantic::SymbolId};
 use oxc_syntax::number::ToJsString;
 use rustc_hash::FxHashMap;
 
 #[derive(Debug, Clone)]
-struct KeyedProperty<'a> {
+pub struct KeyedProperty<'a> {
   value: Ty<'a>,
   optional: bool,
   readonly: bool,
 }
 
 #[derive(Debug, Default, Clone)]
-struct MappedProperty<'a> {
+pub struct MappedProperty<'a> {
   values: Vec<Ty<'a>>,
   readonly: bool,
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct Record<'a> {
+pub struct RecordType<'a> {
   pub proto: Option<Ty<'a>>,
 
   pub string_keyed: FxHashMap<&'a str, KeyedProperty<'a>>,
@@ -29,7 +29,7 @@ pub struct Record<'a> {
   pub symbol_mapped: MappedProperty<'a>,
 }
 
-impl<'a> Record<'a> {
+impl<'a> RecordType<'a> {
   pub fn init_proto(&mut self, proto: Ty<'a>) {
     self.proto = Some(proto);
   }
@@ -72,6 +72,12 @@ impl<'a> Record<'a> {
   }
 
   pub fn delete_property(&mut self, analyzer: &mut Analyzer<'a>, value: Ty<'a>) {
+    todo!()
+  }
+}
+
+impl<'a> Analyzer<'a> {
+  pub fn print_record_type(&self, record: &RecordType<'a>) -> TSType<'a> {
     todo!()
   }
 }

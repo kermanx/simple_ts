@@ -26,7 +26,7 @@ mod yield_expression;
 
 use crate::{
   analyzer::Analyzer,
-  ty::{union::UnionType, Ty},
+  ty::{accumulator::TypeAccumulator, union::UnionType, Ty},
 };
 use oxc::{
   ast::{ast::Expression, match_member_expression},
@@ -86,14 +86,14 @@ impl<'a> Analyzer<'a> {
     };
 
     {
-      let Analyzer { expr_types, pos_to_expr, .. } = self;
-      let union = expr_types.entry(span).or_insert_with(move || {
+      let Analyzer { allocator, expr_types, pos_to_expr, .. } = self;
+      let acc = expr_types.entry(span).or_insert_with(move || {
         for pos in span.start..span.end {
           pos_to_expr[pos as usize] = span;
         }
-        UnionType::default()
+        TypeAccumulator::default()
       });
-      union.add(value);
+      acc.add(value, allocator);
     }
 
     self.pop_span();

@@ -1,9 +1,9 @@
-use crate::{analyzer::Analyzer, ty::record::Record};
+use crate::{analyzer::Analyzer, ty::record::RecordType};
 use oxc::ast::ast::{JSXAttributeItem, JSXOpeningElement};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_jsx_attributes(&mut self, node: &'a JSXOpeningElement<'a>) -> &'a mut Record<'a> {
-    let object = self.allocator.alloc(Record::default());
+  pub fn exec_jsx_attributes(&mut self, node: &'a JSXOpeningElement<'a>) -> &'a mut RecordType<'a> {
+    let object = self.allocator.alloc(RecordType::default());
 
     for attr in &node.attributes {
       match attr {

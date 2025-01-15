@@ -62,11 +62,11 @@ impl<'a> Analyzer<'a> {
           }
         }
       }
-      Ty::Intersection(values) => {
+      Ty::Intersection(intersection) => {
         let mut any_string = false;
         let mut any_number = false;
         let mut any_symbol = false;
-        for value in values {
+        for value in &intersection.types {
           match self.to_property_key(*value) {
             PropertyKeyType::Error => return PropertyKeyType::Error,
             PropertyKeyType::AnyString => any_string = true,

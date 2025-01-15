@@ -1,12 +1,12 @@
 use crate::{
   analyzer::Analyzer,
-  ty::{record::Record, Ty},
+  ty::{record::RecordType, Ty},
 };
 
 impl<'a> Analyzer<'a> {
   /// const { enumerated_1, enumerated_2, ...rest } = object;
   pub fn exec_object_rest(&mut self, object: Ty<'a>, enumerated: Vec<Ty<'a>>) -> Ty<'a> {
-    let rest = self.allocator.alloc(Record::default());
+    let rest = self.allocator.alloc(RecordType::default());
 
     rest.init_spread(self, object);
 

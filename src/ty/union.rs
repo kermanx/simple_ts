@@ -1,6 +1,6 @@
 use super::Ty;
-use crate::utils::F64WithEq;
-use oxc::{allocator::Allocator, semantic::SymbolId, span::Atom};
+use crate::{analyzer::Analyzer, utils::F64WithEq};
+use oxc::{allocator::Allocator, ast::ast::TSType, semantic::SymbolId, span::Atom};
 use rustc_hash::FxHashSet;
 use std::{hash::Hash, mem};
 
@@ -69,7 +69,7 @@ impl<'a> UnionType<'a> {
 }
 
 #[derive(Debug, Default)]
-struct CompoundUnion<'a> {
+pub struct CompoundUnion<'a> {
   string: LiteralAble<&'a Atom<'a>>,
   number: LiteralAble<F64WithEq>,
   bigint: LiteralAble<&'a Atom<'a>>,
@@ -158,7 +158,7 @@ impl<'a> CompoundUnion<'a> {
 }
 
 #[derive(Debug, Default)]
-enum LiteralAble<L> {
+pub enum LiteralAble<L> {
   #[default]
   Vacant,
   Any,
@@ -214,5 +214,11 @@ where
       iter.for_each(|ty| union.add(ty));
       union
     }),
+  }
+}
+
+impl<'a> Analyzer<'a> {
+  pub fn print_union_type(&self, union: &UnionType<'a>) -> TSType<'a> {
+    todo!()
   }
 }
