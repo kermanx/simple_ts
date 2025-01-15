@@ -45,13 +45,9 @@ impl<'a> Analyzer<'a> {
       UnaryOperator::BitwiseNot => self.get_to_numeric(argument),
       UnaryOperator::Typeof => {
         let facts = self.get_facts(argument);
-        let allocator = self.allocator;
         let values = TYPEOF_VALUES
           .iter()
-          .filter_map(|(fact, value)| {
-            // FIXME: use static atom after next oxc release. See https://github.com/oxc-project/oxc/pull/8479
-            facts.contains(*fact).then(|| Type::StringLiteral(allocator.alloc(Atom::from(*value))))
-          })
+          .filter_map(|(fact, value)| facts.contains(*fact).then_some(Type::StringLiteral(value)))
           .collect::<Vec<_>>();
         into_union(self.allocator, values)
       }
@@ -61,13 +57,13 @@ impl<'a> Analyzer<'a> {
   }
 }
 
-const TYPEOF_VALUES: [(Facts, &'static str); 8] = [
-  (Facts::NE_UNDEFINED, "undefined"),
-  (Facts::T_NE_BIGINT, "bigint"),
-  (Facts::T_NE_BOOLEAN, "boolean"),
-  (Facts::T_NE_FUNCTION, "function"),
-  (Facts::T_NE_NUMBER, "number"),
-  (Facts::T_NE_OBJECT, "object"),
-  (Facts::T_NE_STRING, "string"),
-  (Facts::T_NE_SYMBOL, "symbol"),
+const TYPEOF_VALUES: [(Facts, Atom<'static>); 8] = [
+  (Facts::NE_UNDEFINED, Atom::new_const("undefined")),
+  (Facts::T_NE_BIGINT, Atom::new_const("bigint")),
+  (Facts::T_NE_BOOLEAN, Atom::new_const("boolean")),
+  (Facts::T_NE_FUNCTION, Atom::new_const("function")),
+  (Facts::T_NE_NUMBER, Atom::new_const("number")),
+  (Facts::T_NE_OBJECT, Atom::new_const("object")),
+  (Facts::T_NE_STRING, Atom::new_const("string")),
+  (Facts::T_NE_SYMBOL, Atom::new_const("symbol")),
 ];
