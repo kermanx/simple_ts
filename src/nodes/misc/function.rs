@@ -1,9 +1,5 @@
 use crate::{analyzer::Analyzer, ty::Ty};
-use oxc::{
-  ast::ast::{Function, FunctionType},
-  semantic::ScopeId,
-};
-use std::rc::Rc;
+use oxc::ast::ast::Function;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_function(&mut self, node: &'a Function<'a>) -> Ty<'a> {

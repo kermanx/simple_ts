@@ -1,6 +1,6 @@
 use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{
-  ExportDefaultDeclarationKind, ImportDeclarationSpecifier, ModuleDeclaration, ModuleExportName,
+  ExportDefaultDeclarationKind, ModuleDeclaration,
 };
 
 impl<'a> Analyzer<'a> {

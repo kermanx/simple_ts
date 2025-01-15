@@ -1,5 +1,5 @@
 use crate::{analyzer::Analyzer, ty::Ty};
-use oxc::ast::ast::{Class, ClassElement, MethodDefinitionKind, PropertyKind};
+use oxc::ast::ast::Class;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_class(&mut self, node: &'a Class<'a>) -> Ty<'a> {

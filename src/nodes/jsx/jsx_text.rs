@@ -1,4 +1,4 @@
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::analyzer::Analyzer;
 use oxc::ast::ast::JSXText;
 
 impl<'a> Analyzer<'a> {

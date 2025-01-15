@@ -16,7 +16,7 @@ use oxc::{
   span::{GetSpan, Span},
 };
 use rustc_hash::FxHashMap;
-use std::{collections::BTreeSet, marker::PhantomData, mem};
+use std::collections::BTreeSet;
 
 pub struct Analyzer<'a> {
   pub allocator: &'a Allocator,
