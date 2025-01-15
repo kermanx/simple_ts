@@ -12,6 +12,6 @@ impl<'a> Analyzer<'a> {
     let right = self.exec_expression(&node.right);
     self.pop_cf_scope();
 
-    into_union(self.allocator, vec![left, right])
+    into_union(self.allocator, [left, right])
   }
 }

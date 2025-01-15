@@ -15,7 +15,7 @@ impl<'a> Analyzer<'a> {
 
       self.push_indeterminate_cf_scope();
       let right = self.exec_expression(&node.right);
-      let value = into_union(self.allocator, vec![left, right]);
+      let value = into_union(self.allocator, [left, right]);
       self.pop_cf_scope();
 
       // Execute write outside of the indeterminate scope, because the value is already an union

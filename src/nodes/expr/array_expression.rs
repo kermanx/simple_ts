@@ -1,9 +1,12 @@
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{union::into_union, Ty},
+};
 use oxc::ast::ast::{ArrayExpression, ArrayExpressionElement};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_array_expression(&mut self, node: &'a ArrayExpression<'a>) -> Ty<'a> {
-    let values = self.allocator.alloc(vec![]);
+    let mut values = vec![];
 
     for element in &node.elements {
       let value = match element {
@@ -14,6 +17,6 @@ impl<'a> Analyzer<'a> {
       values.push(value);
     }
 
-    Ty::Union(values)
+    into_union(self.allocator, values)
   }
 }

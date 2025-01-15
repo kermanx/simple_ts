@@ -21,6 +21,6 @@ impl<'a> Analyzer<'a> {
     self.apply_complementary_shadows([shadow_1, shadow_2]);
     self.pop_cf_scope();
 
-    into_union(self.allocator, vec![consequent, alternate])
+    into_union(self.allocator, [consequent, alternate])
   }
 }

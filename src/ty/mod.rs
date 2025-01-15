@@ -14,6 +14,8 @@ use generic::Generic;
 use namespace::Namespace;
 use oxc::{ast::ast::TSType, semantic::SymbolId, span::Atom};
 use record::Record;
+use std::{hash, mem};
+use union::UnionType;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Ty<'a> {
@@ -49,7 +51,7 @@ pub enum Ty<'a> {
   Namespace(&'a Namespace<'a>),
 
   /* Compound */
-  Union(&'a Vec<Ty<'a>>),
+  Union(&'a UnionType<'a>),
   Intersection(&'a Vec<Ty<'a>>),
 
   /* Generic */
@@ -58,6 +60,21 @@ pub enum Ty<'a> {
   /// Can only appear in inferred types
   UnresolvedType(&'a TSType<'a>),
   UnresolvedVariable(SymbolId),
+}
+
+impl<'a> PartialEq for Ty<'a> {
+  fn eq(&self, other: &Self) -> bool {
+    // Compare as binary data
+    unsafe { mem::transmute::<_, u128>(*self) == mem::transmute::<_, u128>(*other) }
+  }
+}
+
+impl<'a> Eq for Ty<'a> {}
+
+impl<'a> hash::Hash for Ty<'a> {
+  fn hash<H: hash::Hasher>(&self, state: &mut H) {
+    unsafe { mem::transmute::<_, u128>(*self).hash(state) }
+  }
 }
 
 impl<'a> Analyzer<'a> {
@@ -102,11 +119,9 @@ impl<'a> Analyzer<'a> {
       }
       Ty::Namespace(_) => self.get_facts(Ty::Object),
 
-      Ty::Union(vals) => {
+      Ty::Union(union) => {
         let mut facts = Facts::all();
-        for val in vals {
-          facts &= self.get_facts(*val);
-        }
+        union.for_each(|ty| facts &= self.get_facts(ty));
         facts
       }
       Ty::Intersection(vals) => {

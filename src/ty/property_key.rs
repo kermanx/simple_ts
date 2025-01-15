@@ -18,11 +18,13 @@ pub enum PropertyKeyType<'a> {
 impl<'a> Analyzer<'a> {
   pub fn to_property_key(&mut self, from: Ty<'a>) -> PropertyKeyType<'a> {
     match from {
+      Ty::Error => PropertyKeyType::Error,
+
       Ty::Any => {
         // This is weird, but somehow TypeScript does this.
         PropertyKeyType::AnyNumber
       }
-      Ty::Unknown | Ty::Never | Ty::Void | Ty::Error => PropertyKeyType::Error,
+      Ty::Unknown | Ty::Never | Ty::Void => PropertyKeyType::Error,
 
       Ty::String => PropertyKeyType::AnyString,
       Ty::Number => PropertyKeyType::AnyNumber,
@@ -38,23 +40,26 @@ impl<'a> Analyzer<'a> {
         PropertyKeyType::Error
       }
 
-      Ty::Union(values) => {
+      Ty::Union(union) => {
+        let mut has_error = false;
         let mut any_string = false;
         let mut any_number = false;
         let mut any_symbol = false;
-        for value in values {
-          match self.to_property_key(*value) {
-            PropertyKeyType::Error => return PropertyKeyType::Error,
-            PropertyKeyType::AnyString | PropertyKeyType::StringLiteral(_) => any_string = true,
-            PropertyKeyType::AnyNumber | PropertyKeyType::NumericLiteral(_) => any_number = true,
-            PropertyKeyType::AnySymbol | PropertyKeyType::UniqueSymbol(_) => any_symbol = true,
+        union.for_each(|ty| match self.to_property_key(ty) {
+          PropertyKeyType::Error => has_error = true,
+          PropertyKeyType::AnyString | PropertyKeyType::StringLiteral(_) => any_string = true,
+          PropertyKeyType::AnyNumber | PropertyKeyType::NumericLiteral(_) => any_number = true,
+          PropertyKeyType::AnySymbol | PropertyKeyType::UniqueSymbol(_) => any_symbol = true,
+        });
+        if has_error {
+          PropertyKeyType::Error
+        } else {
+          match (any_string, any_number, any_symbol) {
+            (true, _, _) | (false, true, true) => PropertyKeyType::AnyString,
+            (false, true, false) => PropertyKeyType::AnyNumber,
+            (false, false, true) => PropertyKeyType::AnySymbol,
+            (false, false, false) => PropertyKeyType::Error,
           }
-        }
-        match (any_string, any_number, any_symbol) {
-          (true, _, _) | (false, true, true) => PropertyKeyType::AnyString,
-          (false, true, false) => PropertyKeyType::AnyNumber,
-          (false, false, true) => PropertyKeyType::AnySymbol,
-          (false, false, false) => PropertyKeyType::Error,
         }
       }
       Ty::Intersection(values) => {

@@ -112,10 +112,10 @@ impl<'a> Analyzer<'a> {
       if indeterminate {
         let allocator = self.allocator;
         if let Some(variable) = self.variable_scopes.get_current_mut().variables.get_mut(&symbol) {
-          variable.value = into_union(allocator, vec![variable.value, value]);
+          variable.value = into_union(allocator, [variable.value, value]);
         } else {
           let parent = self.read_variable(symbol);
-          let value = into_union(allocator, vec![parent, value]);
+          let value = into_union(allocator, [parent, value]);
           self.variable_scopes.get_current_mut().variables.insert(symbol, Variable::shadow(value));
         }
       } else {

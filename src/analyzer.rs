@@ -6,7 +6,7 @@ use crate::{
     tree::ScopeTree,
     variable::VariableScope,
   },
-  ty::Ty,
+  ty::{ union::UnionType, Ty},
 };
 use line_index::LineIndex;
 use oxc::{
@@ -32,6 +32,9 @@ pub struct Analyzer<'a> {
 
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
   pub types: FxHashMap<SymbolId, Ty<'a>>,
+
+  pub expr_types: FxHashMap<Span, UnionType<'a>>,
+  pub pos_to_expr: &'a mut [Span],
 }
 
 impl<'a> Analyzer<'a> {
@@ -61,6 +64,9 @@ impl<'a> Analyzer<'a> {
       variables: Default::default(),
       types: Default::default(),
 
+      expr_types: Default::default(),
+      pos_to_expr: allocator.alloc_slice_fill_default(semantic.source_text().len()),
+
       allocator,
     }
   }
@@ -89,7 +95,7 @@ impl<'a> Analyzer<'a> {
     self.diagnostics.insert(message.into() + &span_text);
   }
 
-  pub fn push_span(&mut self, node: &'a impl GetSpan) {
+  pub fn push_span(&mut self, node: &impl GetSpan) {
     self.span_stack.push(node.span());
   }
 

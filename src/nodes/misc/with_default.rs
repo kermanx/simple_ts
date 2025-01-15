@@ -10,6 +10,6 @@ impl<'a> Analyzer<'a> {
     let default_val = self.exec_expression(default);
     self.pop_cf_scope();
 
-    into_union(self.allocator, vec![default_val, value])
+    into_union(self.allocator, [default_val, value])
   }
 }

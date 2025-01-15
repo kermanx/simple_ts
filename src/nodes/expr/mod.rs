@@ -24,12 +24,20 @@ mod unary_expression;
 mod update_expression;
 mod yield_expression;
 
-use crate::{analyzer::Analyzer, ty::Ty};
-use oxc::ast::{ast::Expression, match_member_expression};
+use crate::{
+  analyzer::Analyzer,
+  ty::{union::UnionType, Ty},
+};
+use oxc::{
+  ast::{ast::Expression, match_member_expression},
+  span::GetSpan,
+};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_expression(&mut self, node: &'a Expression<'a>) -> Ty<'a> {
-    self.push_span(node);
+    let span = node.span();
+    self.push_span(&span);
+
     let value = match node {
       match_member_expression!(Expression) => {
         self.exec_member_expression_read(node.to_member_expression()).0
@@ -76,7 +84,20 @@ impl<'a> Analyzer<'a> {
       | Expression::TSNonNullExpression(_)
       | Expression::TSSatisfiesExpression(_) => unreachable!(),
     };
+
+    {
+      let Analyzer { expr_types, pos_to_expr, .. } = self;
+      let union = expr_types.entry(span).or_insert_with(move || {
+        for pos in span.start..span.end {
+          pos_to_expr[pos as usize] = span;
+        }
+        UnionType::default()
+      });
+      union.add(value);
+    }
+
     self.pop_span();
+
     value
   }
 }

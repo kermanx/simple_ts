@@ -15,7 +15,7 @@ impl<'a> Analyzer<'a> {
     };
     if indeterminate {
       self.pop_cf_scope();
-      into_union(self.allocator, vec![Ty::Undefined, value])
+      into_union(self.allocator, [Ty::Undefined, value])
     } else {
       value
     }

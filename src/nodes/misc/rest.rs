@@ -1,4 +1,7 @@
-use crate::{analyzer::Analyzer, ty::{record::Record, Ty}};
+use crate::{
+  analyzer::Analyzer,
+  ty::{record::Record, Ty},
+};
 
 impl<'a> Analyzer<'a> {
   /// const { enumerated_1, enumerated_2, ...rest } = object;
