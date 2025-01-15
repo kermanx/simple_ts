@@ -15,15 +15,16 @@ impl<'a> Analyzer<'a> {
           let value = self.exec_expression(&node.value);
           let value = value;
 
-          if matches!(&node.key, PropertyKey::StaticIdentifier(node) if node.name == "__proto__") {
-            object.init_proto(value);
-          } else {
-            let value = match node.kind {
-              PropertyKind::Init => value,
-              PropertyKind::Get | PropertyKind::Set => todo!(),
-            };
-            object.init_property(self, key, value, false, false);
-          }
+          // tsc doesn't care. So we don't care either.
+          // if matches!(&node.key, PropertyKey::StaticIdentifier(node) if node.name == "__proto__") {
+          //   object.init_proto(value);
+          // } else {
+
+          let value = match node.kind {
+            PropertyKind::Init => value,
+            PropertyKind::Get | PropertyKind::Set => todo!(),
+          };
+          object.init_property(self, key, value, false, false);
         }
         ObjectPropertyKind::SpreadProperty(node) => {
           let argument = self.exec_expression(&node.argument);
