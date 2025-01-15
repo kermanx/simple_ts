@@ -1,0 +1,7 @@
+---
+source: tests/mod.rs
+assertion_line: 58
+input_file: tests/fixtures/basic.ts
+---
+type A = string;
+type B = number;

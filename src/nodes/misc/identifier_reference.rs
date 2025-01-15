@@ -9,7 +9,8 @@ impl<'a> Analyzer<'a> {
     if let Some(symbol) = symbol {
       self.read_variable(symbol)
     } else {
-      todo!("globals and `arguments`");
+      // TODO: globals and `arguments`
+      Ty::Unknown
     }
   }
 
@@ -25,7 +26,7 @@ impl<'a> Analyzer<'a> {
     if let Some(symbol) = symbol {
       self.write_variable(symbol, value);
     } else {
-      todo!("globals and `arguments`");
+      // TODO: globals and `arguments`
     }
   }
 }

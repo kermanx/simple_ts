@@ -13,7 +13,7 @@ use oxc::{
   allocator::Allocator,
   ast::{ast::Program, AstBuilder},
   semantic::{Semantic, SymbolId},
-  span::{GetSpan, Span},
+  span::{GetSpan, Span, SPAN},
 };
 use rustc_hash::FxHashMap;
 use std::collections::BTreeSet;
@@ -48,14 +48,24 @@ impl<'a> Analyzer<'a> {
     let mut variable_scopes = ScopeTree::new();
     let root_variable_scope = variable_scopes.push(VariableScope::new(root_cf_scope));
 
-    let root_call_scope =
-      CallScope::new(vec![], root_variable_scope, 0, true, false, todo!("globalThis"));
+    let root_call_scope = CallScope::new(
+      vec![],
+      root_variable_scope,
+      0,
+      true,
+      false,
+      /* TODO: globalThis */ Ty::Any,
+    );
+
+    let ast_builder = AstBuilder::new(allocator);
+    let pos_to_expr = allocator.alloc_slice_fill_default(semantic.source_text().len());
 
     Analyzer {
+      allocator,
       config,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
-      ast_builder: AstBuilder::new(allocator),
+      ast_builder,
 
       span_stack: Vec::new(),
       call_scopes: Vec::from([root_call_scope]),
@@ -67,9 +77,7 @@ impl<'a> Analyzer<'a> {
 
       diagnostics: Default::default(),
       expr_types: Default::default(),
-      pos_to_expr: allocator.alloc_slice_fill_default(semantic.source_text().len()),
-
-      allocator,
+      pos_to_expr,
     }
   }
 
@@ -117,8 +125,12 @@ impl<'a> Analyzer<'a> {
     todo!()
   }
 
-  pub fn get_type_by_pos(&mut self, pos: usize) -> Ty<'a> {
+  pub fn get_type_by_pos(&mut self, pos: usize) -> Option<Ty<'a>> {
     let span = self.pos_to_expr[pos];
-    self.expr_types.get_mut(&span).unwrap().to_ty()
+    if span == SPAN {
+      None
+    } else {
+      Some(self.expr_types.get_mut(&span).unwrap().to_ty())
+    }
   }
 }

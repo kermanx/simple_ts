@@ -61,7 +61,8 @@ impl<'a> UnionType<'a> {
       }
 
       UnionType::WithUnresolved(s, t) => {
-        s.for_each(&mut f);
+        // FIXME: This is ugly. But `&mut f` will trigger a rustc error
+        s.for_each(&mut f as &mut dyn FnMut(Ty<'a>) -> ());
         t.iter().copied().for_each(f);
       }
     }
@@ -192,7 +193,9 @@ impl<'a, L> LiteralAble<L> {
     match self {
       LiteralAble::Vacant => {}
       LiteralAble::Any => f(any),
-      LiteralAble::Literals(set) => set.iter().copied().map(ctor).for_each(f),
+      LiteralAble::Literals(set) => {
+        set.iter().copied().map(ctor).for_each(&mut f as &mut dyn FnMut(Ty<'a>) -> ())
+      }
     }
   }
 }

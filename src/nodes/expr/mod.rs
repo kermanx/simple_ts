@@ -26,7 +26,7 @@ mod yield_expression;
 
 use crate::{
   analyzer::Analyzer,
-  ty::{accumulator::TypeAccumulator, union::UnionType, Ty},
+  ty::{accumulator::TypeAccumulator, Ty},
 };
 use oxc::{
   ast::{ast::Expression, match_member_expression},

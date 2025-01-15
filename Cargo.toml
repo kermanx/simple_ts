@@ -16,3 +16,7 @@ oxc_ecmascript = "0.46.0"
 oxc_index = "2.0.0"
 oxc_syntax = { version = "0.46.0", features = ["to_js_string"] }
 rustc-hash = "2.1.0"
+
+[dev-dependencies]
+insta = { version = "1.42.0", features = ["glob"] }
+regex = "1.11.1"
