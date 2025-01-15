@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
       ModuleDeclaration::ImportDeclaration(node) => {
         if let Some(specifiers) = &node.specifiers {
           let name = node.source.value.as_str();
-          let known = self.get_known_module(name);
+          let known = self.resolve_module(name);
 
           for specifier in specifiers {
             let value = if let Some(known) = known {
@@ -83,7 +83,7 @@ impl<'a> Analyzer<'a> {
         }
       }
       ModuleDeclaration::ExportDefaultDeclaration(node) => {
-        let value = match &node.declaration {
+        match &node.declaration {
           ExportDefaultDeclarationKind::FunctionDeclaration(node) => self.exec_function(node),
           ExportDefaultDeclarationKind::ClassDeclaration(node) => {
             if node.id.is_none() {

@@ -3,11 +3,12 @@ pub mod facts;
 pub mod generic;
 pub mod namespace;
 pub mod operations;
+pub mod property_key;
 pub mod record;
 pub mod union;
 
 use crate::{analyzer::Analyzer, utils::F64WithEq};
-use callable::Callable;
+use callable::{Constructor, Function};
 use facts::Facts;
 use generic::Generic;
 use namespace::Namespace;
@@ -16,12 +17,13 @@ use record::Record;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type<'a> {
+  Error,
+
   /* Intrinsics */
   Any,
   Unknown,
   Never,
   Void,
-  Error,
 
   /* Primitives */
   BigInt,
@@ -38,13 +40,12 @@ pub enum Type<'a> {
   NumericLiteral(F64WithEq),
   BigIntLiteral(&'a Atom<'a>),
   BooleanLiteral(bool),
-
-  // UniqueSymbol(SymbolId),
+  UniqueSymbol(SymbolId),
 
   /* Object like */
   Record(&'a Record<'a>),
-  Callable(&'a Callable<'a, false>),
-  Constructor(&'a Callable<'a, true>),
+  Function(&'a Function<'a>),
+  Constructor(&'a Constructor<'a>),
   Namespace(&'a Namespace<'a>),
 
   /* Compound */
@@ -62,11 +63,12 @@ pub enum Type<'a> {
 impl<'a> Analyzer<'a> {
   pub fn get_facts(&mut self, ty: Type<'a>) -> Facts {
     match ty {
+      Type::Error => Facts::NONE,
+
       Type::Any => Facts::NONE,
       Type::Unknown => Facts::NONE,
       Type::Never => Facts::T_NE_ALL,
       Type::Void => Facts::FALSY | Facts::T_NE_ALL,
-      Type::Error => Facts::NONE,
 
       Type::BigInt => Facts::T_EQ_BIGINT | Facts::T_NE_ALL & !Facts::T_EQ_BIGINT,
       Type::Boolean => Facts::T_EQ_BOOLEAN | Facts::T_NE_ALL & !Facts::T_EQ_BOOLEAN,
@@ -92,9 +94,10 @@ impl<'a> Analyzer<'a> {
       Type::NumericLiteral(n) => self.get_facts(Type::Number) | Facts::truthy(n.0 != 0.0),
       Type::BigIntLiteral(_) => self.get_facts(Type::BigInt),
       Type::BooleanLiteral(b) => self.get_facts(Type::Boolean) | Facts::truthy(b),
+      Type::UniqueSymbol(_) => self.get_facts(Type::Symbol),
 
       Type::Record(_) => self.get_facts(Type::Object),
-      Type::Callable(_) | Type::Constructor(_) => {
+      Type::Function(_) | Type::Constructor(_) => {
         Facts::T_EQ_FUNCTION | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_FUNCTION
       }
       Type::Namespace(_) => self.get_facts(Type::Object),
@@ -203,10 +206,6 @@ impl<'a> Analyzer<'a> {
 
   pub fn get_to_boolean(&mut self, target: Type<'a>) -> Type<'a> {
     self.test_nullish(target).map_or(Type::Boolean, Type::BooleanLiteral)
-  }
-
-  pub fn get_to_property_key(&mut self, target: Type<'a>) -> Type<'a> {
-    todo!()
   }
 
   pub fn get_to_awaited(&mut self, target: Type<'a>) -> Type<'a> {

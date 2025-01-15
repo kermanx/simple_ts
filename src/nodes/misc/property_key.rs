@@ -8,7 +8,7 @@ impl<'a> Analyzer<'a> {
       PropertyKey::PrivateIdentifier(node) => self.exec_private_identifier(node),
       node => {
         let value = self.exec_expression(node.to_expression());
-        self.get_to_property_key(value)
+        self.to_property_key(value)
       }
     }
   }

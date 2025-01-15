@@ -2,11 +2,11 @@ use crate::{
   analyzer::Analyzer,
   r#type::{record::Record, Type},
 };
-use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKey};
+use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKey, PropertyKind};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_object_expression(&mut self, node: &'a ObjectExpression) -> Type<'a> {
-    let object = self.new_empty_record();
+    let object = self.allocator.alloc(Record::default());
 
     for property in &node.properties {
       match property {
@@ -18,7 +18,11 @@ impl<'a> Analyzer<'a> {
           if matches!(&node.key, PropertyKey::StaticIdentifier(node) if node.name == "__proto__") {
             object.init_proto(value);
           } else {
-            object.init_property(self, node.kind, key, value, true);
+            let value = match node.kind {
+              PropertyKind::Init => value,
+              PropertyKind::Get | PropertyKind::Set => todo!(),
+            };
+            object.init_property(self, key, value, false, false);
           }
         }
         ObjectPropertyKind::SpreadProperty(node) => {
@@ -28,6 +32,6 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    object
+    Type::Record(object)
   }
 }

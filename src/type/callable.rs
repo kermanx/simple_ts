@@ -20,3 +20,6 @@ pub struct Callable<'a, const CTOR: bool> {
   pub params: Vec<(bool, Type<'a>)>,
   pub return_type: Type<'a>,
 }
+
+pub type Function<'a> = Callable<'a, false>;
+pub type Constructor<'a> = Callable<'a, true>;
