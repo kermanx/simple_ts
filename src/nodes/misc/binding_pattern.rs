@@ -32,7 +32,7 @@ impl<'a> Analyzer<'a> {
 
   pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, mut init: Option<Ty<'a>>) {
     if let Some(annotation) = &node.type_annotation {
-      init = Some(self.resolve_type_annotation(annotation));
+      init = Some(self.resolve_type_annotation_or_defer(annotation));
     }
     match &node.kind {
       BindingPatternKind::BindingIdentifier(node) => {

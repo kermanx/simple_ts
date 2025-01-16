@@ -14,8 +14,8 @@ impl<'a> Analyzer<'a> {
     for member in &node.members {
       match member {
         TSSignature::TSIndexSignature(node) => {
-          let key = self.resolve_type_annotation(&node.parameters[0].type_annotation);
-          let value = self.resolve_type_annotation(&node.type_annotation);
+          let key = self.resolve_type_annotation(&node.parameters[0].type_annotation)?;
+          let value = self.resolve_type_annotation(&node.type_annotation)?;
           record.get_or_insert_with(alloc_record).init_property(
             self,
             key,
@@ -27,7 +27,7 @@ impl<'a> Analyzer<'a> {
         TSSignature::TSPropertySignature(node) => {
           let key = self.exec_property_key(&node.key);
           let value = if let Some(type_annotation) = &node.type_annotation {
-            self.resolve_type_annotation(type_annotation)
+            self.resolve_type_annotation(type_annotation)?
           } else {
             todo!("Wtf, how can this happen?");
           };
