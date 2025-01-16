@@ -11,6 +11,6 @@ impl<'a> Analyzer<'a> {
     let value = self.exec_function(node);
 
     self.declare_variable(symbol, true);
-    self.init_variable(symbol, Some(value));
+    self.init_variable(symbol, value);
   }
 }

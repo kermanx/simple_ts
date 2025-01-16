@@ -10,6 +10,7 @@ pub mod print;
 pub mod property_key;
 pub mod record;
 pub mod union;
+pub mod widen;
 
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use callable::{ConstructorType, FunctionType};

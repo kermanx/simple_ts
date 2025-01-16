@@ -59,14 +59,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn init_variable(&mut self, symbol: SymbolId, value: Option<Ty<'a>>) {
-    let value = if let Some(value) = value {
-      value
-    } else if self.is_symbol_var(symbol) {
-      return;
-    } else {
-      Ty::Undefined
-    };
+  pub fn init_variable(&mut self, symbol: SymbolId, value: Ty<'a>) {
     if let Some(resolved) = self.variables.get_mut(&symbol) {
       *resolved = value;
     } else {
