@@ -1,5 +1,6 @@
 mod ts_literal;
 mod ts_type_annotation;
+mod ts_type_literal;
 mod ts_type_parameter_instantiation;
 mod ts_type_query;
 mod ts_type_reference;
@@ -30,6 +31,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSTypeQuery(node) => self.resolve_type_query(node),
       TSType::TSUnionType(node) => self.resolve_union_type(node),
       TSType::TSParenthesizedType(node) => self.resolve_type(&node.type_annotation),
+      TSType::TSTypeLiteral(node) => self.resolve_type_literal(node),
 
       _ => todo!(),
     }
