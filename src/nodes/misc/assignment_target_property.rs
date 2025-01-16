@@ -1,4 +1,7 @@
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{property_key::PropertyKeyType, Ty},
+};
 use oxc::ast::ast::AssignmentTargetProperty;
 
 impl<'a> Analyzer<'a> {
@@ -7,10 +10,10 @@ impl<'a> Analyzer<'a> {
     &mut self,
     node: &'a AssignmentTargetProperty<'a>,
     value: Ty<'a>,
-  ) -> Ty<'a> {
+  ) -> PropertyKeyType<'a> {
     match node {
       AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(node) => {
-        let key = Ty::StringLiteral(&node.binding.name);
+        let key = PropertyKeyType::StringLiteral(&node.binding.name);
 
         let value = self.get_property(value, key);
 

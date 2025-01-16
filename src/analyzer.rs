@@ -1,4 +1,5 @@
 use crate::{
+  builtins::Builtins,
   config::Config,
   scope::{
     call::CallScope,
@@ -24,6 +25,8 @@ pub struct Analyzer<'a> {
   pub line_index: LineIndex,
   pub semantic: Semantic<'a>,
   pub ast_builder: AstBuilder<'a>,
+
+  pub builtins: Builtins<'a>,
 
   pub span_stack: Vec<Span>,
   pub call_scopes: Vec<CallScope<'a>>,
@@ -66,6 +69,8 @@ impl<'a> Analyzer<'a> {
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
       ast_builder,
+
+      builtins: Builtins::new(),
 
       span_stack: Vec::new(),
       call_scopes: Vec::from([root_call_scope]),

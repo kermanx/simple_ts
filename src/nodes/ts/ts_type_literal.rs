@@ -15,6 +15,7 @@ impl<'a> Analyzer<'a> {
       match member {
         TSSignature::TSIndexSignature(node) => {
           let key = self.resolve_type_annotation(&node.parameters[0].type_annotation)?;
+          let key = self.to_property_key(key);
           let value = self.resolve_type_annotation(&node.type_annotation)?;
           record.get_or_insert_with(alloc_record).init_property(
             self,

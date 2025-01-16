@@ -2,6 +2,7 @@ pub mod accumulator;
 pub mod callable;
 pub mod facts;
 pub mod generic;
+pub mod get_property;
 pub mod intersection;
 pub mod intrinsics;
 pub mod namespace;
@@ -19,6 +20,7 @@ use intersection::IntersectionType;
 use intrinsics::IntrinsicType;
 use namespace::NamespaceType;
 use oxc::{ast::ast::TSType, semantic::SymbolId, span::Atom};
+use property_key::PropertyKeyType;
 use record::RecordType;
 use std::{hash, mem};
 use union::UnionType;
@@ -84,15 +86,11 @@ impl<'a> hash::Hash for Ty<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn get_property(&mut self, target: Ty<'a>, key: Ty<'a>) -> Ty<'a> {
-    todo!()
-  }
-
-  pub fn set_property(&mut self, _target: Ty<'a>, _key: Ty<'a>, _value: Ty<'a>) {
+  pub fn set_property(&mut self, _target: Ty<'a>, _key: PropertyKeyType<'a>, _value: Ty<'a>) {
     // Do nothing
   }
 
-  pub fn delete_property(&mut self, _target: Ty<'a>, _key: Ty<'a>) {
+  pub fn delete_property(&mut self, _target: Ty<'a>, _key: PropertyKeyType<'a>) {
     // Do nothing
   }
 

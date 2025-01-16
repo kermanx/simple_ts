@@ -7,7 +7,7 @@ use oxc::{
 };
 use oxc_syntax::number::ToJsString;
 use rustc_hash::FxHashMap;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
 #[derive(Debug, Clone)]
 pub struct KeyedProperty<'a> {
@@ -42,13 +42,13 @@ impl<'a> RecordType<'a> {
   pub fn init_property(
     &mut self,
     analyzer: &mut Analyzer<'a>,
-    key: Ty<'a>,
+    key: PropertyKeyType<'a>,
     value: Ty<'a>,
     optional: bool,
     readonly: bool,
   ) {
     let keyed_property = KeyedProperty { value, optional, readonly };
-    match analyzer.to_property_key(key) {
+    match key {
       PropertyKeyType::Error => {}
       PropertyKeyType::AnyString => {
         self.string_mapped.value.borrow_mut().add(value, analyzer.allocator);
@@ -76,12 +76,46 @@ impl<'a> RecordType<'a> {
     todo!()
   }
 
-  pub fn delete_property(&mut self, analyzer: &mut Analyzer<'a>, value: Ty<'a>) {
+  pub fn delete_property(&mut self, analyzer: &mut Analyzer<'a>, key: PropertyKeyType<'a>) {
     todo!()
   }
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn get_record_property(
+    &mut self,
+    record: &RecordType<'a>,
+    key: PropertyKeyType<'a>,
+  ) -> Ty<'a> {
+    match key {
+      PropertyKeyType::Error => Ty::Error,
+      PropertyKeyType::AnyString => record.string_mapped.value.borrow().get_property(self, key),
+      PropertyKeyType::AnyNumber => record.number_mapped.value.borrow().get_property(self, key),
+      PropertyKeyType::AnySymbol => record.symbol_mapped.value.borrow().get_property(self, key),
+      PropertyKeyType::StringLiteral(s) => {
+        if let Some(property) = record.string_keyed.get(s.as_str()) {
+          property.value.clone()
+        } else {
+          Ty::Error
+        }
+      }
+      PropertyKeyType::NumericLiteral(n) => {
+        if let Some(property) = record.string_keyed.get(n.0.to_js_string().as_str()) {
+          property.value.clone()
+        } else {
+          Ty::Error
+        }
+      }
+      PropertyKeyType::UniqueSymbol(s) => {
+        if let Some(property) = record.symbol_keyed.get(&s) {
+          property.value.clone()
+        } else {
+          Ty::Error
+        }
+      }
+    }
+  }
+
   fn print_keyed_property(
     &self,
     key: PropertyKey<'a>,

@@ -2,7 +2,7 @@ use crate::{
   analyzer::Analyzer,
   ty::{union::into_union, Ty},
 };
-use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator, LogicalOperator};
+use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_assignment_expression(&mut self, node: &'a AssignmentExpression<'a>) -> Ty<'a> {
@@ -29,15 +29,6 @@ impl<'a> Analyzer<'a> {
       self.exec_assignment_target_write(&node.left, value, cache);
       value
     }
-  }
-}
-
-fn to_logical_operator(operator: AssignmentOperator) -> LogicalOperator {
-  match operator {
-    AssignmentOperator::LogicalAnd => LogicalOperator::And,
-    AssignmentOperator::LogicalOr => LogicalOperator::Or,
-    AssignmentOperator::LogicalNullish => LogicalOperator::Coalesce,
-    _ => unreachable!(),
   }
 }
 

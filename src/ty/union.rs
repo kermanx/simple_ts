@@ -1,4 +1,4 @@
-use super::Ty;
+use super::{property_key::PropertyKeyType, Ty};
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use oxc::{
   allocator::Allocator,
@@ -226,6 +226,12 @@ where
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn get_union_property(&mut self, union: &UnionType<'a>, key: PropertyKeyType<'a>) -> Ty<'a> {
+    let result = self.allocator.alloc(UnionType::default());
+    union.for_each(|ty| result.add(self.get_property(ty, key)));
+    Ty::Union(result)
+  }
+
   pub fn print_union_type(&self, union: &UnionType<'a>) -> TSType<'a> {
     let mut types = self.ast_builder.vec();
     union.for_each(|ty| types.push(self.print_type(ty)));

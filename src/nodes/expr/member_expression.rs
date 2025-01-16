@@ -1,4 +1,7 @@
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{property_key::PropertyKeyType, Ty},
+};
 use oxc::ast::ast::MemberExpression;
 
 impl<'a> Analyzer<'a> {
@@ -6,7 +9,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_member_expression_read(
     &mut self,
     node: &'a MemberExpression<'a>,
-  ) -> (Ty<'a>, (Ty<'a>, Ty<'a>)) {
+  ) -> (Ty<'a>, (Ty<'a>, PropertyKeyType<'a>)) {
     let ((indeterminate, value), cache) = self.exec_member_expression_read_in_chain(node);
 
     if indeterminate {
@@ -20,7 +23,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_member_expression_read_in_chain(
     &mut self,
     node: &'a MemberExpression<'a>,
-  ) -> ((bool, Ty<'a>), (Ty<'a>, Ty<'a>)) {
+  ) -> ((bool, Ty<'a>), (Ty<'a>, PropertyKeyType<'a>)) {
     let (mut indeterminate, object) = self.exec_expression_in_chain(node.object());
 
     if !indeterminate && node.optional() {
@@ -39,7 +42,7 @@ impl<'a> Analyzer<'a> {
     &mut self,
     node: &'a MemberExpression<'a>,
     value: Ty<'a>,
-    cache: Option<(Ty<'a>, Ty<'a>)>,
+    cache: Option<(Ty<'a>, PropertyKeyType<'a>)>,
   ) {
     let (object, key) = cache.unwrap_or_else(|| {
       let object = self.exec_expression(node.object());
@@ -52,11 +55,12 @@ impl<'a> Analyzer<'a> {
     self.set_property(object, key, value);
   }
 
-  fn exec_key(&mut self, node: &'a MemberExpression<'a>) -> Ty<'a> {
-    match node {
+  fn exec_key(&mut self, node: &'a MemberExpression<'a>) -> PropertyKeyType<'a> {
+    let value = match node {
       MemberExpression::ComputedMemberExpression(node) => self.exec_expression(&node.expression),
       MemberExpression::StaticMemberExpression(node) => self.exec_identifier_name(&node.property),
       MemberExpression::PrivateFieldExpression(node) => self.exec_private_identifier(&node.field),
-    }
+    };
+    self.to_property_key(value)
   }
 }

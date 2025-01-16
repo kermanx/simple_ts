@@ -1,6 +1,6 @@
 use crate::{
   analyzer::Analyzer,
-  ty::{facts::Facts, union::into_union, Ty},
+  ty::{facts::Facts, property_key::PropertyKeyType, union::into_union, Ty},
 };
 use oxc::{
   ast::ast::{Expression, UnaryExpression, UnaryOperator},
@@ -13,8 +13,8 @@ impl<'a> Analyzer<'a> {
       match &node.argument {
         Expression::StaticMemberExpression(node) => {
           let object = self.exec_expression(&node.object);
-          let property = Ty::StringLiteral(&node.property.name);
-          self.delete_property(object, property)
+          let key = PropertyKeyType::StringLiteral(&node.property.name);
+          self.delete_property(object, key)
         }
         Expression::PrivateFieldExpression(node) => {
           self.add_diagnostic("SyntaxError: private fields can't be deleted");
@@ -22,8 +22,9 @@ impl<'a> Analyzer<'a> {
         }
         Expression::ComputedMemberExpression(node) => {
           let object = self.exec_expression(&node.object);
-          let property = self.exec_expression(&node.expression);
-          self.delete_property(object, property)
+          let key = self.exec_expression(&node.expression);
+          let key = self.to_property_key(key);
+          self.delete_property(object, key)
         }
         Expression::Identifier(_node) => {
           self.add_diagnostic("SyntaxError: Delete of an unqualified identifier in strict mode");
