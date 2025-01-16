@@ -20,10 +20,7 @@ impl<'a> CfScopeKind<'a> {
   }
 
   pub fn is_breakable_without_label(self) -> bool {
-    match self {
-      CfScopeKind::Loop | CfScopeKind::Switch => true,
-      _ => false,
-    }
+    matches!(self, CfScopeKind::Loop | CfScopeKind::Switch)
   }
 
   pub fn is_continuable(self) -> bool {

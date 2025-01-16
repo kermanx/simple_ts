@@ -11,6 +11,7 @@ pub enum TypeAccumulator<'a> {
   Union(&'a mut UnionType<'a>),
   FrozenUnion(&'a UnionType<'a>),
 }
+
 impl<'a> TypeAccumulator<'a> {
   pub fn add(&mut self, ty: Ty<'a>, allocator: &'a Allocator) {
     match self {
@@ -26,18 +27,18 @@ impl<'a> TypeAccumulator<'a> {
     }
   }
 
-  pub fn to_ty(&mut self) -> Ty<'a> {
+  pub fn to_ty(&mut self) -> Option<Ty<'a>> {
     match &*self {
-      TypeAccumulator::None => unreachable!(),
-      TypeAccumulator::Single(ty) => *ty,
+      TypeAccumulator::None => None,
+      TypeAccumulator::Single(ty) => Some(*ty),
       TypeAccumulator::Union(_) => match mem::take(self) {
         TypeAccumulator::Union(union) => {
           *self = TypeAccumulator::FrozenUnion(union);
-          Ty::Union(union)
+          Some(Ty::Union(union))
         }
         _ => unreachable!(),
       },
-      TypeAccumulator::FrozenUnion(union) => Ty::Union(*union),
+      TypeAccumulator::FrozenUnion(union) => Some(Ty::Union(*union)),
     }
   }
 }

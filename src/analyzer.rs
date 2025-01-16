@@ -130,7 +130,7 @@ impl<'a> Analyzer<'a> {
     if span == SPAN {
       None
     } else {
-      Some(self.expr_types.get_mut(&span).unwrap().to_ty())
+      self.expr_types.get_mut(&span).unwrap().to_ty()
     }
   }
 }
