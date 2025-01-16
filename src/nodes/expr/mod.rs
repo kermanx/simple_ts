@@ -24,10 +24,7 @@ mod unary_expression;
 mod update_expression;
 mod yield_expression;
 
-use crate::{
-  analyzer::Analyzer,
-  ty::{accumulator::TypeAccumulator, Ty},
-};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::{
   ast::{ast::Expression, match_member_expression},
   span::GetSpan,
@@ -85,16 +82,7 @@ impl<'a> Analyzer<'a> {
       | Expression::TSSatisfiesExpression(_) => unreachable!(),
     };
 
-    {
-      let Analyzer { allocator, expr_types, pos_to_expr, .. } = self;
-      let acc = expr_types.entry(span).or_insert_with(move || {
-        for pos in span.start..span.end {
-          pos_to_expr[pos as usize] = span;
-        }
-        TypeAccumulator::default()
-      });
-      acc.add(value, allocator);
-    }
+    self.accumulate_type(&span, value);
 
     self.pop_span();
 

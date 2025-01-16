@@ -6,3 +6,4 @@ type Obj = {
 	a: string;
 	b: 111;
 };
+type Obj_a = string;

@@ -11,8 +11,10 @@ impl<'a> Analyzer<'a> {
     let symbol = node.symbol_id.get().unwrap();
     let flags = self.semantic.symbols().get_flags(symbol);
     let init = if let Some(init) = init {
+      self.accumulate_type(node, init);
       init
     } else {
+      self.accumulate_type(node, Ty::Undefined);
       if flags.is_function_scoped_declaration() {
         return;
       } else {

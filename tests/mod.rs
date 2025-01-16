@@ -24,7 +24,9 @@ pub fn print_queried_types(code: String) -> String {
     let mut line_col = analyzer.line_index.line_col(mark_offset.try_into().unwrap());
     line_col.line -= 1;
     let start_offset = analyzer.line_index.offset(line_col).unwrap();
-    let ty = analyzer.get_type_by_pos(start_offset.into()).unwrap();
+    let ty = analyzer.get_type_by_pos(start_offset.into()).unwrap_or_else(|| {
+      panic!("Type query `{}` at {}:{} not found", name, line_col.line + 1, line_col.col + 1)
+    });
     snapshot_stmts.push(Statement::from(analyzer.ast_builder.declaration_ts_type_alias(
       SPAN,
       analyzer.ast_builder.binding_identifier(SPAN, name),

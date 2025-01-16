@@ -37,8 +37,8 @@ pub struct Analyzer<'a> {
   pub types: FxHashMap<SymbolId, Ty<'a>>,
 
   pub diagnostics: BTreeSet<String>,
-  pub expr_types: FxHashMap<Span, TypeAccumulator<'a>>,
-  pub pos_to_expr: &'a mut [Span],
+  pub span_to_type: FxHashMap<Span, TypeAccumulator<'a>>,
+  pub pos_to_span: &'a mut [Span],
 }
 
 impl<'a> Analyzer<'a> {
@@ -81,8 +81,8 @@ impl<'a> Analyzer<'a> {
       types: Default::default(),
 
       diagnostics: Default::default(),
-      expr_types: Default::default(),
-      pos_to_expr,
+      span_to_type: Default::default(),
+      pos_to_span: pos_to_expr,
     }
   }
 
@@ -130,12 +130,24 @@ impl<'a> Analyzer<'a> {
     todo!()
   }
 
+  pub fn accumulate_type(&mut self, span: &impl GetSpan, ty: Ty<'a>) {
+    let Analyzer { allocator, span_to_type: expr_types, pos_to_span: pos_to_expr, .. } = self;
+    let span = span.span();
+    let acc = expr_types.entry(span).or_insert_with(move || {
+      for pos in span.start..span.end {
+        pos_to_expr[pos as usize] = span;
+      }
+      TypeAccumulator::default()
+    });
+    acc.add(ty, allocator);
+  }
+
   pub fn get_type_by_pos(&mut self, pos: usize) -> Option<Ty<'a>> {
-    let span = self.pos_to_expr[pos];
+    let span = self.pos_to_span[pos];
     if span == SPAN {
       None
     } else {
-      self.expr_types.get_mut(&span).unwrap().to_ty()
+      self.span_to_type.get_mut(&span).unwrap().to_ty()
     }
   }
 }

@@ -4,3 +4,6 @@ let obj: {
 }
   obj
 //^? Obj
+
+let obj_a = obj.a
+//  ^? Obj_a
