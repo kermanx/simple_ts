@@ -7,8 +7,7 @@ use oxc::semantic::ScopeId;
 
 pub struct CallScope<'a> {
   pub old_variable_scope_stack: Vec<ScopeId>,
-  pub body_variable_scope: ScopeId,
-  pub cf_scope_depth: usize,
+  pub body_scope: (ScopeId, usize),
 
   pub is_async: bool,
   pub is_generator: bool,
@@ -23,16 +22,14 @@ pub struct CallScope<'a> {
 impl<'a> CallScope<'a> {
   pub fn new(
     old_variable_scope_stack: Vec<ScopeId>,
-    body_variable_scope: ScopeId,
-    cf_scope_depth: usize,
+    body_scope: (ScopeId, usize),
     is_async: bool,
     is_generator: bool,
     this: Ty<'a>,
   ) -> Self {
     CallScope {
       old_variable_scope_stack,
-      body_variable_scope,
-      cf_scope_depth,
+      body_scope,
 
       is_async,
       is_generator,
@@ -54,13 +51,11 @@ impl<'a> Analyzer<'a> {
     is_generator: bool,
     this: Ty<'a>,
   ) {
-    let old_variable_scope_stack = self.variable_scopes.replace_stack(variable_scope_stack);
-    let body_variable_scope = self.push_variable_scope();
-    let body_cf_scope_depth = self.push_cf_scope(CfScopeKind::Function);
+    let old_variable_scope_stack = self.scopes.replace_stack(variable_scope_stack);
+    self.push_scope(CfScopeKind::Function);
     self.call_scopes.push(CallScope::new(
       old_variable_scope_stack,
-      body_variable_scope,
-      body_cf_scope_depth,
+      (self.scopes.current_id(), self.scopes.current_depth()),
       is_async,
       is_generator,
       this,
@@ -69,8 +64,7 @@ impl<'a> Analyzer<'a> {
 
   pub fn pop_call_scope(&mut self) -> Ty<'a> {
     let call_scope = self.call_scopes.pop().unwrap();
-    self.pop_variable_scope();
-    self.variable_scopes.replace_stack(call_scope.old_variable_scope_stack);
+    self.scopes.replace_stack(call_scope.old_variable_scope_stack);
 
     if call_scope.is_async || call_scope.is_generator {
       todo!()

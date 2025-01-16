@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
     let (indeterminate, tag, this) = self.exec_callee(&node.tag);
 
     if indeterminate {
-      self.pop_cf_scope();
+      self.pop_scope();
     }
 
     let mut arguments = vec![todo!()];

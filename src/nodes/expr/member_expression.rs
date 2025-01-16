@@ -13,7 +13,7 @@ impl<'a> Analyzer<'a> {
     let ((indeterminate, value), cache) = self.exec_member_expression_read_in_chain(node);
 
     if indeterminate {
-      self.pop_cf_scope();
+      self.pop_scope();
     }
 
     (value, cache)
@@ -27,7 +27,7 @@ impl<'a> Analyzer<'a> {
     let (mut indeterminate, object) = self.exec_expression_in_chain(node.object());
 
     if !indeterminate && node.optional() {
-      self.push_indeterminate_cf_scope();
+      self.push_indeterminate_scope();
       indeterminate = true;
     }
 

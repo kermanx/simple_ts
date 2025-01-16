@@ -14,7 +14,7 @@ impl<'a> Analyzer<'a> {
       node => self.exec_member_expression_read_in_chain(node.to_member_expression()).0,
     };
     if indeterminate {
-      self.pop_cf_scope();
+      self.pop_scope();
       into_union(self.allocator, [Ty::Undefined, value])
     } else {
       value

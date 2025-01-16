@@ -1,12 +1,7 @@
 use crate::{
   builtins::Builtins,
   config::Config,
-  scope::{
-    call::CallScope,
-    cf::{CfScope, CfScopeKind},
-    tree::ScopeTree,
-    variable::VariableScope,
-  },
+  scope::{call::CallScope, cf::CfScopeKind, tree::ScopeTree, Scope},
   ty::{accumulator::TypeAccumulator, Ty},
 };
 use line_index::LineIndex;
@@ -30,8 +25,7 @@ pub struct Analyzer<'a> {
 
   pub span_stack: Vec<Span>,
   pub call_scopes: Vec<CallScope<'a>>,
-  pub cf_scopes: ScopeTree<CfScope<'a>>,
-  pub variable_scopes: ScopeTree<VariableScope<'a>>,
+  pub scopes: ScopeTree<Scope<'a>>,
 
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
   pub types: FxHashMap<SymbolId, Ty<'a>>,
@@ -45,20 +39,12 @@ impl<'a> Analyzer<'a> {
   pub fn new(allocator: &'a Allocator, config: Config, semantic: Semantic<'a>) -> Self {
     let config = allocator.alloc(config);
 
-    let mut cf_scopes = ScopeTree::new();
-    let root_cf_scope = cf_scopes.push(CfScope { kind: CfScopeKind::Module, exited: None });
+    let mut scopes = ScopeTree::new();
+    let root_scope =
+      scopes.push(Scope { kind: CfScopeKind::Module, exited: None, variables: Default::default() });
 
-    let mut variable_scopes = ScopeTree::new();
-    let root_variable_scope = variable_scopes.push(VariableScope::new(root_cf_scope));
-
-    let root_call_scope = CallScope::new(
-      vec![],
-      root_variable_scope,
-      0,
-      true,
-      false,
-      /* TODO: globalThis */ Ty::Any,
-    );
+    let root_call_scope =
+      CallScope::new(vec![], (root_scope, 0), true, false, /* TODO: globalThis */ Ty::Any);
 
     let ast_builder = AstBuilder::new(allocator);
     let pos_to_expr = allocator.alloc_slice_fill_default(semantic.source_text().len());
@@ -74,8 +60,7 @@ impl<'a> Analyzer<'a> {
 
       span_stack: Vec::new(),
       call_scopes: Vec::from([root_call_scope]),
-      cf_scopes,
-      variable_scopes,
+      scopes,
 
       variables: Default::default(),
       types: Default::default(),
@@ -89,7 +74,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_program(&mut self, node: &'a Program<'a>) {
     self.exec_statement_vec(&node.body);
 
-    assert_eq!(self.variable_scopes.stack.len(), 1);
+    assert_eq!(self.scopes.stack.len(), 1);
 
     #[cfg(feature = "flame")]
     flamescope::dump(&mut std::fs::File::create("flamescope.json").unwrap()).unwrap();

@@ -22,7 +22,7 @@ impl<'a> Analyzer<'a> {
   pub fn instantiate_generic(&mut self, ty: Ty<'a>, args: Vec<Ty<'a>>) -> Option<Ty<'a>> {
     match ty {
       Ty::Generic(generic) => {
-        self.push_variable_scope();
+        self.push_indeterminate_scope();
         for (index, param) in generic.params.iter().enumerate() {
           let arg = args.get(index).copied().or(param.default).unwrap_or(Ty::Error);
           self.types.insert(param.symbol_id, arg);
@@ -33,7 +33,7 @@ impl<'a> Analyzer<'a> {
           }
         }
         let result = self.resolve_type(generic.body);
-        self.pop_variable_scope();
+        self.pop_scope();
         result
       }
       _ => unreachable!("Cannot instantiate non-generic type"),

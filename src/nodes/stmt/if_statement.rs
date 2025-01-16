@@ -6,37 +6,24 @@ impl<'a> Analyzer<'a> {
     self.exec_expression(&node.test);
 
     if node.alternate.is_some() {
-      self.push_exit_blocker_cf_scope();
+      self.push_exit_blocker_scope();
+    } else {
+      self.push_indeterminate_scope();
     }
 
-    self.push_variable_scope();
     self.exec_statement(&node.consequent);
 
     if let Some(alternate) = &node.alternate {
-      let shadow_1 = self.pop_variable_scope_no_apply_shadow();
-      let blocked_1 = self.pop_cf_scope_and_get_blocked_exit();
-      self.push_exit_blocker_cf_scope();
+      let (blocked_1, shadow_1) = self.pop_scope_subtle();
 
-      self.push_variable_scope();
+      self.push_exit_blocker_scope();
       self.exec_statement(alternate);
-      let shadow_2 = self.pop_variable_scope_no_apply_shadow();
-      self.apply_complementary_shadows([shadow_1, shadow_2]);
+      let (blocked_2, shadow_2) = self.pop_scope_subtle();
 
-      let blocked_2 = self.pop_cf_scope_and_get_blocked_exit();
-      match (blocked_1, blocked_2) {
-        (Some(blocked_1), Some(blocked_2)) => {
-          let inner = blocked_1.max(blocked_2);
-          let outer = blocked_1.min(blocked_2);
-          self.exit_to_impl(self.cf_scopes.stack.len(), inner, true);
-          self.exit_to_impl(inner, outer, false);
-        }
-        (Some(blocked), None) | (None, Some(blocked)) => {
-          self.exit_to_impl(self.cf_scopes.stack.len(), blocked, false);
-        }
-        (None, None) => {}
-      }
+      self.apply_complementary_blocked_exits(blocked_1, blocked_2);
+      self.apply_complementary_shadows([shadow_1, shadow_2]);
     } else {
-      self.pop_variable_scope();
+      self.pop_scope();
     }
   }
 }

@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
     let (indeterminate, value) = self.exec_call_expression_in_chain(node);
 
     if indeterminate {
-      self.pop_cf_scope();
+      self.pop_scope();
     }
 
     value
@@ -16,7 +16,7 @@ impl<'a> Analyzer<'a> {
     let (mut indeterminate, callee, this) = self.exec_callee(&node.callee);
 
     if !indeterminate && node.optional {
-      self.push_indeterminate_cf_scope();
+      self.push_indeterminate_scope();
       indeterminate = true;
     }
 

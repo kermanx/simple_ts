@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
     self.exec_block_statement(&node.block);
 
     if let Some(handler) = &node.handler {
-      self.push_indeterminate_cf_scope();
+      self.push_indeterminate_scope();
 
       if let Some(param) = &handler.param {
         self.declare_binding_pattern(&param.pattern, true);
@@ -15,7 +15,7 @@ impl<'a> Analyzer<'a> {
 
       self.exec_block_statement(&handler.body);
 
-      self.pop_cf_scope();
+      self.pop_scope();
     };
 
     if let Some(finalizer) = &node.finalizer {

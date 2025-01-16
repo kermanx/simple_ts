@@ -13,10 +13,10 @@ impl<'a> Analyzer<'a> {
     } else if node.operator.is_logical() {
       let (left, cache) = self.exec_assignment_target_read(&node.left);
 
-      self.push_indeterminate_cf_scope();
+      self.push_indeterminate_scope();
       let right = self.exec_expression(&node.right);
       let value = into_union(self.allocator, [left, right]);
-      self.pop_cf_scope();
+      self.pop_scope();
 
       // Execute write outside of the indeterminate scope, because the value is already an union
       self.exec_assignment_target_write(&node.left, value, cache);

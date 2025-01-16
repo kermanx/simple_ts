@@ -8,7 +8,6 @@ pub enum CfScopeKind<'a> {
   Function,
   Loop,
   Switch,
-  If,
 
   Indeterminate,
   ExitBlocker(Option<usize>),
@@ -35,50 +34,11 @@ impl<'a> CfScopeKind<'a> {
   }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct CfScope<'a> {
-  pub kind: CfScopeKind<'a>,
-  pub exited: Option<bool>,
-}
-
 impl<'a> Analyzer<'a> {
-  pub fn push_cf_scope(&mut self, kind: CfScopeKind<'a>) -> usize {
-    self.cf_scopes.push(CfScope { kind, exited: Some(false) });
-    self.cf_scopes.current_depth()
-  }
-
-  pub fn push_indeterminate_cf_scope(&mut self) -> usize {
-    self.cf_scopes.push(CfScope { kind: CfScopeKind::Indeterminate, exited: None });
-    self.cf_scopes.current_depth()
-  }
-
-  pub fn push_exit_blocker_cf_scope(&mut self) -> usize {
-    self.cf_scopes.push(CfScope { kind: CfScopeKind::ExitBlocker(None), exited: None });
-    self.cf_scopes.current_depth()
-  }
-
-  pub fn push_loop_cf_scope(&mut self) -> usize {
-    self.cf_scopes.push(CfScope { kind: CfScopeKind::Loop, exited: None });
-    self.cf_scopes.current_depth()
-  }
-
-  pub fn pop_cf_scope(&mut self) -> CfScope<'a> {
-    let id = self.cf_scopes.pop();
-    *self.cf_scopes.get(id)
-  }
-
-  pub fn pop_cf_scope_and_get_blocked_exit(&mut self) -> Option<usize> {
-    if let CfScopeKind::ExitBlocker(target) = self.pop_cf_scope().kind {
-      target
-    } else {
-      unreachable!()
-    }
-  }
-
-  pub fn exit_to_impl(&mut self, from_depth: usize, target_depth: usize, mut must_exit: bool) {
+  fn exit_to_impl(&mut self, from_depth: usize, target_depth: usize, mut must_exit: bool) {
     for depth in (target_depth..from_depth).rev() {
-      let id = self.cf_scopes.stack[depth];
-      let cf_scope = self.cf_scopes.get_mut(id);
+      let id = self.scopes.stack[depth];
+      let cf_scope = self.scopes.get_mut(id);
 
       // Update exited state
       if must_exit {
@@ -107,7 +67,7 @@ impl<'a> Analyzer<'a> {
     let mut is_closest_breakable = true;
     let mut target_depth = None;
     let mut label_used = false;
-    for (idx, cf_scope) in self.cf_scopes.iter_stack().enumerate().rev() {
+    for (idx, cf_scope) in self.scopes.iter_stack().enumerate().rev() {
       if cf_scope.kind.is_function() {
         break;
       }
@@ -133,11 +93,11 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn exit_to(&mut self, target_depth: usize) {
-    self.exit_to_impl(target_depth, self.cf_scopes.stack.len(), true);
+    self.exit_to_impl(target_depth, self.scopes.stack.len(), true);
   }
 
   pub fn exit_to_not_must(&mut self, target_depth: usize) {
-    self.exit_to_impl(target_depth, self.cf_scopes.stack.len(), false);
+    self.exit_to_impl(target_depth, self.scopes.stack.len(), false);
   }
 
   /// If the label is used, `true` is returned.
@@ -145,7 +105,7 @@ impl<'a> Analyzer<'a> {
     let mut is_closest_continuable = true;
     let mut target_depth = None;
     let mut label_used = false;
-    for (idx, cf_scope) in self.cf_scopes.iter_stack().enumerate().rev() {
+    for (idx, cf_scope) in self.scopes.iter_stack().enumerate().rev() {
       if cf_scope.kind.is_function() {
         break;
       }
@@ -171,12 +131,31 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn is_indeterminate_to(&self, target: ScopeId) -> bool {
-    let first_different = self.cf_scopes.find_lca(target).0 + 1;
-    for depth in first_different..self.cf_scopes.stack.len() {
-      if self.cf_scopes.get_from_depth(depth).exited.is_none() {
+    let first_different = self.scopes.find_lca(target).0 + 1;
+    for depth in first_different..self.scopes.stack.len() {
+      if self.scopes.get_from_depth(depth).exited.is_none() {
         return true;
       }
     }
     false
+  }
+
+  pub fn apply_complementary_blocked_exits(
+    &mut self,
+    blocked_1: Option<usize>,
+    blocked_2: Option<usize>,
+  ) {
+    match (blocked_1, blocked_2) {
+      (Some(blocked_1), Some(blocked_2)) => {
+        let inner = blocked_1.max(blocked_2);
+        let outer = blocked_1.min(blocked_2);
+        self.exit_to_impl(self.scopes.stack.len(), inner, true);
+        self.exit_to_impl(inner, outer, false);
+      }
+      (Some(blocked), None) | (None, Some(blocked)) => {
+        self.exit_to_impl(self.scopes.stack.len(), blocked, false);
+      }
+      (None, None) => {}
+    }
   }
 }
