@@ -19,6 +19,6 @@ impl<'a> Analyzer<'a> {
       arguments.push((false, value));
     }
 
-    self.get_call_return(tag, this, todo!())
+    todo!()
   }
 }

@@ -22,7 +22,12 @@ impl<'a> Analyzer<'a> {
 
     let args = self.exec_arguments(&node.arguments);
 
-    let ret_val = self.get_call_return(callee, this, args);
+    let ret_val = match callee {
+      Ty::Error | Ty::Any => callee,
+      Ty::Function(f) => f.return_type,
+      Ty::Intersection(_) => todo!(),
+      _ => Ty::Error,
+    };
 
     (indeterminate, ret_val)
   }

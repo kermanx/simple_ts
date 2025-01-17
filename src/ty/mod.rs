@@ -123,10 +123,6 @@ impl<'a> Analyzer<'a> {
     todo!()
   }
 
-  pub fn get_call_return(&mut self, target: Ty<'a>, this: Ty<'a>, arguments: Ty<'a>) -> Ty<'a> {
-    todo!()
-  }
-
   pub fn get_instantiation_return(&mut self, target: Ty<'a>, arguments: Ty<'a>) -> Ty<'a> {
     todo!()
   }
