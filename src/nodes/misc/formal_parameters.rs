@@ -5,14 +5,17 @@ impl<'a> Analyzer<'a> {
   pub fn exec_formal_parameters(
     &mut self,
     node: &'a FormalParameters<'a>,
-  ) -> (Ty<'a>, Vec<Ty<'a>>, Option<Ty<'a>>) {
+  ) -> (Option<Ty<'a>>, Vec<(bool, Ty<'a>)>, Option<Ty<'a>>) {
     for param in &node.items {
       self.declare_binding_pattern(&param.pattern, false);
     }
 
     let mut params = vec![];
     for param in &node.items {
-      params.push(self.init_binding_pattern(&param.pattern, None).unwrap_or(Ty::Any));
+      params.push((
+        param.pattern.optional,
+        self.init_binding_pattern(&param.pattern, None).unwrap_or(Ty::Any),
+      ));
     }
 
     let rest = if let Some(rest) = &node.rest {
@@ -23,6 +26,6 @@ impl<'a> Analyzer<'a> {
     };
 
     // TODO: this type
-    (Ty::Any, params, rest)
+    (None, params, rest)
   }
 }
