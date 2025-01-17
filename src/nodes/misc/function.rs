@@ -1,9 +1,38 @@
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{callable::CallableType, Ty},
+};
 use oxc::ast::ast::Function;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_function(&mut self, node: &'a Function<'a>) -> Ty<'a> {
-    todo!()
+    let type_params = node
+      .type_parameters
+      .as_ref()
+      .map(|type_parameters| self.resolve_type_parameter_declaration(&type_parameters))
+      .unwrap_or_default();
+
+    let (this_type, params, rest_param) = self.exec_formal_parameters(&node.params);
+
+    let annotated_ret = if let Some(return_type) = &node.return_type {
+      Some(self.resolve_type_annotation_or_defer(return_type))
+    } else {
+      None
+    };
+
+    let return_type = if let Some(body) = &node.body {
+      self.exec_function_body(body, node.r#async, node.generator, this_type, annotated_ret)
+    } else {
+      todo!()
+    };
+
+    Ty::Function(self.allocator.alloc(CallableType {
+      type_params,
+      this_type,
+      params,
+      rest_param,
+      return_type,
+    }))
   }
 
   pub fn declare_function(&mut self, node: &'a Function<'a>) {

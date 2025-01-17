@@ -6,7 +6,11 @@ impl<'a> Analyzer<'a> {
     self.declare_binding_pattern(&node.argument, typed);
   }
 
-  pub fn init_binding_rest_element(&mut self, node: &'a BindingRestElement<'a>, init: Ty<'a>) {
-    self.init_binding_pattern(&node.argument, Some(init));
+  pub fn init_binding_rest_element(
+    &mut self,
+    node: &'a BindingRestElement<'a>,
+    init: Option<Ty<'a>>,
+  ) -> Option<Ty<'a>> {
+    self.init_binding_pattern(&node.argument, init)
   }
 }

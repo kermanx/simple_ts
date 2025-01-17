@@ -19,10 +19,12 @@ impl<'a> TypeAccumulator<'a> {
     match self {
       TypeAccumulator::None => *self = TypeAccumulator::Single(ty),
       TypeAccumulator::Single(t) => {
-        let union = allocator.alloc(UnionType::default());
-        union.add(*t);
-        union.add(ty);
-        *self = TypeAccumulator::Union(union);
+        if *t != ty {
+          let union = allocator.alloc(UnionType::default());
+          union.add(*t);
+          union.add(ty);
+          *self = TypeAccumulator::Union(union);
+        }
       }
       TypeAccumulator::Union(union) => union.add(ty),
       TypeAccumulator::FrozenUnion(_) => unreachable!(),

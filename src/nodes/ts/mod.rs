@@ -1,6 +1,7 @@
 mod ts_literal;
 mod ts_type_annotation;
 mod ts_type_literal;
+mod ts_type_parameter_declaration;
 mod ts_type_parameter_instantiation;
 mod ts_type_query;
 mod ts_type_reference;
@@ -35,5 +36,9 @@ impl<'a> Analyzer<'a> {
 
       _ => todo!(),
     }
+  }
+
+  pub fn resolve_type_or_defer(&mut self, node: &'a TSType<'a>) -> Ty<'a> {
+    self.resolve_type(node).unwrap_or(Ty::UnresolvedType(node))
   }
 }

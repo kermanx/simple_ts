@@ -44,7 +44,7 @@ impl<'a> Analyzer<'a> {
       scopes.push(Scope { kind: CfScopeKind::Module, exited: None, variables: Default::default() });
 
     let root_call_scope =
-      CallScope::new(vec![], (root_scope, 0), true, false, /* TODO: globalThis */ Ty::Any);
+      CallScope::new(root_scope, true, false, /* TODO: globalThis */ Ty::Any, None);
 
     let ast_builder = AstBuilder::new(allocator);
     let pos_to_expr = allocator.alloc_slice_fill_default(semantic.source_text().len());

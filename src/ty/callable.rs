@@ -16,9 +16,10 @@ pub enum ReturnType<'a> {
 
 #[derive(Debug, Clone)]
 pub struct CallableType<'a, const CTOR: bool> {
-  pub this_type: Option<Ty<'a>>,
   pub type_params: Vec<GenericParam<'a>>,
-  pub params: Vec<(bool, Ty<'a>)>,
+  pub this_type: Ty<'a>,
+  pub params: Vec<Ty<'a>>,
+  pub rest_param: Option<Ty<'a>>,
   pub return_type: Ty<'a>,
 }
 

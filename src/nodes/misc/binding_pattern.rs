@@ -30,7 +30,11 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn init_binding_pattern(&mut self, node: &'a BindingPattern<'a>, mut init: Option<Ty<'a>>) {
+  pub fn init_binding_pattern(
+    &mut self,
+    node: &'a BindingPattern<'a>,
+    mut init: Option<Ty<'a>>,
+  ) -> Option<Ty<'a>> {
     if let Some(annotation) = &node.type_annotation {
       init = Some(self.resolve_type_annotation_or_defer(annotation));
     }
@@ -51,7 +55,7 @@ impl<'a> Analyzer<'a> {
         }
         if let Some(rest) = &node.rest {
           let init = self.exec_object_rest(init, enumerated);
-          self.init_binding_rest_element(rest, init);
+          self.init_binding_rest_element(rest, Some(init));
         }
       }
       BindingPatternKind::ArrayPattern(node) => {
@@ -66,7 +70,7 @@ impl<'a> Analyzer<'a> {
           }
         }
         if let Some(rest) = &node.rest {
-          self.init_binding_rest_element(rest, rest_value.unwrap());
+          self.init_binding_rest_element(rest, rest_value);
         }
       }
       BindingPatternKind::AssignmentPattern(node) => {
@@ -75,5 +79,7 @@ impl<'a> Analyzer<'a> {
         self.init_binding_pattern(&node.left, Some(binding_val));
       }
     }
+
+    init
   }
 }

@@ -17,36 +17,28 @@ pub struct Scope<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn push_scope(&mut self, kind: CfScopeKind<'a>) -> usize {
-    self.scopes.push(Scope { kind, exited: Some(false), variables: Default::default() });
-    self.scopes.current_depth()
+  pub fn push_scope(&mut self, kind: CfScopeKind<'a>) -> ScopeId {
+    self.scopes.push(Scope { kind, exited: Some(false), variables: Default::default() })
   }
 
-  pub fn push_indeterminate_scope(&mut self) -> usize {
+  pub fn push_indeterminate_scope(&mut self) -> ScopeId {
     self.scopes.push(Scope {
       kind: CfScopeKind::Indeterminate,
       exited: None,
       variables: Default::default(),
-    });
-    self.scopes.current_depth()
+    })
   }
 
-  pub fn push_exit_blocker_scope(&mut self) -> usize {
+  pub fn push_exit_blocker_scope(&mut self) -> ScopeId {
     self.scopes.push(Scope {
       kind: CfScopeKind::ExitBlocker(None),
       exited: None,
       variables: Default::default(),
-    });
-    self.scopes.current_depth()
+    })
   }
 
-  pub fn push_loop_scope(&mut self) -> usize {
-    self.scopes.push(Scope {
-      kind: CfScopeKind::Loop,
-      exited: None,
-      variables: Default::default(),
-    });
-    self.scopes.current_depth()
+  pub fn push_loop_scope(&mut self) -> ScopeId {
+    self.scopes.push(Scope { kind: CfScopeKind::Loop, exited: None, variables: Default::default() })
   }
 
   pub fn pop_scope(&mut self) {
