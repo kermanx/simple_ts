@@ -32,6 +32,14 @@ impl<'a> CfScopeKind<'a> {
       _ => false,
     }
   }
+
+  pub fn get_blocked_exit(self) -> Option<usize> {
+    if let CfScopeKind::ExitBlocker(target) = self {
+      target
+    } else {
+      None
+    }
+  }
 }
 
 impl<'a> Analyzer<'a> {
@@ -140,11 +148,9 @@ impl<'a> Analyzer<'a> {
     false
   }
 
-  pub fn apply_complementary_blocked_exits(
-    &mut self,
-    blocked_1: Option<usize>,
-    blocked_2: Option<usize>,
-  ) {
+  pub fn apply_complementary_blocked_exits(&mut self, scope_1: ScopeId, scope_2: ScopeId) {
+    let blocked_1 = self.scopes.get(scope_1).kind.get_blocked_exit();
+    let blocked_2 = self.scopes.get(scope_2).kind.get_blocked_exit();
     match (blocked_1, blocked_2) {
       (Some(blocked_1), Some(blocked_2)) => {
         let inner = blocked_1.max(blocked_2);

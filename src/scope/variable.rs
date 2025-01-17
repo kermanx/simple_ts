@@ -81,11 +81,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn apply_complementary_shadows(&mut self, scopes: impl IntoIterator<Item = ScopeId>) {
-    self.apply_shadows(scopes, true);
-  }
-
-  pub fn apply_shadows(&mut self, scopes: impl IntoIterator<Item = ScopeId>, complementary: bool) {
+  pub fn apply_shadows<const N: usize>(&mut self, scopes: [ScopeId; N], complementary: bool) {
     let mut shadows: FxHashMap<SymbolId, Vec<Ty<'a>>> = FxHashMap::default();
     let mut len = 0;
     for scope in scopes {

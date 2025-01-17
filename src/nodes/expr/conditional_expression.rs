@@ -10,14 +10,13 @@ impl<'a> Analyzer<'a> {
 
     self.push_exit_blocker_scope();
     let consequent = self.exec_expression(&node.consequent);
-    let (blocked_1, shadow_1) = self.pop_scope_subtle();
+    let scope_1 = self.scopes.pop();
 
     self.push_exit_blocker_scope();
     let alternate = self.exec_expression(&node.alternate);
-    let (blocked_2, shadow_2) = self.pop_scope_subtle();
+    let scope_2 = self.scopes.pop();
 
-    self.apply_complementary_blocked_exits(blocked_1, blocked_2);
-    self.apply_complementary_shadows([shadow_1, shadow_2]);
+    self.finalize_complementary_scopes(scope_1, scope_2);
 
     into_union(self.allocator, [consequent, alternate])
   }

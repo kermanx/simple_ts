@@ -50,15 +50,16 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn pop_scope(&mut self) {
-    let (blocked_exit, id) = self.pop_scope_subtle();
-    debug_assert!(blocked_exit.is_none());
-    self.apply_shadows([id], false);
+    let id = self.scopes.pop();
+    let scope = self.scopes.get(id);
+    debug_assert!(scope.kind.get_blocked_exit().is_none());
+    if !scope.kind.is_function() {
+      self.apply_shadows([id], false);
+    }
   }
 
-  pub fn pop_scope_subtle(&mut self) -> (Option<usize>, ScopeId) {
-    let id = self.scopes.pop();
-    let blocked_exit =
-      if let CfScopeKind::ExitBlocker(target) = self.scopes.get(id).kind { target } else { None };
-    (blocked_exit, id)
+  pub fn finalize_complementary_scopes(&mut self, scope_1: ScopeId, scope_2: ScopeId) {
+    self.apply_shadows([scope_1, scope_2], true);
+    self.apply_complementary_blocked_exits(scope_1, scope_2);
   }
 }
