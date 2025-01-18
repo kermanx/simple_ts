@@ -1,4 +1,7 @@
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{callable::get_callable_function, Ty},
+};
 use oxc::ast::ast::CallExpression;
 
 impl<'a> Analyzer<'a> {
@@ -22,11 +25,10 @@ impl<'a> Analyzer<'a> {
 
     let args = self.exec_arguments(&node.arguments);
 
-    let ret_val = match callee {
-      Ty::Error | Ty::Any => callee,
-      Ty::Function(f) => f.return_type,
-      Ty::Intersection(_) => todo!(),
-      _ => Ty::Error,
+    let ret_val = if let Some(callee) = get_callable_function(callee) {
+      todo!()
+    } else {
+      Ty::Error
     };
 
     (indeterminate, ret_val)

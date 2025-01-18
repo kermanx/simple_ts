@@ -88,3 +88,32 @@ impl<'a> Analyzer<'a> {
     )
   }
 }
+
+macro_rules! define_get_callable {
+  ($name: ident, $ctor: expr, $member: ident) => {
+    pub fn $name<'a>(ty: Ty<'a>) -> Option<Vec<&CallableType<'a, $ctor>>> {
+      fn append_callables<'a>(
+        callables: &mut Vec<&CallableType<'a, $ctor>>,
+        ty: Ty<'a>,
+      ) -> Option<()> {
+        match ty {
+          Ty::$member(f) => Some(callables.push(f)),
+          Ty::Intersection(i) => {
+            for ty in &i.types {
+              append_callables(callables, *ty)?;
+            }
+            Some(())
+          }
+          _ => None,
+        }
+      }
+
+      let mut callables = Vec::new();
+      append_callables(&mut callables, ty)?;
+      Some(callables)
+    }
+  };
+}
+
+define_get_callable!(get_callable_function, false, Function);
+define_get_callable!(get_callable_constructor, true, Constructor);
