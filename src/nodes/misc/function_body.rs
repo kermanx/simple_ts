@@ -28,6 +28,7 @@ impl<'a> Analyzer<'a> {
 
     self.exec_statement_vec(&node.statements);
 
+    self.pop_scope();
     match self.call_scopes.pop().unwrap().ret {
       CallScopeReturnType::Annotated(ty) => ty,
       CallScopeReturnType::Inferred(mut acc) => acc.to_ty().unwrap_or(Ty::Void),

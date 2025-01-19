@@ -7,7 +7,7 @@ use oxc::{
   span::{Atom, SPAN},
 };
 use rustc_hash::FxHashSet;
-use std::{collections::BTreeSet, hash::Hash, mem};
+use std::{hash::Hash, mem};
 
 #[derive(Debug, Default)]
 pub enum UnionType<'a> {

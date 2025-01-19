@@ -1,5 +1,4 @@
 use super::{
-  accumulator::TypeAccumulator,
   generic::GenericParam,
   union::{into_union, UnionType},
   Ty,
@@ -191,7 +190,7 @@ impl<'a> Analyzer<'a> {
     if let Some(callable) = callable {
       match callable {
         ExtractedCallable::Single(callable) => {
-          let mut ty = callable.return_type;
+          let ty = callable.return_type;
           if let Some(type_parameters) = type_parameters {
             let args = self.resolve_type_parameter_instantiation(type_parameters);
             let old_generics = self.take_generics();
@@ -201,7 +200,7 @@ impl<'a> Analyzer<'a> {
           ty
         }
         ExtractedCallable::Overloaded(callables) => {
-          let mut ret_val = Ty::Error;
+          let ret_val = Ty::Error;
           for callable in callables {
             todo!();
             // If matches, set ret_val and break
