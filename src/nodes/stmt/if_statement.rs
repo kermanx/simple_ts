@@ -3,7 +3,7 @@ use oxc::ast::ast::IfStatement;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_if_statement(&mut self, node: &'a IfStatement) {
-    self.exec_expression(&node.test);
+    self.exec_expression(&node.test, None);
 
     if node.alternate.is_some() {
       self.push_exit_blocker_scope();

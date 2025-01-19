@@ -5,10 +5,11 @@ impl<'a> Analyzer<'a> {
   pub fn exec_jsx_expression_container_as_attribute_value(
     &mut self,
     node: &'a JSXExpressionContainer<'a>,
+    ty: Option<Ty<'a>>,
   ) -> Ty<'a> {
     match &node.expression {
       JSXExpression::EmptyExpression(_node) => Ty::Boolean,
-      node => self.exec_expression(node.to_expression()),
+      node => self.exec_expression(node.to_expression(), ty),
     }
   }
 
@@ -19,7 +20,7 @@ impl<'a> Analyzer<'a> {
     match &node.expression {
       JSXExpression::EmptyExpression(_node) => {}
       node => {
-        self.exec_expression(node.to_expression());
+        self.exec_expression(node.to_expression(), None);
       }
     }
   }

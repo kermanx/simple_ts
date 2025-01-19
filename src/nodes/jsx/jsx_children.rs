@@ -7,10 +7,10 @@ impl<'a> Analyzer<'a> {
       match child {
         JSXChild::Text(node) => self.exec_jsx_text(node),
         JSXChild::Element(node) => {
-          self.exec_jsx_element(node);
+          self.exec_jsx_element(node, None);
         }
         JSXChild::Fragment(node) => {
-          self.exec_jsx_fragment(node);
+          self.exec_jsx_fragment(node, None);
         }
         JSXChild::ExpressionContainer(node) => {
           self.exec_jsx_expression_container_as_jsx_child(node)

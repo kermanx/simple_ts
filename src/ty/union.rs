@@ -7,7 +7,7 @@ use oxc::{
   span::{Atom, SPAN},
 };
 use rustc_hash::FxHashSet;
-use std::{hash::Hash, mem};
+use std::{collections::BTreeSet, hash::Hash, mem};
 
 #[derive(Debug, Default)]
 pub enum UnionType<'a> {
@@ -88,7 +88,9 @@ pub struct CompoundUnion<'a> {
   /// (has_true, has_false)
   boolean: (bool, bool),
 
-  complex: FxHashSet<Ty<'a>>,
+  /// Must be ordered
+  /// TODO: Use a set
+  complex: Vec<Ty<'a>>,
 }
 
 impl<'a> CompoundUnion<'a> {
@@ -127,7 +129,7 @@ impl<'a> CompoundUnion<'a> {
       | Ty::Constructor(_)
       | Ty::Namespace(_)
       | Ty::Intersection(_) => {
-        self.complex.insert(ty);
+        self.complex.push(ty);
       }
 
       Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!("Non-value"),

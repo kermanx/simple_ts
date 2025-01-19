@@ -44,11 +44,7 @@ impl<'a> Analyzer<'a> {
       unreachable!();
     };
     self.push_scope(CfScopeKind::Function);
-    let value = if let Some(annotated_ret) = annotated_ret {
-      todo!("backward inference")
-    } else {
-      self.exec_expression(&expr.expression)
-    };
+    let value = self.exec_expression(&expr.expression, annotated_ret);
     self.pop_scope();
     value
   }

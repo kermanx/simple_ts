@@ -122,8 +122,4 @@ impl<'a> Analyzer<'a> {
   pub fn get_to_awaited(&mut self, target: Ty<'a>) -> Ty<'a> {
     todo!()
   }
-
-  pub fn get_instantiation_return(&mut self, target: Ty<'a>, arguments: Ty<'a>) -> Ty<'a> {
-    todo!()
-  }
 }

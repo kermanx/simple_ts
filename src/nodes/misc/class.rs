@@ -2,7 +2,7 @@ use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::Class;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_class(&mut self, node: &'a Class<'a>) -> Ty<'a> {
+  pub fn exec_class(&mut self, node: &'a Class<'a>, _sat: Option<Ty<'a>>) -> Ty<'a> {
     todo!()
   }
 

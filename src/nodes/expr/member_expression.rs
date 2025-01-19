@@ -9,8 +9,9 @@ impl<'a> Analyzer<'a> {
   pub fn exec_member_expression_read(
     &mut self,
     node: &'a MemberExpression<'a>,
+    sat: Option<Ty<'a>>,
   ) -> (Ty<'a>, (Ty<'a>, PropertyKeyType<'a>)) {
-    let ((indeterminate, value), cache) = self.exec_member_expression_read_in_chain(node);
+    let ((indeterminate, value), cache) = self.exec_member_expression_read_in_chain(node, sat);
 
     if indeterminate {
       self.pop_scope();
@@ -23,8 +24,9 @@ impl<'a> Analyzer<'a> {
   pub fn exec_member_expression_read_in_chain(
     &mut self,
     node: &'a MemberExpression<'a>,
+    _sat: Option<Ty<'a>>,
   ) -> ((bool, Ty<'a>), (Ty<'a>, PropertyKeyType<'a>)) {
-    let (mut indeterminate, object) = self.exec_expression_in_chain(node.object());
+    let (mut indeterminate, object) = self.exec_expression_in_chain(node.object(), None);
 
     if !indeterminate && node.optional() {
       self.push_indeterminate_scope();
@@ -45,10 +47,8 @@ impl<'a> Analyzer<'a> {
     cache: Option<(Ty<'a>, PropertyKeyType<'a>)>,
   ) {
     let (object, key) = cache.unwrap_or_else(|| {
-      let object = self.exec_expression(node.object());
-
+      let object = self.exec_expression(node.object(), None);
       let key = self.exec_key(node);
-
       (object, key)
     });
 
@@ -57,7 +57,9 @@ impl<'a> Analyzer<'a> {
 
   fn exec_key(&mut self, node: &'a MemberExpression<'a>) -> PropertyKeyType<'a> {
     let value = match node {
-      MemberExpression::ComputedMemberExpression(node) => self.exec_expression(&node.expression),
+      MemberExpression::ComputedMemberExpression(node) => {
+        self.exec_expression(&node.expression, None)
+      }
       MemberExpression::StaticMemberExpression(node) => self.exec_identifier_name(&node.property),
       MemberExpression::PrivateFieldExpression(node) => self.exec_private_identifier(&node.field),
     };

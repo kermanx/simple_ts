@@ -28,14 +28,14 @@ impl<'a> Analyzer<'a> {
     if let Some((member_expr, same_chain)) = unwrap_to_member_expression(node) {
       if same_chain {
         let ((indeterminate, callee), (object, _)) =
-          self.exec_member_expression_read_in_chain(member_expr);
+          self.exec_member_expression_read_in_chain(member_expr, None);
         (indeterminate, callee, object)
       } else {
-        let (callee, (object, _)) = self.exec_member_expression_read(member_expr);
+        let (callee, (object, _)) = self.exec_member_expression_read(member_expr, None);
         (false, callee, object)
       }
     } else {
-      let (indeterminate, callee) = self.exec_expression_in_chain(node);
+      let (indeterminate, callee) = self.exec_expression_in_chain(node, None);
       (indeterminate, callee, Ty::Undefined)
     }
   }

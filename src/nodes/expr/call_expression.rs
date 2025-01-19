@@ -1,12 +1,13 @@
-use crate::{
-  analyzer::Analyzer,
-  ty::{callable::get_callable_function, Ty},
-};
+use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::CallExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_call_expression(&mut self, node: &'a CallExpression) -> Ty<'a> {
-    let (indeterminate, value) = self.exec_call_expression_in_chain(node);
+  pub fn exec_call_expression(
+    &mut self,
+    node: &'a CallExpression<'a>,
+    ty: Option<Ty<'a>>,
+  ) -> Ty<'a> {
+    let (indeterminate, value) = self.exec_call_expression_in_chain(node, ty);
 
     if indeterminate {
       self.pop_scope();
@@ -15,7 +16,11 @@ impl<'a> Analyzer<'a> {
     value
   }
 
-  pub fn exec_call_expression_in_chain(&mut self, node: &'a CallExpression) -> (bool, Ty<'a>) {
+  pub fn exec_call_expression_in_chain(
+    &mut self,
+    node: &'a CallExpression<'a>,
+    ty: Option<Ty<'a>>,
+  ) -> (bool, Ty<'a>) {
     let (mut indeterminate, callee, this) = self.exec_callee(&node.callee);
 
     if !indeterminate && node.optional {
@@ -23,13 +28,8 @@ impl<'a> Analyzer<'a> {
       indeterminate = true;
     }
 
-    let args = self.exec_arguments(&node.arguments);
-
-    let ret_val = if let Some(callee) = get_callable_function(callee) {
-      todo!()
-    } else {
-      Ty::Error
-    };
+    let callable = self.extract_callable_function(callee);
+    let ret_val = self.exec_call(callable, &node.type_parameters, &node.arguments);
 
     (indeterminate, ret_val)
   }

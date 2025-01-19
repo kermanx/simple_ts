@@ -49,7 +49,7 @@ impl<'a> Analyzer<'a> {
         self.init_module_declaration(node);
       }
       Statement::ExpressionStatement(node) => {
-        self.exec_expression(&node.expression);
+        self.exec_expression(&node.expression, None);
       }
       Statement::BlockStatement(node) => self.exec_block_statement(node),
       Statement::IfStatement(node) => self.exec_if_statement(node),

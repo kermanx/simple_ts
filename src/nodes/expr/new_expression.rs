@@ -2,13 +2,17 @@ use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::NewExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_new_expression(&mut self, node: &'a NewExpression<'a>) -> Ty<'a> {
-    let callee = self.exec_expression(&node.callee);
+  pub fn exec_new_expression(
+    &mut self,
+    node: &'a NewExpression<'a>,
+    _sat: Option<Ty<'a>>,
+  ) -> Ty<'a> {
+    let callee = self.exec_expression(&node.callee, None);
 
-    let arguments = self.exec_arguments(&node.arguments);
+    let callable = self.extract_callable_function(callee);
 
-    let value = self.get_instantiation_return(callee, arguments);
+    self.exec_call(callable, &node.type_parameters, &node.arguments);
 
-    value
+    todo!()
   }
 }

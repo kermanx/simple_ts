@@ -11,11 +11,11 @@ impl<'a> Analyzer<'a> {
   ) -> (Ty<'a>, Option<(Ty<'a>, PropertyKeyType<'a>)>) {
     match node {
       match_member_expression!(SimpleAssignmentTarget) => {
-        let (value, cache) = self.exec_member_expression_read(node.to_member_expression());
+        let (value, cache) = self.exec_member_expression_read(node.to_member_expression(), None);
         (value, Some(cache))
       }
       SimpleAssignmentTarget::AssignmentTargetIdentifier(node) => {
-        (self.exec_identifier_reference_read(node), None)
+        (self.exec_identifier_reference_read(node, None), None)
       }
       _ => unreachable!(),
     }

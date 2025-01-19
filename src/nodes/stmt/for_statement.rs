@@ -10,7 +10,7 @@ impl<'a> Analyzer<'a> {
           self.init_variable_declaration(node, None);
         }
         node => {
-          self.exec_expression(node.to_expression());
+          self.exec_expression(node.to_expression(), None);
         }
       }
     }
@@ -18,12 +18,12 @@ impl<'a> Analyzer<'a> {
     self.push_loop_scope();
 
     if let Some(test) = &node.test {
-      self.exec_expression(test);
+      self.exec_expression(test, None);
       // CHECKER
     }
 
     if let Some(update) = &node.update {
-      self.exec_expression(update);
+      self.exec_expression(update, None);
     }
 
     self.exec_statement(&node.body);

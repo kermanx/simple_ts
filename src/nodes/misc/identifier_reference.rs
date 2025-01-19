@@ -2,7 +2,11 @@ use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::IdentifierReference;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_identifier_reference_read(&mut self, node: &'a IdentifierReference<'a>) -> Ty<'a> {
+  pub fn exec_identifier_reference_read(
+    &mut self,
+    node: &'a IdentifierReference<'a>,
+    _sat: Option<Ty<'a>>,
+  ) -> Ty<'a> {
     let reference = self.semantic.symbols().get_reference(node.reference_id());
     let symbol = reference.symbol_id();
 

@@ -83,16 +83,16 @@ impl<'a> Analyzer<'a> {
       }
       ModuleDeclaration::ExportDefaultDeclaration(node) => {
         match &node.declaration {
-          ExportDefaultDeclarationKind::FunctionDeclaration(node) => self.exec_function(node),
+          ExportDefaultDeclarationKind::FunctionDeclaration(node) => self.exec_function(node, None),
           ExportDefaultDeclarationKind::ClassDeclaration(node) => {
             if node.id.is_none() {
               // Patch `export default class{}`
-              self.exec_class(node)
+              self.exec_class(node, None)
             } else {
               self.init_class(node)
             }
           }
-          node => self.exec_expression(node.to_expression()),
+          node => self.exec_expression(node.to_expression(), None),
         };
       }
       ModuleDeclaration::ExportAllDeclaration(_node) => {

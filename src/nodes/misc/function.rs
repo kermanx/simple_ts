@@ -5,7 +5,7 @@ use crate::{
 use oxc::ast::ast::Function;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_function(&mut self, node: &'a Function<'a>) -> Ty<'a> {
+  pub fn exec_function(&mut self, node: &'a Function<'a>, _ty: Option<Ty<'a>>) -> Ty<'a> {
     let type_params = node
       .type_parameters
       .as_ref()
@@ -37,7 +37,7 @@ impl<'a> Analyzer<'a> {
 
   pub fn declare_function(&mut self, node: &'a Function<'a>) {
     let symbol = node.id.as_ref().unwrap().symbol_id.get().unwrap();
-    let value = self.exec_function(node);
+    let value = self.exec_function(node, None);
 
     self.declare_variable(symbol, true);
     self.init_variable(symbol, value);

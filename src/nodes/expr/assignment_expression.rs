@@ -5,16 +5,21 @@ use crate::{
 use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator};
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_assignment_expression(&mut self, node: &'a AssignmentExpression<'a>) -> Ty<'a> {
+  pub fn exec_assignment_expression(
+    &mut self,
+    node: &'a AssignmentExpression<'a>,
+    sat: Option<Ty<'a>>,
+  ) -> Ty<'a> {
     if node.operator == AssignmentOperator::Assign {
-      let rhs = self.exec_expression(&node.right);
-      self.exec_assignment_target_write(&node.left, rhs, None);
+      let (left, cache) = self.exec_assignment_target_read(&node.left);
+      let rhs = self.exec_expression(&node.right, Some(left));
+      self.exec_assignment_target_write(&node.left, rhs, cache);
       rhs
     } else if node.operator.is_logical() {
       let (left, cache) = self.exec_assignment_target_read(&node.left);
 
       self.push_indeterminate_scope();
-      let right = self.exec_expression(&node.right);
+      let right = self.exec_expression(&node.right, Some(left));
       let value = into_union(self.allocator, [left, right]);
       self.pop_scope();
 
@@ -23,9 +28,9 @@ impl<'a> Analyzer<'a> {
 
       value
     } else {
-      let (lhs, cache) = self.exec_assignment_target_read(&node.left);
-      let rhs = self.exec_expression(&node.right);
-      let value = self.binary_operation(to_binary_operator(node.operator), lhs, rhs);
+      let (left, cache) = self.exec_assignment_target_read(&node.left);
+      let right = self.exec_expression(&node.right, Some(left));
+      let value = self.binary_operation(to_binary_operator(node.operator), left, right);
       self.exec_assignment_target_write(&node.left, value, cache);
       value
     }

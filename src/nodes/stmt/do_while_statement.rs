@@ -6,7 +6,7 @@ impl<'a> Analyzer<'a> {
     self.exec_statement(&node.body);
 
     self.push_indeterminate_scope();
-    self.exec_expression(&node.test);
+    self.exec_expression(&node.test, None);
     // CHECKER
     self.pop_scope();
 

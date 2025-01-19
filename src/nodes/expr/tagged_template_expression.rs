@@ -5,6 +5,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_tagged_template_expression(
     &mut self,
     node: &'a TaggedTemplateExpression<'a>,
+    _sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
     let (indeterminate, tag, this) = self.exec_callee(&node.tag);
 
@@ -15,7 +16,7 @@ impl<'a> Analyzer<'a> {
     let mut arguments = vec![todo!()];
 
     for expr in &node.quasi.expressions {
-      let value = self.exec_expression(expr);
+      let value = self.exec_expression(expr, todo!());
       arguments.push((false, value));
     }
 

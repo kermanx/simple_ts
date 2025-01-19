@@ -1,8 +1,14 @@
-use super::{generic::GenericParam, Ty};
+use super::{
+  accumulator::TypeAccumulator,
+  generic::GenericParam,
+  union::{into_union, UnionType},
+  Ty,
+};
 use crate::analyzer::Analyzer;
 use oxc::{
+  allocator,
   ast::{
-    ast::{FormalParameterKind, TSType},
+    ast::{Argument, FormalParameterKind, TSType, TSTypeParameterInstantiation},
     NONE,
   },
   semantic::SymbolId,
@@ -89,31 +95,126 @@ impl<'a> Analyzer<'a> {
   }
 }
 
-macro_rules! define_get_callable {
+#[derive(Debug)]
+pub enum ExtractedCallable<'a, const CTOR: bool> {
+  Single(&'a CallableType<'a, CTOR>),
+  Overloaded(Vec<ExtractedCallable<'a, CTOR>>),
+  Union(Vec<ExtractedCallable<'a, CTOR>>),
+}
+
+macro_rules! impl_extract_callable {
   ($name: ident, $ctor: expr, $member: ident) => {
-    pub fn $name<'a>(ty: Ty<'a>) -> Option<Vec<&CallableType<'a, $ctor>>> {
-      fn append_callables<'a>(
-        callables: &mut Vec<&CallableType<'a, $ctor>>,
-        ty: Ty<'a>,
-      ) -> Option<()> {
+    impl<'a> Analyzer<'a> {
+      pub fn $name(&mut self, ty: Ty<'a>) -> Option<ExtractedCallable<'a, $ctor>> {
         match ty {
-          Ty::$member(f) => Some(callables.push(f)),
+          Ty::$member(f) => Some(ExtractedCallable::Single(f)),
+          Ty::Union(u) => {
+            let mut res = Some(vec![]);
+            u.for_each(|ty| {
+              if let (Some(res), Some(extracted)) = (&mut res, self.$name(ty)) {
+                res.push(extracted);
+              } else {
+                res = None;
+              }
+            });
+            res.map(ExtractedCallable::Union)
+          }
           Ty::Intersection(i) => {
+            let mut res = vec![];
             for ty in &i.types {
-              append_callables(callables, *ty)?;
+              if let Some(extracted) = self.$name(*ty) {
+                res.push(extracted);
+              }
             }
-            Some(())
+            match res.len() {
+              0 => None,
+              1 => Some(res.into_iter().next().unwrap()),
+              _ => Some(ExtractedCallable::Overloaded(res)),
+            }
           }
           _ => None,
         }
       }
-
-      let mut callables = Vec::new();
-      append_callables(&mut callables, ty)?;
-      Some(callables)
     }
   };
 }
 
-define_get_callable!(get_callable_function, false, Function);
-define_get_callable!(get_callable_constructor, true, Constructor);
+impl_extract_callable!(extract_callable_function, false, Function);
+impl_extract_callable!(extract_callable_constructor, true, Constructor);
+
+impl<'a> Analyzer<'a> {
+  pub fn get_callable_parameter_types<const CTOR: bool>(
+    &mut self,
+    callable: &ExtractedCallable<'a, CTOR>,
+  ) -> Vec<Ty<'a>> {
+    match callable {
+      ExtractedCallable::Single(callable) => callable
+        .params
+        .iter()
+        .copied()
+        .map(
+          |(optional, ty)| {
+            if optional {
+              into_union(self.allocator, [Ty::Undefined, ty])
+            } else {
+              ty
+            }
+          },
+        )
+        .collect(),
+      ExtractedCallable::Overloaded(callables) => {
+        let allocator = self.allocator;
+        let callables = callables.iter().map(|c| self.get_callable_parameter_types(c));
+        let mut res = Vec::new();
+        for callable in callables {
+          for _ in res.len()..callable.len() {
+            res.push(allocator.alloc(UnionType::default()));
+          }
+          for (i, item) in callable.into_iter().enumerate() {
+            res[i].add(item);
+          }
+        }
+        res.into_iter().map(|u| Ty::Union(u)).collect()
+      }
+      ExtractedCallable::Union(callables) => {
+        todo!()
+      }
+    }
+  }
+
+  pub fn exec_call<const CTOR: bool>(
+    &mut self,
+    callable: Option<ExtractedCallable<'a, CTOR>>,
+    type_parameters: &'a Option<allocator::Box<'a, TSTypeParameterInstantiation<'a>>>,
+    arguments: &'a allocator::Vec<'a, Argument<'a>>,
+  ) -> Ty<'a> {
+    if let Some(callable) = callable {
+      match callable {
+        ExtractedCallable::Single(callable) => {
+          let mut ty = callable.return_type;
+          if let Some(type_parameters) = type_parameters {
+            let args = self.resolve_type_parameter_instantiation(type_parameters);
+            let old_generics = self.take_generics();
+            todo!()
+          }
+          self.exec_arguments(arguments);
+          ty
+        }
+        ExtractedCallable::Overloaded(callables) => {
+          let mut ret_val = Ty::Error;
+          for callable in callables {
+            todo!();
+            // If matches, set ret_val and break
+          }
+          ret_val
+        }
+        ExtractedCallable::Union(callables) => {
+          todo!()
+        }
+      }
+    } else {
+      self.exec_arguments(arguments);
+      Ty::Error
+    }
+  }
+}

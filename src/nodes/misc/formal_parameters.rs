@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
     node: &'a FormalParameters<'a>,
   ) -> (Option<Ty<'a>>, Vec<(bool, Ty<'a>)>, Option<Ty<'a>>) {
     for param in &node.items {
-      self.declare_binding_pattern(&param.pattern, false);
+      self.declare_binding_pattern(&param.pattern, param.pattern.type_annotation.is_some());
     }
 
     let mut params = vec![];

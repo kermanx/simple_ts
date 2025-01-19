@@ -1,3 +1,5 @@
+mod ts_as_expression;
+mod ts_instantiation_expression;
 mod ts_literal;
 mod ts_type_annotation;
 mod ts_type_literal;

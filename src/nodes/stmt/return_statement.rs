@@ -6,14 +6,13 @@ impl<'a> Analyzer<'a> {
     let call_scope = self.call_scopes.last().unwrap();
     match &call_scope.ret {
       CallScopeReturnType::Annotated(ty) => {
-        // FIXME: backward inference
         if let Some(argument) = &node.argument {
-          self.exec_expression(argument);
+          self.exec_expression(argument, Some(*ty));
         }
       }
       CallScopeReturnType::Inferred(_) => {
         let ty = if let Some(argument) = &node.argument {
-          self.exec_expression(argument)
+          self.exec_expression(argument, None)
         } else {
           Ty::Undefined
         };

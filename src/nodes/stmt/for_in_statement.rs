@@ -3,7 +3,7 @@ use oxc::ast::ast::ForInStatement;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_for_in_statement(&mut self, node: &'a ForInStatement<'a>) {
-    self.exec_expression(&node.right);
+    self.exec_expression(&node.right, None);
 
     self.push_loop_scope();
 

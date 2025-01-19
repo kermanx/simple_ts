@@ -2,8 +2,7 @@ use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{BindingPattern, BindingPatternKind};
 
 impl<'a> Analyzer<'a> {
-  pub fn declare_binding_pattern(&mut self, node: &'a BindingPattern<'a>, mut typed: bool) {
-    typed |= node.type_annotation.is_some();
+  pub fn declare_binding_pattern(&mut self, node: &'a BindingPattern<'a>, typed: bool) {
     match &node.kind {
       BindingPatternKind::BindingIdentifier(node) => {
         self.declare_binding_identifier(node, typed);

@@ -8,21 +8,25 @@ use oxc::{
 };
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_unary_expression(&mut self, node: &'a UnaryExpression) -> Ty<'a> {
+  pub fn exec_unary_expression(
+    &mut self,
+    node: &'a UnaryExpression,
+    _sat: Option<Ty<'a>>,
+  ) -> Ty<'a> {
     if node.operator == UnaryOperator::Delete {
       match &node.argument {
         Expression::StaticMemberExpression(node) => {
-          let object = self.exec_expression(&node.object);
+          let object = self.exec_expression(&node.object, None);
           let key = PropertyKeyType::StringLiteral(&node.property.name);
           self.delete_property(object, key)
         }
         Expression::PrivateFieldExpression(node) => {
           self.add_diagnostic("SyntaxError: private fields can't be deleted");
-          let _object = self.exec_expression(&node.object);
+          let _object = self.exec_expression(&node.object, None);
         }
         Expression::ComputedMemberExpression(node) => {
-          let object = self.exec_expression(&node.object);
-          let key = self.exec_expression(&node.expression);
+          let object = self.exec_expression(&node.object, None);
+          let key = self.exec_expression(&node.expression, None);
           let key = self.to_property_key(key);
           self.delete_property(object, key)
         }
@@ -30,14 +34,14 @@ impl<'a> Analyzer<'a> {
           self.add_diagnostic("SyntaxError: Delete of an unqualified identifier in strict mode");
         }
         expr => {
-          self.exec_expression(expr);
+          self.exec_expression(expr, None);
         }
       };
 
       return Ty::Boolean;
     }
 
-    let argument = self.exec_expression(&node.argument);
+    let argument = self.exec_expression(&node.argument, None);
 
     match &node.operator {
       UnaryOperator::UnaryNegation => todo!(),

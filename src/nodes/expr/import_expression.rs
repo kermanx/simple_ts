@@ -2,11 +2,16 @@ use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::ImportExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_import_expression(&mut self, node: &'a ImportExpression<'a>) -> Ty<'a> {
-    let source = self.exec_expression(&node.source);
+  pub fn exec_import_expression(
+    &mut self,
+    node: &'a ImportExpression<'a>,
+    _sat: Option<Ty<'a>>,
+  ) -> Ty<'a> {
+    let source = self.exec_expression(&node.source, Some(Ty::String));
 
     for argument in &node.arguments {
-      self.exec_expression(argument);
+      // FIXME: This first argument is `ImportCallOptions`
+      self.exec_expression(argument, Some(Ty::Any));
     }
 
     todo!()
