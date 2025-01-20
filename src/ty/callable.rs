@@ -179,26 +179,16 @@ impl<'a> Analyzer<'a> {
     if let Some(callable) = callable {
       match callable {
         ExtractedCallable::Single(callable) => {
-          if let Some(type_parameters) = type_parameters {
+          if callable.type_params.is_empty() {
+            let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
+            self.exec_arguments(arguments, params);
+            callable.return_type
+          } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
             let old_generics = self.take_generics();
             self.instantiate_generic_param(&callable.type_params, type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
-            let mut in_order = true;
-            for (i, arg) in arguments.iter().enumerate() {
-              match arg {
-                Argument::SpreadElement(node) => {
-                  self.exec_expression(&node.argument, None);
-                  in_order = false;
-                }
-                node => {
-                  self.exec_expression(
-                    node.to_expression(),
-                    in_order.then(|| params.get(i).copied().unwrap_or(Ty::Error)),
-                  );
-                }
-              }
-            }
+            self.exec_arguments(arguments, params);
             let ret = self.resolve_unresolved(callable.return_type);
             self.restore_generics(old_generics);
             ret
