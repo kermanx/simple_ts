@@ -11,7 +11,7 @@ impl<'a> Analyzer<'a> {
       if let Some(param) = &handler.param {
         self.declare_binding_pattern(&param.pattern, true);
         let init = if let Some(type_annotation) = &param.pattern.type_annotation {
-          self.resolve_type_annotation_or_defer(type_annotation)
+          self.resolve_type_annotation(type_annotation)
         } else {
           Ty::Unknown
         };

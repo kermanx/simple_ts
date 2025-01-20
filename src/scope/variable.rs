@@ -1,6 +1,6 @@
 use crate::{
   analyzer::Analyzer,
-  ty::{union::into_union, Ty},
+  ty::{union::into_union, unresolved::UnresolvedType, Ty},
 };
 use oxc::semantic::{ScopeId, SymbolId};
 use rustc_hash::FxHashMap;
@@ -24,7 +24,10 @@ impl<'a> Variable<'a> {
 impl<'a> Analyzer<'a> {
   pub fn declare_variable(&mut self, symbol: SymbolId, typed: bool) {
     if typed {
-      self.variables.insert(symbol, Ty::UnresolvedVariable(symbol));
+      self.variables.insert(
+        symbol,
+        Ty::Unresolved(self.allocator.alloc(UnresolvedType::UnresolvedTypedVariable(symbol))),
+      );
     } else {
       self.scopes.get_current_mut().variables.insert(symbol, Variable::inferred(Ty::Undefined));
     }

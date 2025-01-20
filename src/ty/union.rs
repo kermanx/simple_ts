@@ -1,4 +1,4 @@
-use super::{property_key::PropertyKeyType, Ty};
+use super::{property_key::PropertyKeyType, unresolved::UnresolvedType, Ty};
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use oxc::{
   allocator::Allocator,
@@ -17,7 +17,7 @@ pub enum UnionType<'a> {
   Any,
   Unknown,
   Compound(Box<CompoundUnion<'a>>),
-  WithUnresolved(Box<UnionType<'a>>, Vec<Ty<'a>>),
+  WithUnresolved(Box<UnionType<'a>>, Vec<&'a UnresolvedType<'a>>),
 }
 
 impl<'a> UnionType<'a> {
@@ -29,15 +29,11 @@ impl<'a> UnionType<'a> {
       (s, Ty::Unknown) => *s = UnionType::Unknown,
       (_, Ty::Never) => {}
 
-      (UnionType::WithUnresolved(_, t), Ty::UnresolvedType(_) | Ty::UnresolvedVariable(_)) => {
-        t.push(ty)
-      }
+      (UnionType::WithUnresolved(_, t), Ty::Unresolved(u)) => t.push(u),
       (UnionType::WithUnresolved(s, _), ty) => {
         s.add(ty);
       }
-      (s, Ty::UnresolvedType(_) | Ty::UnresolvedVariable(_)) => {
-        *s = UnionType::WithUnresolved(Box::new(mem::take(s)), vec![ty])
-      }
+      (s, Ty::Unresolved(u)) => *s = UnionType::WithUnresolved(Box::new(mem::take(s)), vec![u]),
 
       (s, Ty::Union(tys)) => {
         tys.for_each(|ty| s.add(ty));
@@ -68,7 +64,7 @@ impl<'a> UnionType<'a> {
       UnionType::WithUnresolved(s, t) => {
         // FIXME: This is ugly. But `&mut f` will trigger a rustc error
         s.for_each(&mut f as &mut dyn FnMut(Ty<'a>) -> ());
-        t.iter().copied().for_each(f);
+        t.iter().copied().for_each(|t| f(Ty::Unresolved(t)));
       }
     }
   }
@@ -96,13 +92,7 @@ pub struct CompoundUnion<'a> {
 impl<'a> CompoundUnion<'a> {
   pub fn add(&mut self, ty: Ty<'a>) {
     match ty {
-      Ty::Error
-      | Ty::Any
-      | Ty::Unknown
-      | Ty::Never
-      | Ty::Union(_)
-      | Ty::UnresolvedType(_)
-      | Ty::UnresolvedVariable(_) => {
+      Ty::Error | Ty::Any | Ty::Unknown | Ty::Never | Ty::Union(_) | Ty::Unresolved(_) => {
         unreachable!("Handled in UnionType")
       }
 

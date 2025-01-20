@@ -13,7 +13,7 @@ impl<'a> Analyzer<'a> {
     loop_init: Option<Ty<'a>>,
   ) {
     let init = if let Some(type_annotation) = &node.id.type_annotation {
-      let ty = self.resolve_type_annotation_or_defer(type_annotation);
+      let ty = self.resolve_type_annotation(type_annotation);
       node.init.as_ref().map(|init| self.exec_expression(init, Some(ty)));
       Some(ty)
     } else if let Some(loop_init) = loop_init {

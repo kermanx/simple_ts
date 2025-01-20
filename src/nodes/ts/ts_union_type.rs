@@ -5,11 +5,11 @@ use crate::{
 use oxc::ast::ast::TSUnionType;
 
 impl<'a> Analyzer<'a> {
-  pub fn resolve_union_type(&mut self, node: &'a TSUnionType<'a>) -> Option<Ty<'a>> {
+  pub fn resolve_union_type(&mut self, node: &'a TSUnionType<'a>) -> Ty<'a> {
     let mut types = vec![];
     for node in &node.types {
-      types.push(self.resolve_type(node)?);
+      types.push(self.resolve_type(node));
     }
-    Some(into_union(self.allocator, types))
+    into_union(self.allocator, types)
   }
 }

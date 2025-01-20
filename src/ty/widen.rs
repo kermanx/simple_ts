@@ -35,7 +35,7 @@ impl<'a> Analyzer<'a> {
 
       Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!(),
 
-      Ty::UnresolvedType(_) | Ty::UnresolvedVariable(_) => todo!(),
+      Ty::Unresolved(_) => todo!(),
     }
   }
 }

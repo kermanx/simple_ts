@@ -41,7 +41,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn instantiate_generic(&mut self, ty: Ty<'a>, args: Vec<Ty<'a>>) -> Option<Ty<'a>> {
+  pub fn instantiate_generic(&mut self, ty: Ty<'a>, args: Vec<Ty<'a>>) -> Ty<'a> {
     match ty {
       Ty::Generic(generic) => {
         let old_generics = self.take_generics();

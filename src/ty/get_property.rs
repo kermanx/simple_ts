@@ -28,7 +28,13 @@ impl<'a> Analyzer<'a> {
 
       Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!(),
 
-      Ty::UnresolvedType(_) | Ty::UnresolvedVariable(_) => todo!(),
+      Ty::Unresolved(u) => {
+        if let Some(base) = self.get_unresolved_base_type(u) {
+          self.get_property(base, key)
+        } else {
+          Ty::Error
+        }
+      }
     }
   }
 }

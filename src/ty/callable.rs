@@ -180,7 +180,7 @@ impl<'a> Analyzer<'a> {
       match callable {
         ExtractedCallable::Single(callable) => {
           if let Some(type_parameters) = type_parameters {
-            let type_args = self.resolve_type_parameter_instantiation_or_defer(type_parameters);
+            let type_args = self.resolve_type_parameter_instantiation(type_parameters);
             let old_generics = self.take_generics();
             self.instantiate_generic_param(&callable.type_params, type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
@@ -199,7 +199,7 @@ impl<'a> Analyzer<'a> {
                 }
               }
             }
-            let ret = self.precise_type(callable.return_type);
+            let ret = self.resolve_unresolved(callable.return_type);
             self.restore_generics(old_generics);
             ret
           } else {

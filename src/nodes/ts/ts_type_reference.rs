@@ -2,14 +2,20 @@ use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{TSTypeName, TSTypeReference};
 
 impl<'a> Analyzer<'a> {
-  pub fn resolve_type_reference(&mut self, node: &'a TSTypeReference<'a>) -> Option<Ty<'a>> {
+  pub fn resolve_type_reference(&mut self, node: &'a TSTypeReference<'a>) -> Ty<'a> {
     let base = match &node.type_name {
       TSTypeName::IdentifierReference(node) => {
         let reference = self.semantic.symbols().get_reference(node.reference_id());
         if let Some(symbol) = reference.symbol_id() {
-          *self.generics.get(&symbol).or_else(|| self.types.get(&symbol))?
+          if let Some(generic) = self.generics.get(&symbol) {
+            *generic
+          } else if let Some(resolved) = self.types.get(&symbol) {
+            *resolved
+          } else {
+            unreachable!()
+          }
         } else {
-          // Unresolved symbol
+          // Global symbol
           Ty::Any
         }
       }
@@ -17,10 +23,10 @@ impl<'a> Analyzer<'a> {
     };
 
     if let Some(type_parameters) = &node.type_parameters {
-      let type_parameters = self.resolve_type_parameter_instantiation(type_parameters)?;
+      let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
       self.instantiate_generic(base, type_parameters)
     } else {
-      Some(base)
+      base
     }
   }
 }

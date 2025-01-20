@@ -5,7 +5,7 @@ use crate::{
 use oxc::ast::ast::{TSSignature, TSTypeLiteral};
 
 impl<'a> Analyzer<'a> {
-  pub fn resolve_type_literal(&mut self, node: &'a TSTypeLiteral<'a>) -> Option<Ty<'a>> {
+  pub fn resolve_type_literal(&mut self, node: &'a TSTypeLiteral<'a>) -> Ty<'a> {
     let allocator = self.allocator;
     let mut record = None;
     let alloc_record = || allocator.alloc(RecordType::default());
@@ -14,9 +14,9 @@ impl<'a> Analyzer<'a> {
     for member in &node.members {
       match member {
         TSSignature::TSIndexSignature(node) => {
-          let key = self.resolve_type_annotation(&node.parameters[0].type_annotation)?;
+          let key = self.resolve_type_annotation(&node.parameters[0].type_annotation);
           let key = self.to_property_key(key);
-          let value = self.resolve_type_annotation(&node.type_annotation)?;
+          let value = self.resolve_type_annotation(&node.type_annotation);
           record.get_or_insert_with(alloc_record).init_property(
             self,
             key,
@@ -28,7 +28,7 @@ impl<'a> Analyzer<'a> {
         TSSignature::TSPropertySignature(node) => {
           let key = self.exec_property_key(&node.key);
           let value = if let Some(type_annotation) = &node.type_annotation {
-            self.resolve_type_annotation(type_annotation)?
+            self.resolve_type_annotation(type_annotation)
           } else {
             todo!("Wtf, how can this happen?");
           };
@@ -46,13 +46,13 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    Some(if callables.is_empty() {
+    if callables.is_empty() {
       Ty::Record(record.unwrap_or_else(alloc_record))
     } else {
       if let Some(record) = record {
         callables.push(Ty::Record(record));
       }
       Ty::Intersection(allocator.alloc(IntersectionType { types: callables }))
-    })
+    }
   }
 }

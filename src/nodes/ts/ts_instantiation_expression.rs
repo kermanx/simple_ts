@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
     node: &'a TSSatisfiesExpression<'a>,
     _sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
-    let ty = self.resolve_type_or_defer(&node.type_annotation);
+    let ty = self.resolve_type(&node.type_annotation);
 
     self.exec_expression(&node.expression, Some(ty))
   }

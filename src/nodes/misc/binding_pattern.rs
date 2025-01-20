@@ -35,7 +35,7 @@ impl<'a> Analyzer<'a> {
     mut init: Option<Ty<'a>>,
   ) -> Option<Ty<'a>> {
     if let Some(annotation) = &node.type_annotation {
-      init = Some(self.resolve_type_annotation_or_defer(annotation));
+      init = Some(self.resolve_type_annotation(annotation));
     }
     match &node.kind {
       BindingPatternKind::BindingIdentifier(node) => {

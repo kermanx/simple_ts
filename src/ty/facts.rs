@@ -116,17 +116,14 @@ impl<'a> Analyzer<'a> {
       Ty::Generic(_) | Ty::Intrinsic(_) => {
         unreachable!("Cannot get facts of {ty:?}")
       }
-      Ty::UnresolvedType(node) => {
-        if let Some(resolved) = self.resolve_type(node) {
-          self.get_facts(resolved)
+
+      Ty::Unresolved(u) => {
+        if let Some(base) = self.get_unresolved_base_type(u) {
+          self.get_facts(base)
         } else {
           Facts::NONE
         }
       }
-      Ty::UnresolvedVariable(symbol) => match *self.variables.get(&symbol).unwrap() {
-        Ty::UnresolvedVariable(s) if s == symbol => Facts::NONE,
-        ty => self.get_facts(ty),
-      },
     }
   }
 

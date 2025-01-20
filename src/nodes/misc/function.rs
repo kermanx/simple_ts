@@ -15,7 +15,7 @@ impl<'a> Analyzer<'a> {
     let (this_type, params, rest_param) = self.exec_formal_parameters(&node.params);
 
     let annotated_ret = if let Some(return_type) = &node.return_type {
-      Some(self.resolve_type_annotation_or_defer(return_type))
+      Some(self.resolve_type_annotation(return_type))
     } else {
       None
     };

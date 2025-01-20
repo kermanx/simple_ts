@@ -54,7 +54,7 @@ impl<'a> Analyzer<'a> {
       Ty::Generic(g) => self.print_generic_type(g),
       Ty::Intrinsic(i) => self.print_intrinsic_type(i),
 
-      Ty::UnresolvedType(_) | Ty::UnresolvedVariable(_) => todo!(),
+      Ty::Unresolved(u) => self.print_unresolved_type(u),
     }
   }
 }

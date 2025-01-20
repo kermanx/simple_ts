@@ -12,8 +12,8 @@ impl<'a> Analyzer<'a> {
       .iter()
       .map(|param| GenericParam {
         symbol_id: param.name.symbol_id(),
-        constraint: param.constraint.as_ref().map(|c| self.resolve_type_or_defer(c)),
-        default: param.default.as_ref().map(|c| self.resolve_type_or_defer(c)),
+        constraint: param.constraint.as_ref().map(|c| self.resolve_type(c)),
+        default: param.default.as_ref().map(|c| self.resolve_type(c)),
         r#in: param.r#in,
         out: param.out,
         r#const: param.r#const,

@@ -11,6 +11,7 @@ pub mod print;
 pub mod property_key;
 pub mod record;
 pub mod union;
+pub mod unresolved;
 pub mod widen;
 
 use crate::{analyzer::Analyzer, utils::F64WithEq};
@@ -19,11 +20,12 @@ use generic::GenericType;
 use intersection::IntersectionType;
 use intrinsics::IntrinsicType;
 use namespace::NamespaceType;
-use oxc::{ast::ast::TSType, semantic::SymbolId, span::Atom};
+use oxc::{semantic::SymbolId, span::Atom};
 use property_key::PropertyKeyType;
 use record::RecordType;
 use std::{hash, mem};
 use union::UnionType;
+use unresolved::UnresolvedType;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Ty<'a> {
@@ -65,9 +67,8 @@ pub enum Ty<'a> {
   /* Generic */
   Generic(&'a GenericType<'a>),
   Intrinsic(&'a IntrinsicType),
-  /// Can only appear in inferred types
-  UnresolvedType(&'a TSType<'a>),
-  UnresolvedVariable(SymbolId),
+
+  Unresolved(&'a UnresolvedType<'a>),
 }
 
 impl<'a> PartialEq for Ty<'a> {
@@ -86,28 +87,6 @@ impl<'a> hash::Hash for Ty<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn precise_type(&mut self, ty: Ty<'a>) -> Ty<'a> {
-    let precised = match ty {
-      Ty::UnresolvedType(ty) => self.resolve_type(ty),
-      Ty::UnresolvedVariable(symbol) => match *self.variables.get(&symbol).unwrap() {
-        Ty::UnresolvedVariable(s) if s == symbol => None,
-        ty => Some(ty),
-      },
-
-      Ty::Union(UnionType::WithUnresolved(resolved, unresolved)) => {
-        let precised = self.allocator.alloc(resolved.clone());
-        for ty in unresolved {
-          precised.add(self.precise_type(*ty));
-        }
-        Some(Ty::Union(precised))
-      }
-      Ty::Intersection(_) => todo!(),
-
-      _ => Some(ty),
-    };
-    precised.unwrap_or(ty)
-  }
-
   pub fn set_property(&mut self, _target: Ty<'a>, _key: PropertyKeyType<'a>, _value: Ty<'a>) {
     // Do nothing
   }
