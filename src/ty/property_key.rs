@@ -63,25 +63,28 @@ impl<'a> Analyzer<'a> {
         }
       }
       Ty::Intersection(intersection) => {
+        let mut has_error = false;
         let mut any_string = false;
         let mut any_number = false;
         let mut any_symbol = false;
-        for value in &intersection.types {
-          match self.to_property_key(*value) {
-            PropertyKeyType::Error => return PropertyKeyType::Error,
-            PropertyKeyType::AnyString => any_string = true,
-            PropertyKeyType::AnyNumber => any_number = true,
-            PropertyKeyType::AnySymbol => any_symbol = true,
-            PropertyKeyType::StringLiteral(_)
-            | PropertyKeyType::NumericLiteral(_)
-            | PropertyKeyType::UniqueSymbol(_) => return PropertyKeyType::Error,
+        intersection.for_each(|ty| match self.to_property_key(ty) {
+          PropertyKeyType::Error => has_error = true,
+          PropertyKeyType::AnyString => any_string = true,
+          PropertyKeyType::AnyNumber => any_number = true,
+          PropertyKeyType::AnySymbol => any_symbol = true,
+          PropertyKeyType::StringLiteral(_)
+          | PropertyKeyType::NumericLiteral(_)
+          | PropertyKeyType::UniqueSymbol(_) => has_error = true,
+        });
+        if has_error {
+          PropertyKeyType::Error
+        } else {
+          match (any_string, any_number, any_symbol) {
+            (true, false, false) => PropertyKeyType::AnyString,
+            (false, true, false) => PropertyKeyType::AnyNumber,
+            (false, false, true) => PropertyKeyType::AnySymbol,
+            _ => PropertyKeyType::Error,
           }
-        }
-        match (any_string, any_number, any_symbol) {
-          (true, false, false) => PropertyKeyType::AnyString,
-          (false, true, false) => PropertyKeyType::AnyNumber,
-          (false, false, true) => PropertyKeyType::AnySymbol,
-          _ => PropertyKeyType::Error,
         }
       }
 

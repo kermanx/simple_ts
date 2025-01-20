@@ -1,5 +1,9 @@
 use crate::{
-  ty::{intersection::IntersectionType, record::RecordType, Ty},
+  ty::{
+    intersection::{IntersectionBaseKind, IntersectionType},
+    record::RecordType,
+    Ty,
+  },
   Analyzer,
 };
 use oxc::ast::ast::{TSSignature, TSTypeLiteral};
@@ -52,7 +56,9 @@ impl<'a> Analyzer<'a> {
       if let Some(record) = record {
         callables.push(Ty::Record(record));
       }
-      Ty::Intersection(allocator.alloc(IntersectionType { types: callables }))
+      Ty::Intersection(
+        allocator.alloc(IntersectionType::ObjectLike(IntersectionBaseKind::NoBase, callables)),
+      )
     }
   }
 }

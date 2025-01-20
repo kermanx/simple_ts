@@ -107,9 +107,7 @@ impl<'a> Analyzer<'a> {
       }
       Ty::Intersection(intersection) => {
         let mut facts = Facts::empty();
-        for val in &intersection.types {
-          facts |= self.get_facts(*val);
-        }
+        intersection.for_each(|ty| facts |= self.get_facts(ty));
         facts
       }
 

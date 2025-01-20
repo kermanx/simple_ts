@@ -1,6 +1,7 @@
 mod ts_as_expression;
 mod ts_infer_type;
 mod ts_instantiation_expression;
+mod ts_intersection_type;
 mod ts_literal;
 mod ts_type_annotation;
 mod ts_type_literal;
@@ -34,6 +35,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSTypeReference(node) => self.resolve_type_reference(node),
       TSType::TSTypeQuery(node) => self.resolve_type_query(node),
       TSType::TSUnionType(node) => self.resolve_union_type(node),
+      TSType::TSIntersectionType(node) => self.resolve_intersection_type(node),
       TSType::TSParenthesizedType(node) => self.resolve_type(&node.type_annotation),
       TSType::TSTypeLiteral(node) => self.resolve_type_literal(node),
       TSType::TSInferType(node) => self.resolve_infer_type(node),

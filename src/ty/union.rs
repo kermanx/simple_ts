@@ -40,12 +40,13 @@ impl<'a> UnionType<'a> {
       }
 
       // The rest should be added to compound
-      (s @ UnionType::Never, compound) => {
-        *s = UnionType::Compound(Box::new(CompoundUnion::default()));
-        s.add(compound);
+      (s @ UnionType::Never, c) => {
+        let mut compound = Box::new(CompoundUnion::default());
+        compound.add(c);
+        *s = UnionType::Compound(compound);
       }
-      (UnionType::Compound(c), compound) => {
-        c.add(compound);
+      (UnionType::Compound(compound), c) => {
+        compound.add(c);
       }
     }
   }
@@ -84,9 +85,7 @@ pub struct CompoundUnion<'a> {
   /// (has_true, has_false)
   boolean: (bool, bool),
 
-  /// Must be ordered
-  /// TODO: Use a set
-  complex: Vec<Ty<'a>>,
+  complex: FxHashSet<Ty<'a>>,
 }
 
 impl<'a> CompoundUnion<'a> {
@@ -119,7 +118,7 @@ impl<'a> CompoundUnion<'a> {
       | Ty::Constructor(_)
       | Ty::Namespace(_)
       | Ty::Intersection(_) => {
-        self.complex.push(ty);
+        self.complex.insert(ty);
       }
 
       Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!("Non-value"),

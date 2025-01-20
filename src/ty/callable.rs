@@ -117,11 +117,11 @@ macro_rules! impl_extract_callable {
           }
           Ty::Intersection(i) => {
             let mut res = vec![];
-            for ty in &i.types {
-              if let Some(extracted) = self.$name(*ty) {
+            i.for_each(|ty| {
+              if let Some(extracted) = self.$name(ty) {
                 res.push(extracted);
               }
-            }
+            });
             match res.len() {
               0 => None,
               1 => Some(res.into_iter().next().unwrap()),
