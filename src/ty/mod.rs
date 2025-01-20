@@ -86,6 +86,28 @@ impl<'a> hash::Hash for Ty<'a> {
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn precise_type(&mut self, ty: Ty<'a>) -> Ty<'a> {
+    let precised = match ty {
+      Ty::UnresolvedType(ty) => self.resolve_type(ty),
+      Ty::UnresolvedVariable(symbol) => match *self.variables.get(&symbol).unwrap() {
+        Ty::UnresolvedVariable(s) if s == symbol => None,
+        ty => Some(ty),
+      },
+
+      Ty::Union(UnionType::WithUnresolved(resolved, unresolved)) => {
+        let precised = self.allocator.alloc(resolved.clone());
+        for ty in unresolved {
+          precised.add(self.precise_type(*ty));
+        }
+        Some(Ty::Union(precised))
+      }
+      Ty::Intersection(_) => todo!(),
+
+      _ => Some(ty),
+    };
+    precised.unwrap_or(ty)
+  }
+
   pub fn set_property(&mut self, _target: Ty<'a>, _key: PropertyKeyType<'a>, _value: Ty<'a>) {
     // Do nothing
   }

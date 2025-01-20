@@ -25,8 +25,8 @@ impl<'a> Analyzer<'a> {
     mem::take(&mut self.generics)
   }
 
-  pub fn restore_generics(&mut self, generics: Box<FxHashMap<SymbolId, Ty<'a>>>) {
-    self.generics = generics;
+  pub fn restore_generics(&mut self, old_generics: Box<FxHashMap<SymbolId, Ty<'a>>>) {
+    self.generics = old_generics;
   }
 
   pub fn instantiate_generic_param(&mut self, params: &Vec<GenericParam<'a>>, args: Vec<Ty<'a>>) {

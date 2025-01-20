@@ -9,7 +9,7 @@ use oxc::{
 use rustc_hash::FxHashSet;
 use std::{hash::Hash, mem};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub enum UnionType<'a> {
   #[default]
   Never,
@@ -74,7 +74,7 @@ impl<'a> UnionType<'a> {
   }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct CompoundUnion<'a> {
   string: LiteralAble<&'a Atom<'a>>,
   number: LiteralAble<F64WithEq>,
@@ -165,7 +165,7 @@ impl<'a> CompoundUnion<'a> {
   }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub enum LiteralAble<L> {
   #[default]
   Vacant,
@@ -228,6 +228,14 @@ where
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn get_optional_type(&mut self, optional: bool, ty: Ty<'a>) -> Ty<'a> {
+    if optional {
+      into_union(self.allocator, [Ty::Undefined, ty])
+    } else {
+      ty
+    }
+  }
+
   pub fn get_union_property(&mut self, union: &UnionType<'a>, key: PropertyKeyType<'a>) -> Ty<'a> {
     let result = self.allocator.alloc(UnionType::default());
     union.for_each(|ty| result.add(self.get_property(ty, key)));

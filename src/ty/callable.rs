@@ -1,8 +1,4 @@
-use super::{
-  generic::GenericParam,
-  union::{into_union, UnionType},
-  Ty,
-};
+use super::{generic::GenericParam, union::UnionType, Ty};
 use crate::analyzer::Analyzer;
 use oxc::{
   allocator,
@@ -30,6 +26,7 @@ pub enum ReturnType<'a> {
 pub struct CallableType<'a, const CTOR: bool> {
   pub type_params: Vec<GenericParam<'a>>,
   pub this_type: Option<Ty<'a>>,
+  /// (optional, type)
   pub params: Vec<(bool, Ty<'a>)>,
   pub rest_param: Option<Ty<'a>>,
   pub return_type: Ty<'a>,
@@ -151,15 +148,7 @@ impl<'a> Analyzer<'a> {
         .params
         .iter()
         .copied()
-        .map(
-          |(optional, ty)| {
-            if optional {
-              into_union(self.allocator, [Ty::Undefined, ty])
-            } else {
-              ty
-            }
-          },
-        )
+        .map(|(optional, ty)| self.get_optional_type(optional, ty))
         .collect(),
       ExtractedCallable::Overloaded(callables) => {
         let allocator = self.allocator;
@@ -190,29 +179,56 @@ impl<'a> Analyzer<'a> {
     if let Some(callable) = callable {
       match callable {
         ExtractedCallable::Single(callable) => {
-          let ty = callable.return_type;
           if let Some(type_parameters) = type_parameters {
-            let args = self.resolve_type_parameter_instantiation(type_parameters);
+            let type_args = self.resolve_type_parameter_instantiation_or_defer(type_parameters);
             let old_generics = self.take_generics();
+            self.instantiate_generic_param(&callable.type_params, type_args);
+            let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
+            let mut in_order = true;
+            for (i, arg) in arguments.iter().enumerate() {
+              match arg {
+                Argument::SpreadElement(node) => {
+                  self.exec_expression(&node.argument, None);
+                  in_order = false;
+                }
+                node => {
+                  self.exec_expression(
+                    node.to_expression(),
+                    in_order.then(|| params.get(i).copied().unwrap_or(Ty::Error)),
+                  );
+                }
+              }
+            }
+            let ret = self.precise_type(callable.return_type);
+            self.restore_generics(old_generics);
+            ret
+          } else {
             todo!()
           }
-          self.exec_arguments(arguments);
-          ty
         }
         ExtractedCallable::Overloaded(callables) => {
-          let ret_val = Ty::Error;
+          let ret = Ty::Error;
           for callable in callables {
             todo!();
             // If matches, set ret_val and break
           }
-          ret_val
+          ret
         }
         ExtractedCallable::Union(callables) => {
           todo!()
         }
       }
     } else {
-      self.exec_arguments(arguments);
+      for arg in arguments {
+        match arg {
+          Argument::SpreadElement(node) => {
+            self.exec_expression(&node.argument, None);
+          }
+          node => {
+            self.exec_expression(node.to_expression(), None);
+          }
+        }
+      }
       Ty::Error
     }
   }
