@@ -1,4 +1,5 @@
 mod ts_as_expression;
+mod ts_infer_type;
 mod ts_instantiation_expression;
 mod ts_literal;
 mod ts_type_annotation;
@@ -35,6 +36,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSUnionType(node) => self.resolve_union_type(node),
       TSType::TSParenthesizedType(node) => self.resolve_type(&node.type_annotation),
       TSType::TSTypeLiteral(node) => self.resolve_type_literal(node),
+      TSType::TSInferType(node) => self.resolve_infer_type(node),
 
       _ => todo!(),
     }

@@ -19,6 +19,7 @@ pub enum UnresolvedType<'a> {
   GenericParam(SymbolId),
   Conditional(&'a UnresolvedConditionalType<'a>),
   Keyof(&'a Ty<'a>),
+  InferType(SymbolId),
 }
 
 impl<'a> Analyzer<'a> {
@@ -53,6 +54,7 @@ impl<'a> Analyzer<'a> {
           let ty = self.try_resolve_unresolved(*ty)?;
           todo!()
         }
+        UnresolvedType::InferType(_) => unreachable!(),
       },
 
       Ty::Record(r) => todo!(),
@@ -77,6 +79,7 @@ impl<'a> Analyzer<'a> {
         Some(into_union(self.allocator, [cond.true_ty, cond.false_ty]))
       }
       UnresolvedType::Keyof(_) => Some(Ty::String),
+      UnresolvedType::InferType(_) => unreachable!(),
     }
   }
 
