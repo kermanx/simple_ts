@@ -4,3 +4,4 @@ input_file: tests/fixtures/function.ts
 ---
 type T1 = string;
 type T2 = 2;
+type T3 = 3;

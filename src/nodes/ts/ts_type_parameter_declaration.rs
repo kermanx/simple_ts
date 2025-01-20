@@ -1,22 +1,39 @@
 use oxc::ast::ast::TSTypeParameterDeclaration;
 
-use crate::{ty::generic::GenericParam, Analyzer};
+use crate::{
+  ty::{generic::GenericParam, unresolved::UnresolvedType, Ty},
+  Analyzer,
+};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type_parameter_declaration(
     &mut self,
     node: &'a TSTypeParameterDeclaration<'a>,
   ) -> Vec<GenericParam<'a>> {
+    for param in &node.params {
+      let symbol_id = param.name.symbol_id();
+      self
+        .types
+        .entry(symbol_id)
+        .or_insert_with(|| Ty::Unresolved(UnresolvedType::GenericParam(symbol_id)));
+    }
     node
       .params
       .iter()
-      .map(|param| GenericParam {
-        symbol_id: param.name.symbol_id(),
-        constraint: param.constraint.as_ref().map(|c| self.resolve_type(c)),
-        default: param.default.as_ref().map(|c| self.resolve_type(c)),
-        r#in: param.r#in,
-        out: param.out,
-        r#const: param.r#const,
+      .map(|param| {
+        let symbol_id = param.name.symbol_id();
+        let constraint = param.constraint.as_ref().map(|c| self.resolve_type(c));
+        if let Some(constraint) = constraint {
+          self.generic_constraints.insert(symbol_id, constraint);
+        }
+        GenericParam {
+          symbol_id,
+          constraint,
+          default: param.default.as_ref().map(|c| self.resolve_type(c)),
+          r#in: param.r#in,
+          out: param.out,
+          r#const: param.r#const,
+        }
       })
       .collect()
   }

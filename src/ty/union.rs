@@ -17,7 +17,7 @@ pub enum UnionType<'a> {
   Any,
   Unknown,
   Compound(Box<CompoundUnion<'a>>),
-  WithUnresolved(Box<UnionType<'a>>, Vec<&'a UnresolvedType<'a>>),
+  WithUnresolved(Box<UnionType<'a>>, Vec<UnresolvedType<'a>>),
 }
 
 impl<'a> UnionType<'a> {

@@ -68,7 +68,7 @@ pub enum Ty<'a> {
   Generic(&'a GenericType<'a>),
   Intrinsic(&'a IntrinsicType),
 
-  Unresolved(&'a UnresolvedType<'a>),
+  Unresolved(UnresolvedType<'a>),
 }
 
 impl<'a> PartialEq for Ty<'a> {

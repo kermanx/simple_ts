@@ -31,6 +31,7 @@ pub struct Analyzer<'a> {
   pub types: FxHashMap<SymbolId, Ty<'a>>,
   /// Use `Box` to make `mem::replace` faster
   pub generics: Box<FxHashMap<SymbolId, Ty<'a>>>,
+  pub generic_constraints: FxHashMap<SymbolId, Ty<'a>>,
 
   pub diagnostics: BTreeSet<String>,
   pub span_to_type: FxHashMap<Span, TypeAccumulator<'a>>,
@@ -67,6 +68,7 @@ impl<'a> Analyzer<'a> {
       variables: Default::default(),
       types: Default::default(),
       generics: Default::default(),
+      generic_constraints: Default::default(),
 
       diagnostics: Default::default(),
       span_to_type: Default::default(),
