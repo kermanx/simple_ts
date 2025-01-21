@@ -31,17 +31,34 @@ impl<'a> TypeAccumulator<'a> {
     }
   }
 
-  pub fn to_ty(&mut self) -> Option<Ty<'a>> {
-    match &*self {
-      TypeAccumulator::None => None,
-      TypeAccumulator::Single(ty) => Some(*ty),
+  pub fn frozen(&mut self) {
+    match self {
       TypeAccumulator::Union(_) => match mem::take(self) {
         TypeAccumulator::Union(union) => {
           *self = TypeAccumulator::FrozenUnion(union);
-          Some(Ty::Union(union))
         }
         _ => unreachable!(),
       },
+      _ => {}
+    }
+  }
+
+  pub fn frozen_clone(&mut self) -> TypeAccumulator<'a> {
+    self.frozen();
+    match self {
+      TypeAccumulator::None => TypeAccumulator::None,
+      TypeAccumulator::Single(ty) => TypeAccumulator::Single(*ty),
+      TypeAccumulator::Union(_) => unreachable!(),
+      TypeAccumulator::FrozenUnion(union) => TypeAccumulator::FrozenUnion(union),
+    }
+  }
+
+  pub fn to_ty(&mut self) -> Option<Ty<'a>> {
+    self.frozen();
+    match &*self {
+      TypeAccumulator::None => None,
+      TypeAccumulator::Single(ty) => Some(*ty),
+      TypeAccumulator::Union(_) => unreachable!(),
       TypeAccumulator::FrozenUnion(union) => Some(Ty::Union(*union)),
     }
   }

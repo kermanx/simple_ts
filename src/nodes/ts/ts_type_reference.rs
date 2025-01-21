@@ -6,18 +6,7 @@ impl<'a> Analyzer<'a> {
     let base = match &node.type_name {
       TSTypeName::IdentifierReference(node) => {
         let reference = self.semantic.symbols().get_reference(node.reference_id());
-        if let Some(symbol) = reference.symbol_id() {
-          if let Some(generic) = self.generics.get(&symbol) {
-            *generic
-          } else if let Some(resolved) = self.types.get(&symbol) {
-            *resolved
-          } else {
-            unreachable!()
-          }
-        } else {
-          // Global symbol
-          Ty::Any
-        }
+        self.read_type(reference.symbol_id())
       }
       TSTypeName::QualifiedName(_node) => todo!(),
     };

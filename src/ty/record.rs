@@ -22,10 +22,17 @@ pub struct MappedProperty<'a> {
   readonly: bool,
 }
 
+impl<'a> Clone for MappedProperty<'a> {
+  fn clone(&self) -> Self {
+    Self {
+      value: RefCell::new(self.value.borrow_mut().frozen_clone()),
+      readonly: self.readonly,
+    }
+  }
+}
+
 #[derive(Debug, Default)]
 pub struct RecordType<'a> {
-  pub proto: Option<Ty<'a>>,
-
   pub string_keyed: FxHashMap<&'a str, KeyedProperty<'a>>,
   pub symbol_keyed: FxHashMap<SymbolId, KeyedProperty<'a>>,
 
@@ -74,6 +81,14 @@ impl<'a> RecordType<'a> {
 
   pub fn delete_property(&mut self, analyzer: &mut Analyzer<'a>, key: PropertyKeyType<'a>) {
     todo!()
+  }
+
+  pub fn extend(&mut self, other: &RecordType<'a>) {
+    self.string_keyed.extend(other.string_keyed.clone());
+    self.symbol_keyed.extend(other.symbol_keyed.clone());
+    self.string_mapped = other.string_mapped.clone();
+    self.number_mapped = other.number_mapped.clone();
+    self.symbol_mapped = other.symbol_mapped.clone();
   }
 }
 

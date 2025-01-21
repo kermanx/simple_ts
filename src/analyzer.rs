@@ -125,6 +125,21 @@ impl<'a> Analyzer<'a> {
     todo!()
   }
 
+  pub fn read_type(&self, symbol: Option<SymbolId>) -> Ty<'a> {
+    if let Some(symbol) = symbol {
+      if let Some(generic) = self.generics.get(&symbol) {
+        *generic
+      } else if let Some(resolved) = self.types.get(&symbol) {
+        *resolved
+      } else {
+        unreachable!()
+      }
+    } else {
+      // Global symbol
+      Ty::Any
+    }
+  }
+
   pub fn accumulate_type(&mut self, span: &impl GetSpan, ty: Ty<'a>) {
     let Analyzer { allocator, span_to_type: expr_types, pos_to_span: pos_to_expr, .. } = self;
     let span = span.span();
