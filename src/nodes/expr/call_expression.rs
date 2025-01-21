@@ -6,9 +6,9 @@ impl<'a> Analyzer<'a> {
   pub fn exec_call_expression(
     &mut self,
     node: &'a CallExpression<'a>,
-    ty: Option<Ty<'a>>,
+    sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
-    let (indeterminate, value) = self.exec_call_expression_in_chain(node, ty);
+    let (indeterminate, value) = self.exec_call_expression_in_chain(node, sat);
 
     if indeterminate {
       self.pop_scope();
@@ -20,9 +20,9 @@ impl<'a> Analyzer<'a> {
   pub fn exec_call_expression_in_chain(
     &mut self,
     node: &'a CallExpression<'a>,
-    ty: Option<Ty<'a>>,
+    sat: Option<Ty<'a>>,
   ) -> (bool, Ty<'a>) {
-    let (mut indeterminate, callee, this) = self.exec_callee(&node.callee);
+    let (mut indeterminate, callee, this_arg) = self.exec_callee(&node.callee);
 
     if !indeterminate && node.optional {
       self.push_indeterminate_scope();
@@ -30,7 +30,7 @@ impl<'a> Analyzer<'a> {
     }
 
     let callable = self.extract_callable_function(callee);
-    let ret_val = self.exec_call(callable, &node.type_parameters, &node.arguments);
+    let ret_val = self.exec_call(callable, &node.type_parameters, this_arg, &node.arguments);
 
     (indeterminate, ret_val)
   }

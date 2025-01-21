@@ -12,7 +12,7 @@ impl<'a> Analyzer<'a> {
 
     let callable = self.extract_callable_function(callee);
 
-    self.exec_call(callable, &node.type_parameters, &node.arguments);
+    self.exec_call(callable, &node.type_parameters, Ty::Error, &node.arguments);
 
     todo!()
   }

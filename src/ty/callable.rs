@@ -204,6 +204,7 @@ impl<'a> Analyzer<'a> {
     &mut self,
     callable: Option<ExtractedCallable<'a, CTOR>>,
     type_parameters: &'a Option<allocator::Box<'a, TSTypeParameterInstantiation<'a>>>,
+    this_arg: Ty<'a>,
     arguments: &'a allocator::Vec<'a, Argument<'a>>,
   ) -> Ty<'a> {
     if let Some(callable) = callable {
