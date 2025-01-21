@@ -1,4 +1,8 @@
-use super::{union::into_union, unresolved::UnresolvedType, Ty};
+use super::{
+  union::into_union,
+  unresolved::{UnresolvedIntersection, UnresolvedType},
+  Ty,
+};
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use oxc::{
   allocator::Allocator,
@@ -188,7 +192,7 @@ impl<'a> IntersectionTypeBuilder<'a> {
         }
       }
     };
-    Ty::Intersection(allocator.alloc(IntersectionType::ObjectLike(kind, object_like)))
+    Ty::Intersection(allocator.alloc(IntersectionType { kind, object_like }))
   }
 
   pub fn build(self, allocator: &'a Allocator) -> Ty<'a> {
@@ -197,21 +201,23 @@ impl<'a> IntersectionTypeBuilder<'a> {
     if base == Ty::Never {
       return Ty::Never;
     }
-    let with_union = if let Some(union) = union {
+    let with_unresolved = if unresolved.is_empty() {
+      base
+    } else {
+      Ty::Unresolved(UnresolvedType::Intersection(
+        allocator.alloc(UnresolvedIntersection { base, unresolved }),
+      ))
+    };
+    if let Some(union) = union {
       into_union(
         allocator,
         union.into_iter().map(|mut builder| {
-          builder.add(base);
+          builder.add(with_unresolved);
           builder.build(allocator)
         }),
       )
     } else {
-      base
-    };
-    if unresolved.is_empty() {
-      with_union
-    } else {
-      Ty::Intersection(allocator.alloc(IntersectionType::WithUnresolved(with_union, unresolved)))
+      with_unresolved
     }
   }
 }
@@ -228,41 +234,36 @@ pub enum IntersectionBaseKind<'a> {
   Void,
 }
 
-#[derive(Debug)]
-pub enum IntersectionType<'a> {
-  ObjectLike(IntersectionBaseKind<'a>, Vec<Ty<'a>>),
-  WithUnresolved(Ty<'a>, Vec<UnresolvedType<'a>>),
+#[derive(Debug, Clone)]
+pub struct IntersectionType<'a> {
+  pub kind: IntersectionBaseKind<'a>,
+  /// non empty
+  pub object_like: Vec<Ty<'a>>,
 }
 
 impl<'a> IntersectionType<'a> {
+  pub fn kind_to_ty(&self) -> Option<Ty<'a>> {
+    match self.kind {
+      IntersectionBaseKind::NoBase => None,
+      IntersectionBaseKind::Number(Some(n)) => Some(Ty::NumericLiteral(n)),
+      IntersectionBaseKind::Number(None) => Some(Ty::Number),
+      IntersectionBaseKind::String(Some(s)) => Some(Ty::StringLiteral(s)),
+      IntersectionBaseKind::String(None) => Some(Ty::String),
+      IntersectionBaseKind::Boolean(Some(b)) => Some(Ty::BooleanLiteral(b)),
+      IntersectionBaseKind::Boolean(None) => Some(Ty::Boolean),
+      IntersectionBaseKind::Symbol(Some(s)) => Some(Ty::UniqueSymbol(s)),
+      IntersectionBaseKind::Symbol(None) => Some(Ty::Symbol),
+      IntersectionBaseKind::BigInt(Some(b)) => Some(Ty::BigIntLiteral(b)),
+      IntersectionBaseKind::BigInt(None) => Some(Ty::BigInt),
+      IntersectionBaseKind::ObjectKeyword => Some(Ty::Object),
+      IntersectionBaseKind::Void => Some(Ty::Void),
+    }
+  }
+
   pub fn for_each(&self, mut f: impl FnMut(Ty<'a>) -> ()) {
-    match self {
-      IntersectionType::ObjectLike(kind, object_like) => {
-        match kind {
-          IntersectionBaseKind::NoBase => {}
-          IntersectionBaseKind::Number(Some(n)) => f(Ty::NumericLiteral(*n)),
-          IntersectionBaseKind::Number(None) => f(Ty::Number),
-          IntersectionBaseKind::String(Some(s)) => f(Ty::StringLiteral(*s)),
-          IntersectionBaseKind::String(None) => f(Ty::String),
-          IntersectionBaseKind::Boolean(Some(b)) => f(Ty::BooleanLiteral(*b)),
-          IntersectionBaseKind::Boolean(None) => f(Ty::Boolean),
-          IntersectionBaseKind::Symbol(Some(s)) => f(Ty::UniqueSymbol(*s)),
-          IntersectionBaseKind::Symbol(None) => f(Ty::Symbol),
-          IntersectionBaseKind::BigInt(Some(b)) => f(Ty::BigIntLiteral(*b)),
-          IntersectionBaseKind::BigInt(None) => f(Ty::BigInt),
-          IntersectionBaseKind::ObjectKeyword => f(Ty::Object),
-          IntersectionBaseKind::Void => f(Ty::Void),
-        }
-        for ty in object_like {
-          f(*ty);
-        }
-      }
-      IntersectionType::WithUnresolved(t, u) => {
-        f(*t);
-        for u in u {
-          f(Ty::Unresolved(*u));
-        }
-      }
+    self.kind_to_ty().map(&mut f);
+    for ty in &self.object_like {
+      f(*ty);
     }
   }
 }
@@ -272,5 +273,24 @@ impl<'a> Analyzer<'a> {
     let mut types = self.ast_builder.vec();
     intersection.for_each(|ty| types.push(self.print_type(ty)));
     self.ast_builder.ts_type_intersection_type(SPAN, types)
+  }
+}
+
+pub fn into_intersection<'a, Iter>(
+  allocator: &'a Allocator,
+  types: impl IntoIterator<Item = Ty<'a>, IntoIter = Iter>,
+) -> Ty<'a>
+where
+  Iter: Iterator<Item = Ty<'a>> + ExactSizeIterator,
+{
+  let mut iter = types.into_iter();
+  match iter.len() {
+    0 => unreachable!(),
+    1 => iter.next().unwrap(),
+    _ => {
+      let mut builder = IntersectionTypeBuilder::default();
+      iter.for_each(|ty| builder.add(ty));
+      builder.build(allocator)
+    }
   }
 }

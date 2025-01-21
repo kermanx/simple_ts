@@ -1,5 +1,6 @@
 use super::{
   generic::GenericType,
+  intersection::{into_intersection, IntersectionType},
   union::{into_union, UnionType},
   Ty,
 };
@@ -20,6 +21,18 @@ pub struct UnresolvedGenericInstantiation<'a> {
   pub args: Vec<Ty<'a>>,
 }
 
+#[derive(Debug, Clone)]
+pub struct UnresolvedUnion<'a> {
+  pub base: Ty<'a>,
+  pub unresolved: Vec<UnresolvedType<'a>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct UnresolvedIntersection<'a> {
+  pub base: Ty<'a>,
+  pub unresolved: Vec<UnresolvedType<'a>>,
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum UnresolvedType<'a> {
   UnresolvedTypedVariable(SymbolId),
@@ -29,6 +42,8 @@ pub enum UnresolvedType<'a> {
   Keyof(&'a Ty<'a>),
   InferType(SymbolId),
   GenericInstantiation(&'a UnresolvedGenericInstantiation<'a>),
+  Union(&'a UnresolvedUnion<'a>),
+  Intersection(&'a UnresolvedIntersection<'a>),
 }
 
 impl<'a> Analyzer<'a> {
@@ -71,6 +86,54 @@ impl<'a> Analyzer<'a> {
         UnresolvedType::GenericInstantiation(g) => {
           todo!()
         }
+        UnresolvedType::Union(u) => {
+          let base = self.try_resolve_unresolved(u.base);
+          let mut changed = base.is_some();
+          let mut types = vec![base.unwrap_or(u.base)];
+          let mut unresolved = vec![];
+          for u in &u.unresolved {
+            if let Some(ty) = self.try_resolve_unresolved(Ty::Unresolved(*u)) {
+              types.push(ty);
+              changed = true;
+            } else {
+              unresolved.push(*u);
+            }
+          }
+          changed.then(|| {
+            let base = into_union(self.allocator, types);
+            if unresolved.is_empty() {
+              base
+            } else {
+              Ty::Unresolved(UnresolvedType::Union(
+                self.allocator.alloc(UnresolvedUnion { base, unresolved }),
+              ))
+            }
+          })
+        }
+        UnresolvedType::Intersection(i) => {
+          let base = self.try_resolve_unresolved(i.base);
+          let mut changed = base.is_some();
+          let mut types = vec![base.unwrap_or(i.base)];
+          let mut unresolved = vec![];
+          for u in &i.unresolved {
+            if let Some(ty) = self.try_resolve_unresolved(Ty::Unresolved(*u)) {
+              types.push(ty);
+              changed = true;
+            } else {
+              unresolved.push(*u);
+            }
+          }
+          changed.then(|| {
+            let base = into_intersection(self.allocator, types);
+            if unresolved.is_empty() {
+              base
+            } else {
+              Ty::Unresolved(UnresolvedType::Intersection(
+                self.allocator.alloc(UnresolvedIntersection { base, unresolved }),
+              ))
+            }
+          })
+        }
       },
 
       Ty::Record(r) => todo!(),
@@ -78,7 +141,7 @@ impl<'a> Analyzer<'a> {
       Ty::Constructor(c) => todo!(),
       Ty::Namespace(n) => todo!(),
 
-      Ty::Union(UnionType::WithUnresolved(resolved, unresolved)) => todo!(),
+      Ty::Union(_) => todo!(),
       Ty::Intersection(_) => todo!(),
 
       _ => Some(ty),
@@ -101,6 +164,8 @@ impl<'a> Analyzer<'a> {
       UnresolvedType::Keyof(_) => Some(Ty::String),
       UnresolvedType::InferType(_) => unreachable!(),
       UnresolvedType::GenericInstantiation(g) => todo!(),
+      UnresolvedType::Union(_) => None,
+      UnresolvedType::Intersection(i) => Some(i.base),
     }
   }
 

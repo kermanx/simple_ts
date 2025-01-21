@@ -1,4 +1,8 @@
-use super::{property_key::PropertyKeyType, unresolved::UnresolvedType, Ty};
+use super::{
+  property_key::PropertyKeyType,
+  unresolved::{UnresolvedType, UnresolvedUnion},
+  Ty,
+};
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use oxc::{
   allocator::Allocator,
@@ -10,69 +14,66 @@ use rustc_hash::FxHashSet;
 use std::{hash::Hash, mem};
 
 #[derive(Debug, Default, Clone)]
-pub enum UnionType<'a> {
+pub enum UnionTypeBuilder<'a> {
   #[default]
   Never,
   Error,
   Any,
   Unknown,
-  Compound(Box<CompoundUnion<'a>>),
-  WithUnresolved(Box<UnionType<'a>>, Vec<UnresolvedType<'a>>),
+  Compound(Box<UnionType<'a>>),
+  WithUnresolved(Box<UnionTypeBuilder<'a>>, Vec<UnresolvedType<'a>>),
 }
 
-impl<'a> UnionType<'a> {
+impl<'a> UnionTypeBuilder<'a> {
   pub fn add(&mut self, ty: Ty<'a>) {
     match (self, ty) {
-      (UnionType::Error | UnionType::Any | UnionType::Unknown, _) => {}
-      (s, Ty::Error) => *s = UnionType::Error,
-      (s, Ty::Any) => *s = UnionType::Any,
-      (s, Ty::Unknown) => *s = UnionType::Unknown,
+      (UnionTypeBuilder::Error | UnionTypeBuilder::Any | UnionTypeBuilder::Unknown, _) => {}
+      (s, Ty::Error) => *s = UnionTypeBuilder::Error,
+      (s, Ty::Any) => *s = UnionTypeBuilder::Any,
+      (s, Ty::Unknown) => *s = UnionTypeBuilder::Unknown,
       (_, Ty::Never) => {}
 
-      (UnionType::WithUnresolved(_, t), Ty::Unresolved(u)) => t.push(u),
-      (UnionType::WithUnresolved(s, _), ty) => {
+      (UnionTypeBuilder::WithUnresolved(_, t), Ty::Unresolved(u)) => t.push(u),
+      (UnionTypeBuilder::WithUnresolved(s, _), ty) => {
         s.add(ty);
       }
-      (s, Ty::Unresolved(u)) => *s = UnionType::WithUnresolved(Box::new(mem::take(s)), vec![u]),
+      (s, Ty::Unresolved(u)) => {
+        *s = UnionTypeBuilder::WithUnresolved(Box::new(mem::take(s)), vec![u])
+      }
 
       (s, Ty::Union(tys)) => {
         tys.for_each(|ty| s.add(ty));
       }
 
       // The rest should be added to compound
-      (s @ UnionType::Never, c) => {
-        let mut compound = Box::new(CompoundUnion::default());
+      (s @ UnionTypeBuilder::Never, c) => {
+        let mut compound = Box::new(UnionType::default());
         compound.add(c);
-        *s = UnionType::Compound(compound);
+        *s = UnionTypeBuilder::Compound(compound);
       }
-      (UnionType::Compound(compound), c) => {
+      (UnionTypeBuilder::Compound(compound), c) => {
         compound.add(c);
       }
     }
   }
 
-  pub fn for_each(&self, mut f: impl FnMut(Ty<'a>) -> ()) {
+  pub fn build(self, allocator: &'a Allocator) -> Ty<'a> {
     match self {
-      UnionType::Never => f(Ty::Never),
-      UnionType::Error => f(Ty::Error),
-      UnionType::Any => f(Ty::Any),
-      UnionType::Unknown => f(Ty::Unknown),
-
-      UnionType::Compound(c) => {
-        c.for_each(f);
-      }
-
-      UnionType::WithUnresolved(s, t) => {
-        // FIXME: This is ugly. But `&mut f` will trigger a rustc error
-        s.for_each(&mut f as &mut dyn FnMut(Ty<'a>) -> ());
-        t.iter().copied().for_each(|t| f(Ty::Unresolved(t)));
+      UnionTypeBuilder::Never => Ty::Never,
+      UnionTypeBuilder::Error => Ty::Error,
+      UnionTypeBuilder::Any => Ty::Any,
+      UnionTypeBuilder::Unknown => Ty::Unknown,
+      UnionTypeBuilder::Compound(compound) => Ty::Union(allocator.alloc(compound)),
+      UnionTypeBuilder::WithUnresolved(builder, unresolved) => {
+        let base = builder.build(allocator);
+        Ty::Unresolved(UnresolvedType::Union(allocator.alloc(UnresolvedUnion { base, unresolved })))
       }
     }
   }
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct CompoundUnion<'a> {
+pub struct UnionType<'a> {
   string: LiteralAble<&'a Atom<'a>>,
   number: LiteralAble<F64WithEq>,
   bigint: LiteralAble<&'a Atom<'a>>,
@@ -85,14 +86,14 @@ pub struct CompoundUnion<'a> {
   /// (has_true, has_false)
   boolean: (bool, bool),
 
-  complex: FxHashSet<Ty<'a>>,
+  pub complex: FxHashSet<Ty<'a>>,
 }
 
-impl<'a> CompoundUnion<'a> {
+impl<'a> UnionType<'a> {
   pub fn add(&mut self, ty: Ty<'a>) {
     match ty {
       Ty::Error | Ty::Any | Ty::Unknown | Ty::Never | Ty::Union(_) | Ty::Unresolved(_) => {
-        unreachable!("Handled in UnionType")
+        unreachable!("Handled in UnionTypeBuilder")
       }
 
       Ty::Void => self.void = true,
@@ -208,11 +209,11 @@ where
     // FIXME: Should be Ty::Never
     0 => Ty::Undefined,
     1 => iter.next().unwrap(),
-    _ => Ty::Union({
-      let union = allocator.alloc(UnionType::default());
-      iter.for_each(|ty| union.add(ty));
-      union
-    }),
+    _ => {
+      let mut builder = UnionTypeBuilder::default();
+      iter.for_each(|ty| builder.add(ty));
+      builder.build(allocator)
+    }
   }
 }
 
@@ -226,9 +227,9 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn get_union_property(&mut self, union: &UnionType<'a>, key: PropertyKeyType<'a>) -> Ty<'a> {
-    let result = self.allocator.alloc(UnionType::default());
-    union.for_each(|ty| result.add(self.get_property(ty, key)));
-    Ty::Union(result)
+    let mut builder = UnionTypeBuilder::default();
+    union.for_each(|ty| builder.add(self.get_property(ty, key)));
+    builder.build(self.allocator)
   }
 
   pub fn print_union_type(&self, union: &UnionType<'a>) -> TSType<'a> {

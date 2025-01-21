@@ -57,7 +57,8 @@ impl<'a> Analyzer<'a> {
         callables.push(Ty::Record(record));
       }
       Ty::Intersection(
-        allocator.alloc(IntersectionType::ObjectLike(IntersectionBaseKind::NoBase, callables)),
+        allocator
+          .alloc(IntersectionType { kind: IntersectionBaseKind::NoBase, object_like: callables }),
       )
     }
   }
