@@ -77,9 +77,10 @@ impl<'a> Analyzer<'a> {
 
       Expression::TSAsExpression(node) => self.exec_ts_as_expression(node, sat),
       Expression::TSSatisfiesExpression(node) => self.exec_ts_satisfies_expression(node, sat),
-      Expression::TSTypeAssertion(_)
-      | Expression::TSNonNullExpression(_)
-      | Expression::TSInstantiationExpression(_) => todo!(),
+      Expression::TSInstantiationExpression(node) => {
+        self.exec_ts_instantiation_expression(node, sat)
+      }
+      _ => todo!()
     };
 
     self.accumulate_type(&span, value);

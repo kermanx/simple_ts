@@ -36,6 +36,35 @@ pub type FunctionType<'a> = CallableType<'a, false>;
 pub type ConstructorType<'a> = CallableType<'a, true>;
 
 impl<'a> Analyzer<'a> {
+  pub fn instantiate_callable_type_parameters<const CTOR: bool>(
+    &mut self,
+    callable: &CallableType<'a, CTOR>,
+    type_args: &Vec<Ty<'a>>,
+  ) -> Option<&'a CallableType<'a, CTOR>> {
+    if callable.type_params.len() != type_args.len() {
+      return None;
+    }
+
+    let old_generics = self.take_generics();
+    self.instantiate_generic_param(&callable.type_params, type_args);
+    let this_type = callable.this_type.map(|ty| self.resolve_unresolved(ty));
+    let params = callable
+      .params
+      .iter()
+      .map(|(optional, ty)| (*optional, self.resolve_unresolved(*ty)))
+      .collect();
+    let rest_param = callable.rest_param.map(|ty| self.resolve_unresolved(ty));
+    let return_type = self.resolve_unresolved(callable.return_type);
+    self.restore_generics(old_generics);
+    Some(self.allocator.alloc(CallableType {
+      type_params: vec![],
+      this_type,
+      params,
+      rest_param,
+      return_type,
+    }))
+  }
+
   pub fn print_callable_type<const CTOR: bool>(
     &self,
     callable: &CallableType<'a, CTOR>,
@@ -186,7 +215,7 @@ impl<'a> Analyzer<'a> {
           } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
             let old_generics = self.take_generics();
-            self.instantiate_generic_param(&callable.type_params, type_args);
+            self.instantiate_generic_param(&callable.type_params, &type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
             let ret = self.resolve_unresolved(callable.return_type);

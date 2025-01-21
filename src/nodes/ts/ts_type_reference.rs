@@ -24,7 +24,7 @@ impl<'a> Analyzer<'a> {
 
     if let Some(type_parameters) = &node.type_parameters {
       let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
-      self.instantiate_generic(base, type_parameters)
+      self.instantiate_generic_type(base, type_parameters)
     } else {
       base
     }

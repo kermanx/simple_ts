@@ -1,14 +1,14 @@
 use crate::{ty::Ty, Analyzer};
-use oxc::ast::ast::TSSatisfiesExpression;
+use oxc::ast::ast::TSInstantiationExpression;
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_ts_satisfies_expression(
+  pub fn exec_ts_instantiation_expression(
     &mut self,
-    node: &'a TSSatisfiesExpression<'a>,
+    node: &'a TSInstantiationExpression<'a>,
     _sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
-    let ty = self.resolve_type(&node.type_annotation);
-
-    self.exec_expression(&node.expression, Some(ty))
+    let base = self.exec_expression(&node.expression, None);
+    let type_args = self.resolve_type_parameter_instantiation(&node.type_parameters);
+    self.instantiate_generic_value(base, &type_args)
   }
 }

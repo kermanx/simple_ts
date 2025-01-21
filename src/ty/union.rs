@@ -74,17 +74,17 @@ impl<'a> UnionTypeBuilder<'a> {
 
 #[derive(Debug, Default, Clone)]
 pub struct UnionType<'a> {
-  string: LiteralAble<&'a Atom<'a>>,
-  number: LiteralAble<F64WithEq>,
-  bigint: LiteralAble<&'a Atom<'a>>,
-  symbol: LiteralAble<SymbolId>,
+  pub string: LiteralAble<&'a Atom<'a>>,
+  pub number: LiteralAble<F64WithEq>,
+  pub bigint: LiteralAble<&'a Atom<'a>>,
+  pub symbol: LiteralAble<SymbolId>,
 
-  object: bool,
-  void: bool,
-  null: bool,
-  undefined: bool,
+  pub object: bool,
+  pub void: bool,
+  pub null: bool,
+  pub undefined: bool,
   /// (has_true, has_false)
-  boolean: (bool, bool),
+  pub boolean: (bool, bool),
 
   pub complex: FxHashSet<Ty<'a>>,
 }
