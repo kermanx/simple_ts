@@ -82,7 +82,7 @@ impl<'a> Analyzer<'a> {
           let ty = self.try_resolve_unresolved(*ty)?;
           todo!()
         }
-        UnresolvedType::InferType(_) => unreachable!(),
+        UnresolvedType::InferType(_) => None,
         UnresolvedType::GenericInstantiation(g) => {
           todo!()
         }
@@ -162,7 +162,7 @@ impl<'a> Analyzer<'a> {
         Some(into_union(self.allocator, [cond.true_ty, cond.false_ty]))
       }
       UnresolvedType::Keyof(_) => Some(Ty::String),
-      UnresolvedType::InferType(_) => unreachable!(),
+      UnresolvedType::InferType(_) => None,
       UnresolvedType::GenericInstantiation(g) => todo!(),
       UnresolvedType::Union(_) => None,
       UnresolvedType::Intersection(i) => Some(i.base),

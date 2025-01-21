@@ -33,7 +33,7 @@ impl<'a> Analyzer<'a> {
       }
       Ty::Intersection(_) => ty,
 
-      Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!(),
+      Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
 
       Ty::Unresolved(_) => todo!(),
     }

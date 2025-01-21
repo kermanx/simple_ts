@@ -135,7 +135,7 @@ impl<'a> IntersectionTypeBuilder<'a> {
           return;
         }
 
-        Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!(),
+        Ty::Generic(_) | Ty::Intrinsic(_) => IntersectionBuilderState::Error,
 
         Ty::Unresolved(u) => {
           self.unresolved.push(u);

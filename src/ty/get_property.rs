@@ -26,7 +26,7 @@ impl<'a> Analyzer<'a> {
       Ty::Union(u) => self.get_union_property(u, key),
       Ty::Intersection(_) => todo!(),
 
-      Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!(),
+      Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
 
       Ty::Unresolved(u) => {
         if let Some(base) = self.get_unresolved_lowest_type(u) {
