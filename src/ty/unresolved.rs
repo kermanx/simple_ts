@@ -35,8 +35,8 @@ pub struct UnresolvedIntersection<'a> {
 
 #[derive(Debug, Clone, Copy)]
 pub enum UnresolvedType<'a> {
-  UnresolvedTypedVariable(SymbolId),
-  TypeAlias(SymbolId),
+  UnInitVariable(SymbolId),
+  UnInitType(SymbolId),
   GenericParam(SymbolId),
   Conditional(&'a UnresolvedConditionalType<'a>),
   Keyof(&'a Ty<'a>),
@@ -55,9 +55,9 @@ impl<'a> Analyzer<'a> {
   fn try_resolve_unresolved(&mut self, ty: Ty<'a>) -> Option<Ty<'a>> {
     match ty {
       Ty::Unresolved(u) => match u {
-        UnresolvedType::UnresolvedTypedVariable(_) => None,
-        UnresolvedType::TypeAlias(symbol) => match *self.types.get(&symbol).unwrap() {
-          Ty::Unresolved(UnresolvedType::TypeAlias(s)) if s == symbol => None,
+        UnresolvedType::UnInitVariable(_) => None,
+        UnresolvedType::UnInitType(symbol) => match *self.types.get(&symbol).unwrap() {
+          Ty::Unresolved(UnresolvedType::UnInitType(s)) if s == symbol => None,
           ty => self.try_resolve_unresolved(ty),
         },
         UnresolvedType::GenericParam(symbol) => match *self.generics.get(&symbol).unwrap() {
@@ -152,9 +152,9 @@ impl<'a> Analyzer<'a> {
   /// This function only unwrap one level of `UnresolvedType`.
   pub fn get_unresolved_lowest_type(&self, unresolved: UnresolvedType<'a>) -> Option<Ty<'a>> {
     match unresolved {
-      UnresolvedType::UnresolvedTypedVariable(_) => None,
-      UnresolvedType::TypeAlias(symbol) => match *self.types.get(&symbol).unwrap() {
-        Ty::Unresolved(UnresolvedType::TypeAlias(s)) if s == symbol => None,
+      UnresolvedType::UnInitVariable(_) => None,
+      UnresolvedType::UnInitType(symbol) => match *self.types.get(&symbol).unwrap() {
+        Ty::Unresolved(UnresolvedType::UnInitType(s)) if s == symbol => None,
         ty => Some(ty),
       },
       UnresolvedType::GenericParam(symbol) => self.generic_constraints.get(&symbol).copied(),

@@ -35,10 +35,6 @@ pub struct RecordType<'a> {
 }
 
 impl<'a> RecordType<'a> {
-  pub fn init_proto(&mut self, proto: Ty<'a>) {
-    self.proto = Some(proto);
-  }
-
   pub fn init_property(
     &mut self,
     analyzer: &mut Analyzer<'a>,

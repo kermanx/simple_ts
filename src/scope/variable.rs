@@ -24,9 +24,7 @@ impl<'a> Variable<'a> {
 impl<'a> Analyzer<'a> {
   pub fn declare_variable(&mut self, symbol: SymbolId, typed: bool) {
     if typed {
-      self
-        .variables
-        .insert(symbol, Ty::Unresolved(UnresolvedType::UnresolvedTypedVariable(symbol)));
+      self.variables.insert(symbol, Ty::Unresolved(UnresolvedType::UnInitVariable(symbol)));
     } else {
       self.scopes.get_current_mut().variables.insert(symbol, Variable::inferred(Ty::Undefined));
     }

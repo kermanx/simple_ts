@@ -24,7 +24,11 @@ impl<'a> Analyzer<'a> {
       Ty::BooleanLiteral(_) => Ty::Boolean,
       Ty::UniqueSymbol(_) => Ty::Symbol,
 
-      Ty::Record(_) | Ty::Function(_) | Ty::Constructor(_) | Ty::Namespace(_) => ty,
+      Ty::Record(_)
+      | Ty::Function(_)
+      | Ty::Constructor(_)
+      | Ty::Interface(_)
+      | Ty::Namespace(_) => ty,
 
       Ty::Union(u) => {
         let widened = self.allocator.alloc(UnionType::default());

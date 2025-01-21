@@ -98,7 +98,7 @@ impl<'a> Analyzer<'a> {
       Ty::Function(_) | Ty::Constructor(_) => {
         Facts::T_EQ_FUNCTION | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_FUNCTION
       }
-      Ty::Namespace(_) => self.get_facts(Ty::Object),
+      Ty::Interface(_) | Ty::Namespace(_) => self.get_facts(Ty::Object),
 
       Ty::Union(union) => {
         let mut facts = Facts::all();

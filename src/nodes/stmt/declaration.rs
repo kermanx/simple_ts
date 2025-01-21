@@ -13,9 +13,11 @@ impl<'a> Analyzer<'a> {
       Declaration::ClassDeclaration(node) => {
         self.declare_class(node);
       }
-
       Declaration::TSTypeAliasDeclaration(node) => {
         self.declare_ts_type_alias(node);
+      }
+      Declaration::TSInterfaceDeclaration(node) => {
+        self.declare_ts_interface(node);
       }
       _ => todo!(),
     }
@@ -32,9 +34,11 @@ impl<'a> Analyzer<'a> {
       Declaration::ClassDeclaration(node) => {
         self.init_class(node);
       }
-
       Declaration::TSTypeAliasDeclaration(node) => {
         self.init_ts_type_alias(node);
+      }
+      Declaration::TSInterfaceDeclaration(node) => {
+        self.init_ts_interface(node);
       }
       _ => todo!(),
     }

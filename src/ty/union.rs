@@ -117,6 +117,7 @@ impl<'a> UnionType<'a> {
       Ty::Record(_)
       | Ty::Function(_)
       | Ty::Constructor(_)
+      | Ty::Interface(_)
       | Ty::Namespace(_)
       | Ty::Intersection(_) => {
         self.complex.insert(ty);

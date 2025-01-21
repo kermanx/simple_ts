@@ -3,6 +3,7 @@ pub mod callable;
 pub mod facts;
 pub mod generic;
 pub mod get_property;
+pub mod interface;
 pub mod intersection;
 pub mod intrinsics;
 pub mod r#match;
@@ -18,6 +19,7 @@ pub mod widen;
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 use callable::{ConstructorType, FunctionType};
 use generic::GenericType;
+use interface::InterfaceType;
 use intersection::IntersectionType;
 use intrinsics::IntrinsicType;
 use namespace::NamespaceType;
@@ -59,6 +61,7 @@ pub enum Ty<'a> {
   Record(&'a RecordType<'a>),
   Function(&'a FunctionType<'a>),
   Constructor(&'a ConstructorType<'a>),
+  Interface(&'a InterfaceType<'a>),
   Namespace(&'a NamespaceType<'a>),
 
   /* Compound */

@@ -7,7 +7,7 @@ use oxc::ast::ast::TSTypeAliasDeclaration;
 impl<'a> Analyzer<'a> {
   pub fn declare_ts_type_alias(&mut self, node: &'a TSTypeAliasDeclaration<'a>) {
     let symbol_id = node.id.symbol_id();
-    self.types.insert(symbol_id, Ty::Unresolved(UnresolvedType::TypeAlias(symbol_id)));
+    self.types.insert(symbol_id, Ty::Unresolved(UnresolvedType::UnInitType(symbol_id)));
   }
 
   pub fn init_ts_type_alias(&mut self, node: &'a TSTypeAliasDeclaration<'a>) {

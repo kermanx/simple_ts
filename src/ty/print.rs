@@ -47,6 +47,7 @@ impl<'a> Analyzer<'a> {
       Ty::Function(r) => self.print_callable_type(r),
       Ty::Constructor(r) => self.print_callable_type(r),
       Ty::Namespace(r) => self.print_namespace_type(r),
+      Ty::Interface(i) => self.print_interface_type(i),
 
       Ty::Union(u) => self.print_union_type(u),
       Ty::Intersection(i) => self.print_intersection_type(i),

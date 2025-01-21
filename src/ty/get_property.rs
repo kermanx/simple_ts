@@ -21,6 +21,7 @@ impl<'a> Analyzer<'a> {
       }
 
       Ty::Record(r) => self.get_record_property(r, key),
+      Ty::Interface(i) => todo!(),
       Ty::Namespace(_) => todo!(),
 
       Ty::Union(u) => self.get_union_property(u, key),

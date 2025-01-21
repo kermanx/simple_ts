@@ -36,9 +36,11 @@ impl<'a> Analyzer<'a> {
       Ty::UniqueSymbol(s) => PropertyKeyType::UniqueSymbol(s),
       Ty::BigIntLiteral(_) | Ty::BooleanLiteral(_) => PropertyKeyType::Error,
 
-      Ty::Record(_) | Ty::Function(_) | Ty::Constructor(_) | Ty::Namespace(_) => {
-        PropertyKeyType::Error
-      }
+      Ty::Record(_)
+      | Ty::Function(_)
+      | Ty::Constructor(_)
+      | Ty::Interface(_)
+      | Ty::Namespace(_) => PropertyKeyType::Error,
 
       Ty::Union(union) => {
         let mut has_error = false;
