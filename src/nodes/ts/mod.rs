@@ -3,6 +3,7 @@ mod ts_infer_type;
 mod ts_instantiation_expression;
 mod ts_intersection_type;
 mod ts_literal;
+mod ts_type_alias;
 mod ts_type_annotation;
 mod ts_type_literal;
 mod ts_type_parameter_declaration;
