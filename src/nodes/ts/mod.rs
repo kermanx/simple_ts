@@ -1,4 +1,5 @@
 mod ts_as_expression;
+mod ts_function_type;
 mod ts_infer_type;
 mod ts_instantiation_expression;
 mod ts_interface;
@@ -45,6 +46,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSParenthesizedType(node) => self.resolve_type(&node.type_annotation),
       TSType::TSTypeLiteral(node) => self.resolve_type_literal(node),
       TSType::TSInferType(node) => self.resolve_infer_type(node),
+      TSType::TSFunctionType(node) => self.resolve_function_type(node),
 
       _ => todo!(),
     }

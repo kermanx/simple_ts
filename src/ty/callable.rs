@@ -25,7 +25,7 @@ pub enum ReturnType<'a> {
 #[derive(Debug, Clone)]
 pub struct CallableType<'a, const CTOR: bool> {
   pub type_params: Vec<GenericParam<'a>>,
-  pub this_type: Option<Ty<'a>>,
+  pub this_param: Option<Ty<'a>>,
   /// (optional, type)
   pub params: Vec<(bool, Ty<'a>)>,
   pub rest_param: Option<Ty<'a>>,
@@ -47,7 +47,7 @@ impl<'a> Analyzer<'a> {
 
     let old_generics = self.take_generics();
     self.instantiate_generic_param(&callable.type_params, type_args);
-    let this_type = callable.this_type.map(|ty| self.resolve_unresolved(ty));
+    let this_type = callable.this_param.map(|ty| self.resolve_unresolved(ty));
     let params = callable
       .params
       .iter()
@@ -58,7 +58,7 @@ impl<'a> Analyzer<'a> {
     self.restore_generics(old_generics);
     Some(self.allocator.alloc(CallableType {
       type_params: vec![],
-      this_type,
+      this_param: this_type,
       params,
       rest_param,
       return_type,
@@ -72,7 +72,7 @@ impl<'a> Analyzer<'a> {
     self.ast_builder.ts_type_function_type(
       SPAN,
       /* TODO: */ NONE,
-      callable.this_type.map(|ty| {
+      callable.this_param.map(|ty| {
         self.ast_builder.ts_this_parameter(
           SPAN,
           SPAN,
