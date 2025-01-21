@@ -8,6 +8,7 @@ mod ts_literal;
 mod ts_non_null_expression;
 mod ts_satisfies_expression;
 mod ts_signature_vec;
+mod ts_this_parameter;
 mod ts_type_alias;
 mod ts_type_annotation;
 mod ts_type_assertion;

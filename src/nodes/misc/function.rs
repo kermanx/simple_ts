@@ -12,7 +12,7 @@ impl<'a> Analyzer<'a> {
       .map(|type_parameters| self.resolve_type_parameter_declaration(&type_parameters))
       .unwrap_or_default();
 
-    let (this_type, params, rest_param) = self.exec_formal_parameters(&node.params);
+    let (this_param, params, rest_param) = self.exec_formal_parameters(&node.params);
 
     let annotated_ret = if let Some(return_type) = &node.return_type {
       Some(self.resolve_type_annotation(return_type))
@@ -21,14 +21,14 @@ impl<'a> Analyzer<'a> {
     };
 
     let return_type = if let Some(body) = &node.body {
-      self.exec_function_body(body, node.r#async, node.generator, this_type, annotated_ret)
+      self.exec_function_body(body, node.r#async, node.generator, this_param, annotated_ret)
     } else {
       todo!()
     };
 
     Ty::Function(self.allocator.alloc(CallableType {
       type_params,
-      this_type,
+      this_param,
       params,
       rest_param,
       return_type,

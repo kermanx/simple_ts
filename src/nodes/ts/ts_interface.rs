@@ -36,8 +36,11 @@ impl<'a> Analyzer<'a> {
       _ => unreachable!(),
     };
 
-    let mut callables =
-      self.resolve_signature_vec(&node.body.body, &mut Some(&mut *interface.record.borrow_mut()));
+    self.resolve_signature_vec(
+      &node.body.body,
+      &mut Some(&mut *interface.record.borrow_mut()),
+      &mut *interface.callables.borrow_mut(),
+    );
 
     if let Some(extends) = &node.extends {
       todo!()
