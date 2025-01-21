@@ -1,10 +1,11 @@
-use super::Ty;
-use crate::analyzer::Analyzer;
 use oxc::{
   ast::ast::{TSType, TSTypeOperatorOperator},
   span::SPAN,
 };
 use oxc_syntax::number::{BigintBase, NumberBase};
+
+use super::Ty;
+use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
   pub fn print_type(&self, ty: Ty<'a>) -> TSType<'a> {

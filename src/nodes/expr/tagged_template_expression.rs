@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::TaggedTemplateExpression;
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_tagged_template_expression(

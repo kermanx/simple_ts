@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::{allocator, ast::ast::JSXChild};
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_jsx_children(&mut self, node: &'a allocator::Vec<'a, JSXChild<'a>>) -> Ty<'a> {

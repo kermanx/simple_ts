@@ -1,15 +1,16 @@
-use super::{
-  union::into_union,
-  unresolved::{UnresolvedIntersection, UnresolvedType},
-  Ty,
-};
-use crate::{analyzer::Analyzer, utils::F64WithEq};
 use oxc::{
   allocator::Allocator,
   ast::ast::TSType,
   semantic::SymbolId,
   span::{Atom, SPAN},
 };
+
+use super::{
+  union::into_union,
+  unresolved::{UnresolvedIntersection, UnresolvedType},
+  Ty,
+};
+use crate::{analyzer::Analyzer, utils::F64WithEq};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 enum IntersectionBuilderState<'a> {

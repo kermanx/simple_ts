@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, scope::cf::CfScopeKind};
 use oxc::ast::ast::LabeledStatement;
+
+use crate::{analyzer::Analyzer, scope::cf::CfScopeKind};
 
 impl<'a> Analyzer<'a> {
   pub fn declare_labeled_statement(&mut self, node: &'a LabeledStatement<'a>) {

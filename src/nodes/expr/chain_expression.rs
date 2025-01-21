@@ -1,10 +1,11 @@
-use crate::{
-  analyzer::Analyzer,
-  ty::{union::into_union, Ty},
-};
 use oxc::ast::{
   ast::{ChainElement, ChainExpression, Expression},
   match_member_expression,
+};
+
+use crate::{
+  analyzer::Analyzer,
+  ty::{union::into_union, Ty},
 };
 
 impl<'a> Analyzer<'a> {

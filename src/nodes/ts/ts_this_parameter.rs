@@ -1,5 +1,6 @@
-use crate::{ty::Ty, Analyzer};
 use oxc::ast::ast::TSThisParameter;
+
+use crate::{ty::Ty, Analyzer};
 
 impl<'a> Analyzer<'a> {
   pub fn resovle_this_parameter(&mut self, node: &'a TSThisParameter<'a>) -> Ty<'a> {

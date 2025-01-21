@@ -1,9 +1,5 @@
-use super::{
-  property_key::PropertyKeyType,
-  unresolved::{UnresolvedType, UnresolvedUnion},
-  Ty,
-};
-use crate::{analyzer::Analyzer, utils::F64WithEq};
+use std::{hash::Hash, mem};
+
 use oxc::{
   allocator::Allocator,
   ast::ast::TSType,
@@ -11,7 +7,13 @@ use oxc::{
   span::{Atom, SPAN},
 };
 use rustc_hash::FxHashSet;
-use std::{hash::Hash, mem};
+
+use super::{
+  property_key::PropertyKeyType,
+  unresolved::{UnresolvedType, UnresolvedUnion},
+  Ty,
+};
+use crate::{analyzer::Analyzer, utils::F64WithEq};
 
 #[derive(Debug, Default, Clone)]
 pub enum UnionTypeBuilder<'a> {

@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::VariableDeclaration;
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn declare_variable_declaration(&mut self, node: &'a VariableDeclaration<'a>) {

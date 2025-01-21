@@ -1,5 +1,3 @@
-use super::{generic::GenericParam, union::UnionType, Ty};
-use crate::analyzer::Analyzer;
 use oxc::{
   allocator,
   ast::{
@@ -9,6 +7,9 @@ use oxc::{
   semantic::SymbolId,
   span::SPAN,
 };
+
+use super::{generic::GenericParam, union::UnionType, Ty};
+use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone)]
 pub enum ReturnType<'a> {

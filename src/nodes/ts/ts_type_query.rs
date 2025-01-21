@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{TSTypeQuery, TSTypeQueryExprName};
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type_query(&mut self, node: &'a TSTypeQuery<'a>) -> Ty<'a> {

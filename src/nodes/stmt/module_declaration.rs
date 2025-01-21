@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{ExportDefaultDeclarationKind, ModuleDeclaration};
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn declare_module_declaration(&mut self, node: &'a ModuleDeclaration<'a>) {

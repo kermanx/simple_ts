@@ -1,3 +1,5 @@
+use oxc::ast::ast::{FunctionBody, Statement};
+
 use crate::{
   analyzer::Analyzer,
   scope::{
@@ -6,7 +8,6 @@ use crate::{
   },
   ty::Ty,
 };
-use oxc::ast::ast::{FunctionBody, Statement};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_function_body(

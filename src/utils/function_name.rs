@@ -1,8 +1,9 @@
-use crate::analyzer::Analyzer;
 use oxc::{
   ast::{ast::PropertyKind, AstKind},
   semantic::ScopeId,
 };
+
+use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
   /// Note: this is for flamegraph only. May not conform to the standard.

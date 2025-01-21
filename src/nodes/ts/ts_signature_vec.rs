@@ -1,8 +1,9 @@
+use oxc::{allocator, ast::ast::TSSignature};
+
 use crate::{
   ty::{callable::CallableType, record::RecordType, Ty},
   Analyzer,
 };
-use oxc::{allocator, ast::ast::TSSignature};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_signature_vec(

@@ -1,8 +1,9 @@
+use oxc::ast::ast::{ArrayExpression, ArrayExpressionElement};
+
 use crate::{
   analyzer::Analyzer,
   ty::{property_key::PropertyKeyType, union::into_union, Ty},
 };
-use oxc::ast::ast::{ArrayExpression, ArrayExpressionElement};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_array_expression(

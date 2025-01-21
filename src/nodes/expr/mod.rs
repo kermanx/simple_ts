@@ -24,11 +24,12 @@ mod unary_expression;
 mod update_expression;
 mod yield_expression;
 
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::{
   ast::{ast::Expression, match_member_expression},
   span::GetSpan,
 };
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_expression(&mut self, node: &'a Expression<'a>, sat: Option<Ty<'a>>) -> Ty<'a> {

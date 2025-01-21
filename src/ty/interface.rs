@@ -1,7 +1,9 @@
-use super::{callable::FunctionType, record::RecordType, unresolved::UnresolvedType, Ty};
+use std::cell::RefCell;
+
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
-use std::cell::RefCell;
+
+use super::{callable::FunctionType, record::RecordType, unresolved::UnresolvedType, Ty};
 
 #[derive(Debug, Default)]
 pub struct InterfaceTypeInner<'a> {

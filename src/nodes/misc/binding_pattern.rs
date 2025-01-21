@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{BindingPattern, BindingPatternKind};
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn declare_binding_pattern(&mut self, node: &'a BindingPattern<'a>, typed: bool) {

@@ -1,5 +1,6 @@
-use crate::analyzer::Analyzer;
 use oxc::ast::ast::IfStatement;
+
+use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_if_statement(&mut self, node: &'a IfStatement) {

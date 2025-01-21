@@ -1,8 +1,9 @@
+use oxc::ast::ast::Expression;
+
 use crate::{
   analyzer::Analyzer,
   ty::{union::into_union, Ty},
 };
-use oxc::ast::ast::Expression;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_with_default(&mut self, default: &'a Expression<'a>, value: Ty<'a>) -> Ty<'a> {

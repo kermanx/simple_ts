@@ -1,8 +1,9 @@
+use oxc::ast::ast::JSXMemberExpression;
+
 use crate::{
   analyzer::Analyzer,
   ty::{property_key::PropertyKeyType, Ty},
 };
-use oxc::ast::ast::JSXMemberExpression;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_jsx_member_expression(

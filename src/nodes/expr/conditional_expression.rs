@@ -1,8 +1,9 @@
+use oxc::ast::ast::ConditionalExpression;
+
 use crate::{
   analyzer::Analyzer,
   ty::{union::into_union, Ty},
 };
-use oxc::ast::ast::ConditionalExpression;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_conditional_expression(

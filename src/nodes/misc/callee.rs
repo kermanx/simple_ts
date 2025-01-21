@@ -1,8 +1,9 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::{
   ast::{ChainElement, Expression, MemberExpression},
   match_member_expression,
 };
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 /// Returns Some((node, same_chain))
 fn unwrap_to_member_expression<'a>(

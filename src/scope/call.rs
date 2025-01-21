@@ -1,5 +1,6 @@
-use crate::ty::{accumulator::TypeAccumulator, Ty};
 use oxc::semantic::ScopeId;
+
+use crate::ty::{accumulator::TypeAccumulator, Ty};
 
 pub enum CallScopeReturnType<'a> {
   Annotated(Ty<'a>),

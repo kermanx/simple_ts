@@ -1,8 +1,9 @@
+use oxc::ast::{ast::SimpleAssignmentTarget, match_member_expression};
+
 use crate::{
   analyzer::Analyzer,
   ty::{property_key::PropertyKeyType, Ty},
 };
-use oxc::ast::{ast::SimpleAssignmentTarget, match_member_expression};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_simple_assignment_target_read(

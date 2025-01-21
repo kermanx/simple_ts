@@ -1,9 +1,5 @@
-use crate::{
-  builtins::Builtins,
-  config::Config,
-  scope::{call::CallScope, cf::CfScopeKind, tree::ScopeTree, Scope},
-  ty::{accumulator::TypeAccumulator, Ty},
-};
+use std::collections::BTreeSet;
+
 use line_index::LineIndex;
 use oxc::{
   allocator::Allocator,
@@ -12,7 +8,13 @@ use oxc::{
   span::{GetSpan, Span, SPAN},
 };
 use rustc_hash::FxHashMap;
-use std::collections::BTreeSet;
+
+use crate::{
+  builtins::Builtins,
+  config::Config,
+  scope::{call::CallScope, cf::CfScopeKind, tree::ScopeTree, Scope},
+  ty::{accumulator::TypeAccumulator, Ty},
+};
 
 pub struct Analyzer<'a> {
   pub allocator: &'a Allocator,

@@ -1,10 +1,11 @@
-use crate::{
-  analyzer::Analyzer,
-  ty::{facts::Facts, property_key::PropertyKeyType, union::into_union, Ty},
-};
 use oxc::{
   ast::ast::{Expression, UnaryExpression, UnaryOperator},
   span::Atom,
+};
+
+use crate::{
+  analyzer::Analyzer,
+  ty::{facts::Facts, property_key::PropertyKeyType, union::into_union, Ty},
 };
 
 impl<'a> Analyzer<'a> {

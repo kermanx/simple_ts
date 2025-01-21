@@ -1,5 +1,6 @@
-use crate::analyzer::Analyzer;
 use oxc::ast::ast::TSType;
+
+use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone, Copy)]
 pub struct IntrinsicType {

@@ -1,7 +1,8 @@
-use super::Ty;
-use crate::analyzer::Analyzer;
 use oxc::ast::ast::TSType;
 use rustc_hash::FxHashMap;
+
+use super::Ty;
+use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone)]
 pub struct NamespaceType<'a> {

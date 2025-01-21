@@ -1,5 +1,6 @@
-use crate::{ty::Ty, Analyzer};
 use oxc::ast::ast::TSInstantiationExpression;
+
+use crate::{ty::Ty, Analyzer};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_ts_instantiation_expression(

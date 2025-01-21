@@ -19,8 +19,9 @@ mod ts_type_query;
 mod ts_type_reference;
 mod ts_union_type;
 
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::TSType;
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type(&mut self, node: &'a TSType<'a>) -> Ty<'a> {

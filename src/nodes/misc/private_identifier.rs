@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::{ast::ast::PrivateIdentifier, span::Atom};
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_private_identifier(&mut self, node: &'a PrivateIdentifier<'a>) -> Ty<'a> {

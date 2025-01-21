@@ -1,8 +1,9 @@
+use oxc::ast::ast::Function;
+
 use crate::{
   analyzer::Analyzer,
   ty::{callable::CallableType, Ty},
 };
-use oxc::ast::ast::Function;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_function(&mut self, node: &'a Function<'a>, _ty: Option<Ty<'a>>) -> Ty<'a> {

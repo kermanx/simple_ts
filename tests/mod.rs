@@ -1,3 +1,5 @@
+use std::{fs, sync::LazyLock};
+
 use insta::{assert_snapshot, glob, Settings};
 use oxc::{
   allocator::Allocator,
@@ -7,7 +9,6 @@ use oxc::{
 };
 use regex::Regex;
 use simple_ts::{analyze, Config};
-use std::{fs, sync::LazyLock};
 
 static TYPE_QUERY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\^\? (\w+)").unwrap());
 

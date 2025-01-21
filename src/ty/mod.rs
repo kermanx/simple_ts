@@ -16,7 +16,8 @@ pub mod union;
 pub mod unresolved;
 pub mod widen;
 
-use crate::{analyzer::Analyzer, utils::F64WithEq};
+use std::{hash, mem};
+
 use callable::{ConstructorType, FunctionType};
 use generic::GenericType;
 use interface::InterfaceType;
@@ -26,9 +27,10 @@ use namespace::NamespaceType;
 use oxc::{semantic::SymbolId, span::Atom};
 use property_key::PropertyKeyType;
 use record::RecordType;
-use std::{hash, mem};
 use union::UnionType;
 use unresolved::UnresolvedType;
+
+use crate::{analyzer::Analyzer, utils::F64WithEq};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Ty<'a> {

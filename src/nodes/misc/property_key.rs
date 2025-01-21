@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::property_key::PropertyKeyType};
 use oxc::ast::ast::PropertyKey;
+
+use crate::{analyzer::Analyzer, ty::property_key::PropertyKeyType};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_property_key(&mut self, node: &'a PropertyKey<'a>) -> PropertyKeyType<'a> {

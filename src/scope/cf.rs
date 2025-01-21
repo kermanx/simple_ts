@@ -1,5 +1,6 @@
-use crate::analyzer::Analyzer;
 use oxc::{ast::ast::LabeledStatement, semantic::ScopeId, span::Atom};
+
+use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone, Copy)]
 pub enum CfScopeKind<'a> {

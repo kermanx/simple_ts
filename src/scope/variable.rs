@@ -1,9 +1,10 @@
+use oxc::semantic::{ScopeId, SymbolId};
+use rustc_hash::FxHashMap;
+
 use crate::{
   analyzer::Analyzer,
   ty::{union::into_union, unresolved::UnresolvedType, Ty},
 };
-use oxc::semantic::{ScopeId, SymbolId};
-use rustc_hash::FxHashMap;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Variable<'a> {

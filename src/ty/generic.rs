@@ -1,3 +1,8 @@
+use std::mem;
+
+use oxc::{ast::ast::TSType, semantic::SymbolId};
+use rustc_hash::FxHashMap;
+
 use super::{
   intersection::{self, IntersectionType},
   union::UnionType,
@@ -5,9 +10,6 @@ use super::{
   Ty,
 };
 use crate::analyzer::Analyzer;
-use oxc::{ast::ast::TSType, semantic::SymbolId};
-use rustc_hash::FxHashMap;
-use std::mem;
 
 #[derive(Debug, Clone)]
 pub struct GenericParam<'a> {

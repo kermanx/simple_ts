@@ -1,8 +1,9 @@
+use oxc::ast::ast::TSTypeAliasDeclaration;
+
 use crate::{
   ty::{generic::GenericType, unresolved::UnresolvedType, Ty},
   Analyzer,
 };
-use oxc::ast::ast::TSTypeAliasDeclaration;
 
 impl<'a> Analyzer<'a> {
   pub fn declare_ts_type_alias(&mut self, node: &'a TSTypeAliasDeclaration<'a>) {

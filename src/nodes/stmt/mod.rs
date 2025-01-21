@@ -16,8 +16,9 @@ mod throw_statement;
 mod try_statement;
 mod while_statement;
 
-use crate::analyzer::Analyzer;
 use oxc::ast::{ast::Statement, match_declaration, match_module_declaration};
+
+use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
   pub fn declare_statement(&mut self, node: &'a Statement) {

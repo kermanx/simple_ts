@@ -1,3 +1,5 @@
+use oxc::{ast::ast::TSType, semantic::SymbolId};
+
 use super::{
   generic::GenericType,
   intersection::{into_intersection, IntersectionType},
@@ -5,7 +7,6 @@ use super::{
   Ty,
 };
 use crate::Analyzer;
-use oxc::{ast::ast::TSType, semantic::SymbolId};
 
 #[derive(Debug, Clone)]
 pub struct UnresolvedConditionalType<'a> {

@@ -1,8 +1,9 @@
+use oxc::ast::ast::{JSXAttributeItem, JSXOpeningElement};
+
 use crate::{
   analyzer::Analyzer,
   ty::{record::RecordType, Ty},
 };
-use oxc::ast::ast::{JSXAttributeItem, JSXOpeningElement};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_jsx_attributes(

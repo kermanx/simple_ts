@@ -1,8 +1,9 @@
+use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator};
+
 use crate::{
   analyzer::Analyzer,
   ty::{union::into_union, Ty},
 };
-use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_assignment_expression(

@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, scope::call::CallScopeReturnType, ty::Ty};
 use oxc::ast::ast::ReturnStatement;
+
+use crate::{analyzer::Analyzer, scope::call::CallScopeReturnType, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_return_statement(&mut self, node: &'a ReturnStatement) {

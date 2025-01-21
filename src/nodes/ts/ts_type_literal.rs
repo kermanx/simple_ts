@@ -1,3 +1,5 @@
+use oxc::ast::ast::TSTypeLiteral;
+
 use crate::{
   ty::{
     intersection::{IntersectionBaseKind, IntersectionType},
@@ -6,7 +8,6 @@ use crate::{
   },
   Analyzer,
 };
-use oxc::ast::ast::TSTypeLiteral;
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type_literal(&mut self, node: &'a TSTypeLiteral<'a>) -> Ty<'a> {

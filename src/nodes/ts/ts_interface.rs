@@ -1,3 +1,5 @@
+use oxc::ast::ast::{Expression, TSInterfaceDeclaration, TSType};
+
 use crate::{
   ty::{
     generic::GenericType,
@@ -7,7 +9,6 @@ use crate::{
   },
   Analyzer,
 };
-use oxc::ast::ast::{Expression, TSInterfaceDeclaration, TSType};
 
 impl<'a> Analyzer<'a> {
   pub fn declare_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) {

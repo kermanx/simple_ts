@@ -1,7 +1,8 @@
-use super::{intersection::IntersectionTypeBuilder, unresolved::UnresolvedType, Ty};
-use crate::Analyzer;
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
+
+use super::{intersection::IntersectionTypeBuilder, unresolved::UnresolvedType, Ty};
+use crate::Analyzer;
 
 enum MatchResult<'a> {
   Unmatched,

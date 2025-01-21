@@ -1,9 +1,9 @@
-use oxc::allocator::Allocator;
 use std::mem;
 
-use crate::Analyzer;
+use oxc::allocator::Allocator;
 
 use super::{property_key::PropertyKeyType, union::UnionType, Ty};
+use crate::Analyzer;
 
 #[derive(Debug, Default)]
 pub enum TypeAccumulator<'a> {

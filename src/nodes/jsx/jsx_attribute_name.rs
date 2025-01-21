@@ -1,5 +1,6 @@
-use crate::{analyzer::Analyzer, ty::property_key::PropertyKeyType};
 use oxc::{allocator::Allocator, ast::ast::JSXAttributeName, span::Atom};
+
+use crate::{analyzer::Analyzer, ty::property_key::PropertyKeyType};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_jsx_attribute_name(&mut self, node: &'a JSXAttributeName<'a>) -> PropertyKeyType<'a> {

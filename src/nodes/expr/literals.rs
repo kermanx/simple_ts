@@ -1,7 +1,8 @@
-use crate::{analyzer::Analyzer, ty::Ty};
 use oxc::ast::ast::{
   BigIntLiteral, BooleanLiteral, NullLiteral, NumericLiteral, RegExpLiteral, StringLiteral,
 };
+
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_string_literal(&mut self, node: &'a StringLiteral, _ty: Option<Ty<'a>>) -> Ty<'a> {

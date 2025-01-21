@@ -1,5 +1,5 @@
-use super::{accumulator::TypeAccumulator, property_key::PropertyKeyType, Ty};
-use crate::analyzer::Analyzer;
+use std::cell::RefCell;
+
 use oxc::{
   ast::ast::{PropertyKey, TSSignature, TSType},
   semantic::SymbolId,
@@ -7,7 +7,9 @@ use oxc::{
 };
 use oxc_syntax::number::ToJsString;
 use rustc_hash::FxHashMap;
-use std::cell::RefCell;
+
+use super::{accumulator::TypeAccumulator, property_key::PropertyKeyType, Ty};
+use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone)]
 pub struct KeyedProperty<'a> {
@@ -24,10 +26,7 @@ pub struct MappedProperty<'a> {
 
 impl<'a> Clone for MappedProperty<'a> {
   fn clone(&self) -> Self {
-    Self {
-      value: RefCell::new(self.value.borrow_mut().frozen_clone()),
-      readonly: self.readonly,
-    }
+    Self { value: RefCell::new(self.value.borrow_mut().frozen_clone()), readonly: self.readonly }
   }
 }
 

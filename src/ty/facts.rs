@@ -1,6 +1,7 @@
+use bitflags::bitflags;
+
 use super::Ty;
 use crate::analyzer::Analyzer;
-use bitflags::bitflags;
 
 bitflags! {
   #[derive(Debug, Clone, Copy, PartialEq, Eq)]

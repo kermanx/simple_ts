@@ -1,8 +1,9 @@
+use oxc::ast::ast::LogicalExpression;
+
 use crate::{
   analyzer::Analyzer,
   ty::{union::into_union, Ty},
 };
-use oxc::ast::ast::LogicalExpression;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_logical_expression(

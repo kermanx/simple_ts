@@ -1,8 +1,9 @@
+use oxc::ast::ast::MemberExpression;
+
 use crate::{
   analyzer::Analyzer,
   ty::{property_key::PropertyKeyType, Ty},
 };
-use oxc::ast::ast::MemberExpression;
 
 impl<'a> Analyzer<'a> {
   /// Returns (short-circuit, value, cache)

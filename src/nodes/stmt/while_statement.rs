@@ -1,5 +1,6 @@
-use crate::analyzer::Analyzer;
 use oxc::ast::ast::WhileStatement;
+
+use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
   pub fn exec_while_statement(&mut self, node: &'a WhileStatement<'a>) {

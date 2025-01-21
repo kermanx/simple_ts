@@ -1,6 +1,7 @@
+use oxc::{semantic::SymbolId, span::Atom};
+
 use super::Ty;
 use crate::{analyzer::Analyzer, utils::F64WithEq};
-use oxc::{semantic::SymbolId, span::Atom};
 
 #[derive(Debug, Clone, Copy)]
 pub enum PropertyKeyType<'a> {

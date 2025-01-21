@@ -1,8 +1,9 @@
+use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
+
 use crate::{
   analyzer::Analyzer,
   ty::{record::RecordType, Ty},
 };
-use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_object_expression(

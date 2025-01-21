@@ -1,8 +1,9 @@
+use oxc::ast::ast::AssignmentTargetProperty;
+
 use crate::{
   analyzer::Analyzer,
   ty::{property_key::PropertyKeyType, Ty},
 };
-use oxc::ast::ast::AssignmentTargetProperty;
 
 impl<'a> Analyzer<'a> {
   /// Returns the key

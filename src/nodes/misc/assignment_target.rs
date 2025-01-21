@@ -1,9 +1,10 @@
+use oxc::ast::{
+  ast::AssignmentTarget, match_assignment_target_pattern, match_simple_assignment_target,
+};
+
 use crate::{
   analyzer::Analyzer,
   ty::{property_key::PropertyKeyType, Ty},
-};
-use oxc::ast::{
-  ast::AssignmentTarget, match_assignment_target_pattern, match_simple_assignment_target,
 };
 
 impl<'a> Analyzer<'a> {

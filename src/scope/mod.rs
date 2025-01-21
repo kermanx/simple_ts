@@ -3,11 +3,12 @@ pub mod cf;
 pub mod tree;
 pub mod variable;
 
-use crate::Analyzer;
 use cf::CfScopeKind;
 use oxc::semantic::{ScopeId, SymbolId};
 use rustc_hash::FxHashMap;
 use variable::Variable;
+
+use crate::Analyzer;
 
 #[derive(Debug)]
 pub struct Scope<'a> {

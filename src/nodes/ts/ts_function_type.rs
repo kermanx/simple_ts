@@ -1,8 +1,9 @@
+use oxc::ast::ast::TSFunctionType;
+
 use crate::{
   ty::{callable::CallableType, Ty},
   Analyzer,
 };
-use oxc::ast::ast::TSFunctionType;
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_function_type(&mut self, node: &'a TSFunctionType<'a>) -> Ty<'a> {
