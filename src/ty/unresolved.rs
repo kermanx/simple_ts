@@ -1,11 +1,12 @@
 use super::{
+  generic::GenericType,
   union::{into_union, UnionType},
   Ty,
 };
 use crate::Analyzer;
 use oxc::{ast::ast::TSType, semantic::SymbolId};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct UnresolvedConditionalType<'a> {
   check: Ty<'a>,
   extends: Ty<'a>,
@@ -13,13 +14,21 @@ pub struct UnresolvedConditionalType<'a> {
   false_ty: Ty<'a>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone)]
+pub struct UnresolvedGenericInstantiation<'a> {
+  pub generic: UnresolvedType<'a>,
+  pub args: Vec<Ty<'a>>,
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum UnresolvedType<'a> {
   UnresolvedTypedVariable(SymbolId),
+  TypeAlias(SymbolId),
   GenericParam(SymbolId),
   Conditional(&'a UnresolvedConditionalType<'a>),
   Keyof(&'a Ty<'a>),
   InferType(SymbolId),
+  GenericInstantiation(&'a UnresolvedGenericInstantiation<'a>),
 }
 
 impl<'a> Analyzer<'a> {
@@ -32,8 +41,12 @@ impl<'a> Analyzer<'a> {
     match ty {
       Ty::Unresolved(u) => match u {
         UnresolvedType::UnresolvedTypedVariable(_) => None,
+        UnresolvedType::TypeAlias(symbol) => match *self.types.get(&symbol).unwrap() {
+          Ty::Unresolved(UnresolvedType::TypeAlias(s)) if s == symbol => None,
+          ty => self.try_resolve_unresolved(ty),
+        },
         UnresolvedType::GenericParam(symbol) => match *self.generics.get(&symbol).unwrap() {
-          Ty::Unresolved(u2) if u == u2 => None,
+          Ty::Unresolved(UnresolvedType::GenericParam(s)) if s == symbol => None,
           ty => self.try_resolve_unresolved(ty),
         },
         UnresolvedType::Conditional(cond) => {
@@ -55,6 +68,9 @@ impl<'a> Analyzer<'a> {
           todo!()
         }
         UnresolvedType::InferType(_) => unreachable!(),
+        UnresolvedType::GenericInstantiation(g) => {
+          todo!()
+        }
       },
 
       Ty::Record(r) => todo!(),
@@ -71,15 +87,20 @@ impl<'a> Analyzer<'a> {
 
   /// Returns `None` if the type is singular.
   /// This function only unwrap one level of `UnresolvedType`.
-  pub fn get_unresolved_base_type(&self, unresolved: UnresolvedType<'a>) -> Option<Ty<'a>> {
+  pub fn get_unresolved_lowest_type(&self, unresolved: UnresolvedType<'a>) -> Option<Ty<'a>> {
     match unresolved {
       UnresolvedType::UnresolvedTypedVariable(_) => None,
+      UnresolvedType::TypeAlias(symbol) => match *self.types.get(&symbol).unwrap() {
+        Ty::Unresolved(UnresolvedType::TypeAlias(s)) if s == symbol => None,
+        ty => Some(ty),
+      },
       UnresolvedType::GenericParam(symbol) => self.generic_constraints.get(&symbol).copied(),
       UnresolvedType::Conditional(cond) => {
         Some(into_union(self.allocator, [cond.true_ty, cond.false_ty]))
       }
       UnresolvedType::Keyof(_) => Some(Ty::String),
       UnresolvedType::InferType(_) => unreachable!(),
+      UnresolvedType::GenericInstantiation(g) => todo!(),
     }
   }
 

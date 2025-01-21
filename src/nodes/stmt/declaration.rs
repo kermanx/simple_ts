@@ -13,7 +13,11 @@ impl<'a> Analyzer<'a> {
       Declaration::ClassDeclaration(node) => {
         self.declare_class(node);
       }
-      _ => unreachable!(),
+
+      Declaration::TSTypeAliasDeclaration(node) => {
+        self.declare_ts_type_alias(node);
+      }
+      _ => todo!(),
     }
   }
 
@@ -28,7 +32,11 @@ impl<'a> Analyzer<'a> {
       Declaration::ClassDeclaration(node) => {
         self.init_class(node);
       }
-      _ => unreachable!(),
+
+      Declaration::TSTypeAliasDeclaration(node) => {
+        self.init_ts_type_alias(node);
+      }
+      _ => todo!(),
     }
   }
 }

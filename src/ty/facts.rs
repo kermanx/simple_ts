@@ -116,7 +116,7 @@ impl<'a> Analyzer<'a> {
       }
 
       Ty::Unresolved(u) => {
-        if let Some(base) = self.get_unresolved_base_type(u) {
+        if let Some(base) = self.get_unresolved_lowest_type(u) {
           self.get_facts(base)
         } else {
           Facts::NONE

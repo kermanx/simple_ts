@@ -1,4 +1,7 @@
-use super::Ty;
+use super::{
+  unresolved::{self, UnresolvedGenericInstantiation, UnresolvedType},
+  Ty,
+};
 use crate::analyzer::Analyzer;
 use oxc::{ast::ast::TSType, semantic::SymbolId};
 use rustc_hash::FxHashMap;
@@ -17,7 +20,7 @@ pub struct GenericParam<'a> {
 #[derive(Debug, Clone)]
 pub struct GenericType<'a> {
   pub params: Vec<GenericParam<'a>>,
-  pub body: &'a TSType<'a>,
+  pub body: Ty<'a>,
 }
 
 impl<'a> Analyzer<'a> {
@@ -46,10 +49,14 @@ impl<'a> Analyzer<'a> {
       Ty::Generic(generic) => {
         let old_generics = self.take_generics();
         self.instantiate_generic_param(&generic.params, args);
-        let result = self.resolve_type(generic.body);
+        let result = self.resolve_unresolved(generic.body);
         self.restore_generics(old_generics);
         result
       }
+      Ty::Intrinsic(intrinsic) => todo!(),
+      Ty::Unresolved(generic) => Ty::Unresolved(UnresolvedType::GenericInstantiation(
+        self.allocator.alloc(UnresolvedGenericInstantiation { generic, args }),
+      )),
       _ => unreachable!("Cannot instantiate non-generic type"),
     }
   }

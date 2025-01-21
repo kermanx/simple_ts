@@ -5,6 +5,7 @@ pub mod generic;
 pub mod get_property;
 pub mod intersection;
 pub mod intrinsics;
+pub mod r#match;
 pub mod namespace;
 pub mod operations;
 pub mod print;

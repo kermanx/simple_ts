@@ -91,7 +91,7 @@ impl<'a> Analyzer<'a> {
       Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!(),
 
       Ty::Unresolved(u) => {
-        if let Some(base) = self.get_unresolved_base_type(u) {
+        if let Some(base) = self.get_unresolved_lowest_type(u) {
           self.to_property_key(base)
         } else {
           PropertyKeyType::Error
