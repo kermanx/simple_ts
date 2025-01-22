@@ -27,12 +27,12 @@ pub struct GenericType<'a> {
 pub struct GenericInstanceType<'a> {
   pub generic: Ty<'a>,
   pub args: Vec<Ty<'a>>,
-  pub resolved: RefCell<Option<Ty<'a>>>,
+  pub unwrapped: RefCell<Option<Ty<'a>>>,
 }
 
 impl<'a> GenericInstanceType<'a> {
   pub fn new(generic: Ty<'a>, args: Vec<Ty<'a>>) -> Self {
-    Self { generic, args, resolved: RefCell::new(None) }
+    Self { generic, args, unwrapped: RefCell::new(None) }
   }
 }
 
@@ -64,8 +64,8 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn resolve_generic_instance(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
-    *instance.resolved.borrow_mut().get_or_insert_with(|| {
+  pub fn unwrap_generic_instance(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
+    *instance.unwrapped.borrow_mut().get_or_insert_with(|| {
       match instance.generic {
         Ty::Unresolved(_) => {
           unreachable!("Generic itself should always be resolved when analyzing declaration")

@@ -7,7 +7,7 @@ impl<'a> Analyzer<'a> {
   /// Note: This function only unwrap one level of `UnresolvedType`.
   pub fn get_lowest_type(&mut self, ty: Ty<'a>) -> Ty<'a> {
     match ty {
-      Ty::Instance(i) => self.resolve_generic_instance(i),
+      Ty::Instance(i) => self.unwrap_generic_instance(i),
       Ty::Generic(g) => self.get_lowest_type(g.body),
       Ty::Intrinsic(i) => todo!(),
 

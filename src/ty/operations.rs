@@ -38,7 +38,7 @@ impl<'a> Analyzer<'a> {
       },
 
       Ty::Instance(i) => {
-        let resolved = self.resolve_generic_instance(i);
+        let resolved = self.unwrap_generic_instance(i);
         self.non_nullable(resolved)
       }
       Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,

@@ -47,7 +47,7 @@ impl<'a> UnionTypeBuilder<'a> {
       }
 
       (s, Ty::Instance(u)) => {
-        let resolved = analyzer.resolve_generic_instance(u);
+        let resolved = analyzer.unwrap_generic_instance(u);
         s.add(analyzer, resolved);
       }
 

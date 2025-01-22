@@ -140,7 +140,7 @@ impl<'a> IntersectionTypeBuilder<'a> {
         }
 
         Ty::Instance(i) => {
-          let resolved = analyzer.resolve_generic_instance(i);
+          let resolved = analyzer.unwrap_generic_instance(i);
           self.add(analyzer, resolved);
           return;
         }
