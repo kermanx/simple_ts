@@ -31,8 +31,6 @@ pub enum UnresolvedType<'a> {
   Conditional(&'a UnresolvedConditionalType<'a>),
   Keyof(&'a Ty<'a>),
   InferType(SymbolId),
-  Union(&'a UnresolvedUnion<'a>),
-  Intersection(&'a UnresolvedIntersection<'a>),
 }
 
 impl<'a> Analyzer<'a> {
@@ -72,54 +70,6 @@ impl<'a> Analyzer<'a> {
           todo!()
         }
         UnresolvedType::InferType(_) => None,
-        UnresolvedType::Union(u) => {
-          let base = self.try_resolve_unresolved(u.base);
-          let mut changed = base.is_some();
-          let mut types = vec![base.unwrap_or(u.base)];
-          let mut unresolved = vec![];
-          for u in &u.unresolved {
-            if let Some(ty) = self.try_resolve_unresolved(Ty::Unresolved(*u)) {
-              types.push(ty);
-              changed = true;
-            } else {
-              unresolved.push(*u);
-            }
-          }
-          changed.then(|| {
-            let base = self.into_union(types);
-            if unresolved.is_empty() {
-              base
-            } else {
-              Ty::Unresolved(UnresolvedType::Union(
-                self.allocator.alloc(UnresolvedUnion { base, unresolved }),
-              ))
-            }
-          })
-        }
-        UnresolvedType::Intersection(i) => {
-          let base = self.try_resolve_unresolved(i.base);
-          let mut changed = base.is_some();
-          let mut types = vec![base.unwrap_or(i.base)];
-          let mut unresolved = vec![];
-          for u in &i.unresolved {
-            if let Some(ty) = self.try_resolve_unresolved(Ty::Unresolved(*u)) {
-              types.push(ty);
-              changed = true;
-            } else {
-              unresolved.push(*u);
-            }
-          }
-          changed.then(|| {
-            let base = self.into_intersection(types);
-            if unresolved.is_empty() {
-              base
-            } else {
-              Ty::Unresolved(UnresolvedType::Intersection(
-                self.allocator.alloc(UnresolvedIntersection { base, unresolved }),
-              ))
-            }
-          })
-        }
       },
 
       Ty::Record(r) => todo!(),

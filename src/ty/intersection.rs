@@ -151,10 +151,11 @@ impl<'a> IntersectionTypeBuilder<'a> {
     }
   }
 
-  fn build_without_union_and_unresolved(
+  fn build_without_union(
     allocator: &'a Allocator,
     kind: IntersectionBuilderState<'a>,
     object_like: Vec<Ty<'a>>,
+    unresolved: Vec<UnresolvedType<'a>>,
   ) -> Ty<'a> {
     let primitive_only = object_like.is_empty();
     let kind = match kind {
@@ -197,34 +198,27 @@ impl<'a> IntersectionTypeBuilder<'a> {
         }
       }
     };
-    Ty::Intersection(allocator.alloc(IntersectionType { kind, object_like }))
+    Ty::Intersection(allocator.alloc(IntersectionType { kind, object_like, unresolved }))
   }
 
   pub fn build(self, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
     let allocator = analyzer.allocator;
     let Self { kind, object_like, unresolved, union } = self;
-    let base = Self::build_without_union_and_unresolved(allocator, kind, object_like);
+    let base = Self::build_without_union(allocator, kind, object_like, unresolved);
     if base == Ty::Never {
       return Ty::Never;
     }
-    let with_unresolved = if unresolved.is_empty() {
-      base
-    } else {
-      Ty::Unresolved(UnresolvedType::Intersection(
-        allocator.alloc(UnresolvedIntersection { base, unresolved }),
-      ))
-    };
     if let Some(union) = union {
       let types: Vec<_> = union
         .into_iter()
         .map(|mut builder| {
-          builder.add(analyzer, with_unresolved);
+          builder.add(analyzer, base);
           builder.build(analyzer)
         })
         .collect();
       analyzer.into_union(types)
     } else {
-      with_unresolved
+      base
     }
   }
 }
@@ -246,6 +240,7 @@ pub struct IntersectionType<'a> {
   pub kind: IntersectionBaseKind<'a>,
   /// non empty
   pub object_like: Vec<Ty<'a>>,
+  pub unresolved: Vec<UnresolvedType<'a>>,
 }
 
 impl<'a> IntersectionType<'a> {
@@ -269,9 +264,8 @@ impl<'a> IntersectionType<'a> {
 
   pub fn for_each(&self, mut f: impl FnMut(Ty<'a>) -> ()) {
     self.kind_to_ty().map(&mut f);
-    for ty in &self.object_like {
-      f(*ty);
-    }
+    self.object_like.iter().copied().for_each(&mut f);
+    self.unresolved.iter().copied().map(Ty::Unresolved).for_each(f);
   }
 }
 

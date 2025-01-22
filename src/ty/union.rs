@@ -1,4 +1,4 @@
-use std::{hash::Hash, mem};
+use std::hash::Hash;
 
 use oxc::{
   ast::ast::TSType,
@@ -7,11 +7,7 @@ use oxc::{
 };
 use rustc_hash::FxHashSet;
 
-use super::{
-  property_key::PropertyKeyType,
-  unresolved::{UnresolvedType, UnresolvedUnion},
-  Ty,
-};
+use super::{property_key::PropertyKeyType, unresolved::UnresolvedType, Ty};
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 
 #[derive(Debug, Default, Clone)]
@@ -22,7 +18,6 @@ pub enum UnionTypeBuilder<'a> {
   Any,
   Unknown,
   Compound(Box<UnionType<'a>>),
-  WithUnresolved(Box<UnionTypeBuilder<'a>>, Vec<UnresolvedType<'a>>),
 }
 
 impl<'a> UnionTypeBuilder<'a> {
@@ -35,14 +30,6 @@ impl<'a> UnionTypeBuilder<'a> {
       (s, Ty::Any) => *s = UnionTypeBuilder::Any,
       (s, Ty::Unknown) => *s = UnionTypeBuilder::Unknown,
       (_, Ty::Never) => {}
-
-      (UnionTypeBuilder::WithUnresolved(_, t), Ty::Unresolved(u)) => t.push(u),
-      (UnionTypeBuilder::WithUnresolved(s, _), ty) => {
-        s.add(analyzer, ty);
-      }
-      (s, Ty::Unresolved(u)) => {
-        *s = UnionTypeBuilder::WithUnresolved(Box::new(mem::take(s)), vec![u])
-      }
 
       (s, Ty::Union(tys)) => {
         tys.for_each(|ty| s.add(analyzer, ty));
@@ -72,12 +59,6 @@ impl<'a> UnionTypeBuilder<'a> {
       UnionTypeBuilder::Any => Ty::Any,
       UnionTypeBuilder::Unknown => Ty::Unknown,
       UnionTypeBuilder::Compound(compound) => Ty::Union(analyzer.allocator.alloc(compound)),
-      UnionTypeBuilder::WithUnresolved(builder, unresolved) => {
-        let base = builder.build(analyzer);
-        Ty::Unresolved(UnresolvedType::Union(
-          analyzer.allocator.alloc(UnresolvedUnion { base, unresolved }),
-        ))
-      }
     }
   }
 }
@@ -97,6 +78,7 @@ pub struct UnionType<'a> {
   pub boolean: (bool, bool),
 
   pub complex: FxHashSet<Ty<'a>>,
+  pub unresolved: Vec<UnresolvedType<'a>>,
 }
 
 impl<'a> UnionType<'a> {
@@ -129,6 +111,8 @@ impl<'a> UnionType<'a> {
         self.complex.insert(ty);
       }
 
+      Ty::Unresolved(unresolved) => self.unresolved.push(unresolved),
+
       _ => unreachable!("Handled in UnionTypeBuilder"),
     }
   }
@@ -158,7 +142,8 @@ impl<'a> UnionType<'a> {
       (false, false) => {}
     }
 
-    self.complex.iter().copied().for_each(f);
+    self.complex.iter().copied().for_each(&mut f);
+    self.unresolved.iter().copied().map(Ty::Unresolved).for_each(f);
   }
 }
 

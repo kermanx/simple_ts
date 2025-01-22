@@ -83,8 +83,38 @@ pub enum Ty<'a> {
 
 impl<'a> PartialEq for Ty<'a> {
   fn eq(&self, other: &Self) -> bool {
-    // Compare as binary data
-    unsafe { mem::transmute::<_, u128>(*self) == mem::transmute::<_, u128>(*other) }
+    match (self, other) {
+      (Ty::Error, Ty::Error) => true,
+      (Ty::Any, Ty::Any) => true,
+      (Ty::Unknown, Ty::Unknown) => true,
+      (Ty::Never, Ty::Never) => true,
+      (Ty::Void, Ty::Void) => true,
+      (Ty::BigInt, Ty::BigInt) => true,
+      (Ty::Boolean, Ty::Boolean) => true,
+      (Ty::Null, Ty::Null) => true,
+      (Ty::Number, Ty::Number) => true,
+      (Ty::Object, Ty::Object) => true,
+      (Ty::String, Ty::String) => true,
+      (Ty::Symbol, Ty::Symbol) => true,
+      (Ty::Undefined, Ty::Undefined) => true,
+      (Ty::StringLiteral(a), Ty::StringLiteral(b)) => a == b,
+      (Ty::NumericLiteral(a), Ty::NumericLiteral(b)) => a == b,
+      (Ty::BigIntLiteral(a), Ty::BigIntLiteral(b)) => a == b,
+      (Ty::BooleanLiteral(a), Ty::BooleanLiteral(b)) => a == b,
+      (Ty::UniqueSymbol(a), Ty::UniqueSymbol(b)) => a == b,
+      (Ty::Record(a), Ty::Record(b)) => a as *const _ == b,
+      (Ty::Interface(a), Ty::Interface(b)) => a as *const _ == b,
+      (Ty::Function(a), Ty::Function(b)) => a as *const _ == b,
+      (Ty::Constructor(a), Ty::Constructor(b)) => a as *const _ == b,
+      (Ty::Union(a), Ty::Union(b)) => a as *const _ == b,
+      (Ty::Intersection(a), Ty::Intersection(b)) => a as *const _ == b,
+      (Ty::Instance(a), Ty::Instance(b)) => a as *const _ == b,
+      (Ty::Generic(a), Ty::Generic(b)) => a as *const _ == b,
+      (Ty::Intrinsic(a), Ty::Intrinsic(b)) => a as *const _ == b,
+      (Ty::Namespace(a), Ty::Namespace(b)) => a as *const _ == b,
+      (Ty::Unresolved(a), Ty::Unresolved(b)) => a as *const _ == b,
+      _ => false,
+    }
   }
 }
 
@@ -92,7 +122,26 @@ impl<'a> Eq for Ty<'a> {}
 
 impl<'a> hash::Hash for Ty<'a> {
   fn hash<H: hash::Hasher>(&self, state: &mut H) {
-    unsafe { mem::transmute::<_, u128>(*self).hash(state) }
+    mem::discriminant(self).hash(state);
+    match self {
+      Ty::StringLiteral(atom) => atom.hash(state),
+      Ty::NumericLiteral(f) => f.hash(state),
+      Ty::BigIntLiteral(atom) => atom.hash(state),
+      Ty::BooleanLiteral(b) => b.hash(state),
+      Ty::UniqueSymbol(id) => id.hash(state),
+      Ty::Record(r) => (r as *const _ as usize).hash(state),
+      Ty::Interface(i) => (i as *const _ as usize).hash(state),
+      Ty::Function(f) => (f as *const _ as usize).hash(state),
+      Ty::Constructor(c) => (c as *const _ as usize).hash(state),
+      Ty::Union(u) => (u as *const _ as usize).hash(state),
+      Ty::Intersection(i) => (i as *const _ as usize).hash(state),
+      Ty::Instance(i) => (i as *const _ as usize).hash(state),
+      Ty::Generic(g) => (g as *const _ as usize).hash(state),
+      Ty::Intrinsic(i) => (i as *const _ as usize).hash(state),
+      Ty::Namespace(n) => (n as *const _ as usize).hash(state),
+      Ty::Unresolved(u) => (u as *const _ as usize).hash(state),
+      _ => {}
+    }
   }
 }
 

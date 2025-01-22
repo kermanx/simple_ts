@@ -21,11 +21,11 @@ impl<'a> Analyzer<'a> {
       if let Some(record) = record {
         callables.push(Ty::Record(record));
       }
-      Ty::Intersection(
-        self
-          .allocator
-          .alloc(IntersectionType { kind: IntersectionBaseKind::NoBase, object_like: callables }),
-      )
+      Ty::Intersection(self.allocator.alloc(IntersectionType {
+        kind: IntersectionBaseKind::NoBase,
+        object_like: callables,
+        unresolved: Vec::new(),
+      }))
     }
   }
 }

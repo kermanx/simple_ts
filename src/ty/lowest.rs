@@ -24,8 +24,6 @@ impl<'a> Analyzer<'a> {
         UnresolvedType::Conditional(cond) => self.into_union([cond.true_ty, cond.false_ty]),
         UnresolvedType::Keyof(_) => Ty::String,
         UnresolvedType::InferType(_) => Ty::Unknown,
-        UnresolvedType::Union(_) => Ty::Unknown,
-        UnresolvedType::Intersection(i) => i.base,
       },
 
       ty => ty,

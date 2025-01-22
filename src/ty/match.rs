@@ -223,8 +223,6 @@ impl<'a> Analyzer<'a> {
       (Ty::Constructor(_), Ty::Object) => MatchResult::Matched,
       (Ty::Constructor(_), _) | (_, Ty::Constructor(_)) => MatchResult::Unmatched,
 
-      (Ty::Namespace(target), Ty::Namespace(pattern)) => todo!(),
-
       (Ty::Undefined, Ty::Void) => MatchResult::Matched,
       (Ty::Undefined, _) => MatchResult::Unmatched,
       (_, Ty::Void) => MatchResult::Unmatched,

@@ -129,9 +129,11 @@ impl<'a> Analyzer<'a> {
         if object_like.is_empty() {
           intersection.kind_to_ty()
         } else {
-          Some(Ty::Intersection(
-            self.allocator.alloc(Box::new(IntersectionType { kind, object_like })),
-          ))
+          Some(Ty::Intersection(self.allocator.alloc(Box::new(IntersectionType {
+            kind,
+            object_like,
+            unresolved: intersection.unresolved.clone(),
+          }))))
         }
       }
 
