@@ -13,7 +13,7 @@ use crate::{
   builtins::Builtins,
   config::Config,
   scope::{call::CallScope, cf::CfScopeKind, tree::ScopeTree, Scope},
-  ty::{accumulator::TypeAccumulator, Ty},
+  ty::{accumulator::TypeAccumulator, unresolved::UnresolvedType, Ty},
 };
 
 pub struct Analyzer<'a> {
@@ -134,7 +134,7 @@ impl<'a> Analyzer<'a> {
       } else if let Some(resolved) = self.types.get(&symbol) {
         *resolved
       } else {
-        unreachable!()
+        Ty::Unresolved(UnresolvedType::UnInitType(symbol))
       }
     } else {
       // Global symbol
