@@ -1,9 +1,7 @@
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
-use super::{
-  callable::CallableType, intersection::IntersectionTypeBuilder, unresolved::UnresolvedType, Ty,
-};
+use super::{callable::CallableType, unresolved::UnresolvedType, Ty};
 use crate::Analyzer;
 
 pub enum MatchResult<'a> {
@@ -11,6 +9,16 @@ pub enum MatchResult<'a> {
   Unmatched,
   Matched,
   Inferred(FxHashMap<SymbolId, Ty<'a>>),
+}
+
+impl<'a> From<bool> for MatchResult<'a> {
+  fn from(b: bool) -> Self {
+    if b {
+      MatchResult::Matched
+    } else {
+      MatchResult::Unmatched
+    }
+  }
 }
 
 impl<'a> Analyzer<'a> {
@@ -33,6 +41,9 @@ impl<'a> Analyzer<'a> {
 
   pub fn match_types_no_dispatch(&mut self, target: Ty<'a>, pattern: Ty<'a>) -> MatchResult<'a> {
     match (target, pattern) {
+      (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,
+      (_, Ty::Generic(_) | Ty::Intrinsic(_)) => MatchResult::Error,
+
       (target, pattern) if target == pattern => MatchResult::Matched,
 
       (matched, Ty::Unresolved(UnresolvedType::InferType(s)))
@@ -41,30 +52,40 @@ impl<'a> Analyzer<'a> {
         map.insert(s, matched);
         map
       }),
+      (Ty::Unresolved(_), _) | (_, Ty::Unresolved(_)) => todo!(),
 
-      (Ty::Any | Ty::Error, _) => MatchResult::Matched,
-      (_, Ty::Any | Ty::Error | Ty::Unknown) => MatchResult::Matched,
+      (_, Ty::Never) => MatchResult::Unmatched,
+      (Ty::Error | Ty::Any | Ty::Never, _) => MatchResult::Matched,
+      (_, Ty::Error | Ty::Any | Ty::Unknown) => MatchResult::Matched,
+      (Ty::Unknown, _) => MatchResult::Unmatched,
 
-      (Ty::Undefined, Ty::Void) => MatchResult::Matched,
+      (Ty::Union(target), Ty::Union(_)) => {
+        let mut error = false;
+        let mut unmatched = false;
+        let mut inferred = FxHashMap::<SymbolId, Vec<Ty<'a>>>::default();
 
-      (Ty::StringLiteral(_), Ty::String) => MatchResult::Matched,
-      (Ty::NumericLiteral(_), Ty::Number) => MatchResult::Matched,
-      (Ty::BigIntLiteral(_), Ty::BigInt) => MatchResult::Matched,
-      (Ty::BooleanLiteral(_), Ty::Boolean) => MatchResult::Matched,
-      (Ty::UniqueSymbol(_), Ty::Symbol) => MatchResult::Matched,
+        target.for_each(|ty| match self.match_types_no_dispatch(ty, pattern) {
+          MatchResult::Error => error = true,
+          MatchResult::Unmatched => unmatched = true,
+          MatchResult::Matched => {}
+          MatchResult::Inferred(i) => {
+            for (s, t) in i {
+              inferred.entry(s).or_insert_with(Default::default).push(t);
+            }
+          }
+        });
 
-      (Ty::Record(target), Ty::Record(pattern)) => todo!(),
-      (Ty::Function(target), Ty::Function(pattern)) => self.match_callable_types(target, pattern),
-      (Ty::Constructor(target), Ty::Constructor(pattern)) => {
-        self.match_callable_types(target, pattern)
+        if error {
+          MatchResult::Error
+        } else if unmatched {
+          MatchResult::Unmatched
+        } else {
+          MatchResult::Inferred(
+            inferred.into_iter().map(|(s, types)| (s, self.into_union(types))).collect(),
+          )
+        }
       }
-      (Ty::Interface(target), Ty::Interface(pattern)) => todo!(),
-      (Ty::Namespace(target), Ty::Namespace(pattern)) => todo!(),
-
-      (Ty::Union(target), Ty::Union(pattern)) => {
-        todo!()
-      }
-      (Ty::Union(target), pattern) => MatchResult::Unmatched,
+      (Ty::Union(_), _) => MatchResult::Unmatched,
       (target, Ty::Union(pattern)) => {
         todo!()
       }
@@ -74,7 +95,7 @@ impl<'a> Analyzer<'a> {
       }
       (Ty::Intersection(target), pattern) => {
         let mut error = false;
-        let mut matched: Option<Option<FxHashMap<SymbolId, IntersectionTypeBuilder<'a>>>> = None;
+        let mut matched: Option<Option<FxHashMap<SymbolId, Vec<Ty<'a>>>>> = None;
         target.for_each(|ty| {
           let result = self.match_types_no_dispatch(ty, pattern);
           match result {
@@ -86,8 +107,7 @@ impl<'a> Analyzer<'a> {
               let inferred =
                 matched.get_or_insert_with(Default::default).get_or_insert_with(Default::default);
               for (s, t) in map {
-                let builder = inferred.entry(s).or_insert_with(Default::default);
-                builder.add(self, t);
+                inferred.entry(s).or_insert_with(Default::default).push(t);
               }
             }
             MatchResult::Error => error = true,
@@ -97,11 +117,9 @@ impl<'a> Analyzer<'a> {
           MatchResult::Error
         } else if let Some(matched) = matched {
           if let Some(inferred) = matched {
-            let mut map = FxHashMap::default();
-            for (s, builder) in inferred {
-              map.insert(s, builder.build(self));
-            }
-            MatchResult::Inferred(map)
+            MatchResult::Inferred(
+              inferred.into_iter().map(|(s, types)| (s, self.into_intersection(types))).collect(),
+            )
           } else {
             MatchResult::Matched
           }
@@ -109,9 +127,7 @@ impl<'a> Analyzer<'a> {
           MatchResult::Unmatched
         }
       }
-      (target, Ty::Intersection(pattern)) => {
-        todo!()
-      }
+      (_, Ty::Intersection(_)) => MatchResult::Unmatched,
 
       (Ty::Instance(target), Ty::Instance(pattern)) => {
         // See https://github.com/Microsoft/TypeScript/wiki/FAQ#structural-vs-instantiation-based-inference.
@@ -137,10 +153,51 @@ impl<'a> Analyzer<'a> {
         let pattern = self.unwrap_generic_instance(pattern);
         self.match_types_no_dispatch(target, pattern)
       }
-      (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,
-      (_, Ty::Generic(_) | Ty::Intrinsic(_)) => MatchResult::Error,
+      (Ty::Instance(target), pattern) => {
+        let target = self.unwrap_generic_instance(target);
+        self.match_types_no_dispatch(target, pattern)
+      }
+      (target, Ty::Instance(pattern)) => {
+        let pattern = self.unwrap_generic_instance(pattern);
+        self.match_types_no_dispatch(target, pattern)
+      }
 
-      _ => MatchResult::Unmatched,
+      (Ty::Record(target), Ty::Record(pattern)) => todo!(),
+      (Ty::Object, Ty::Record(pattern)) => MatchResult::from(pattern.is_empty()),
+      (Ty::Record(_), Ty::Object) => MatchResult::Matched,
+      (_, Ty::Record(_)) | (Ty::Record(_), _) => MatchResult::Unmatched,
+
+      (Ty::Function(target), Ty::Function(pattern)) => self.match_callable_types(target, pattern),
+      (Ty::Function(_), Ty::Object) => MatchResult::Matched,
+      (Ty::Function(_), _) | (_, Ty::Function(_)) => MatchResult::Unmatched,
+
+      (Ty::Constructor(target), Ty::Constructor(pattern)) => {
+        self.match_callable_types(target, pattern)
+      }
+      (Ty::Constructor(_), Ty::Object) => MatchResult::Matched,
+      (Ty::Constructor(_), _) | (_, Ty::Constructor(_)) => MatchResult::Unmatched,
+
+      (Ty::Interface(target), Ty::Interface(pattern)) => todo!(),
+      (Ty::Object, Ty::Interface(pattern)) => MatchResult::from(pattern.is_empty()),
+      (Ty::Interface(_), Ty::Object) => MatchResult::Matched,
+      (_, Ty::Interface(_)) | (Ty::Interface(_), _) => MatchResult::Unmatched,
+
+      (Ty::Namespace(target), Ty::Namespace(pattern)) => todo!(),
+      (_, Ty::Namespace(_)) | (Ty::Namespace(_), _) => todo!(),
+
+      (Ty::Undefined, Ty::Void) => MatchResult::Matched,
+      (Ty::Undefined, _) => MatchResult::Unmatched,
+      (_, Ty::Void) => MatchResult::Unmatched,
+      (Ty::Void, _) => MatchResult::Unmatched,
+
+      (Ty::Null, _) | (_, Ty::Null) => MatchResult::Unmatched,
+      (_, Ty::Object) | (Ty::Object, _) => MatchResult::Unmatched,
+
+      (Ty::String | Ty::StringLiteral(_), pattern) => MatchResult::from(pattern == Ty::String),
+      (Ty::Number | Ty::NumericLiteral(_), pattern) => MatchResult::from(pattern == Ty::Number),
+      (Ty::BigInt | Ty::BigIntLiteral(_), pattern) => MatchResult::from(pattern == Ty::BigInt),
+      (Ty::Boolean | Ty::BooleanLiteral(_), pattern) => MatchResult::from(pattern == Ty::Boolean),
+      (Ty::Symbol | Ty::UniqueSymbol(_), pattern) => MatchResult::from(pattern == Ty::Symbol),
     }
   }
 

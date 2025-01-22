@@ -31,6 +31,13 @@ impl<'a> TypeAccumulator<'a> {
     }
   }
 
+  pub fn is_empty(&self) -> bool {
+    match self {
+      TypeAccumulator::None => true,
+      _ => false,
+    }
+  }
+
   pub fn frozen(&mut self) {
     match self {
       TypeAccumulator::Union(_) => match mem::take(self) {

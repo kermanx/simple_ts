@@ -46,3 +46,14 @@ impl<'a> InterfaceTypeInner<'a> {
     }
   }
 }
+
+impl<'a> InterfaceType<'a> {
+  pub fn is_empty(&self) -> bool {
+    let inner = self.0.borrow();
+    inner.record.is_empty()
+      && inner.callables.is_empty()
+      && inner.string_keyed_methods.is_empty()
+      && inner.symbol_keyed_methods.is_empty()
+      && inner.unresolved_extends.is_empty()
+  }
+}

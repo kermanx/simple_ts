@@ -89,6 +89,14 @@ impl<'a> RecordType<'a> {
     self.number_mapped = other.number_mapped.clone();
     self.symbol_mapped = other.symbol_mapped.clone();
   }
+
+  pub fn is_empty(&self) -> bool {
+    self.string_keyed.is_empty()
+      && self.symbol_keyed.is_empty()
+      && self.string_mapped.value.borrow().is_empty()
+      && self.number_mapped.value.borrow().is_empty()
+      && self.symbol_mapped.value.borrow().is_empty()
+  }
 }
 
 impl<'a> Analyzer<'a> {
