@@ -110,27 +110,48 @@ impl<'a> Analyzer<'a> {
         }
       }
 
-      (Ty::Intersection(target), Ty::Intersection(pattern)) => {
-        todo!()
+      (Ty::Intersection(_), Ty::Intersection(pattern)) => {
+        let mut error = false;
+        let mut matched = true;
+        let mut inferred = FxHashMap::<SymbolId, Vec<Ty<'a>>>::default();
+
+        pattern.for_each(|pattern| match self.match_types_no_dispatch(target, pattern) {
+          MatchResult::Error => error = true,
+          MatchResult::Unmatched => matched = false,
+          MatchResult::Matched => {}
+          MatchResult::Inferred(map) => {
+            for (s, t) in map {
+              inferred.entry(s).or_insert_with(Default::default).push(t);
+            }
+          }
+        });
+
+        if error {
+          MatchResult::Error
+        } else if matched {
+          MatchResult::Inferred(
+            inferred.into_iter().map(|(s, types)| (s, self.into_intersection(types))).collect(),
+          )
+        } else {
+          MatchResult::Unmatched
+        }
       }
+      (_, Ty::Intersection(_)) => MatchResult::Unmatched,
       (Ty::Intersection(target), pattern) => {
         let mut error = false;
         let mut matched: Option<Option<FxHashMap<SymbolId, Vec<Ty<'a>>>>> = None;
-        target.for_each(|ty| {
-          let result = self.match_types_no_dispatch(ty, pattern);
-          match result {
-            MatchResult::Unmatched => {}
-            MatchResult::Matched => {
-              matched.get_or_insert_with(Default::default);
+        target.for_each(|target| match self.match_types_no_dispatch(target, pattern) {
+          MatchResult::Error => error = true,
+          MatchResult::Unmatched => {}
+          MatchResult::Matched => {
+            matched.get_or_insert_with(Default::default);
+          }
+          MatchResult::Inferred(map) => {
+            let inferred =
+              matched.get_or_insert_with(Default::default).get_or_insert_with(Default::default);
+            for (s, t) in map {
+              inferred.entry(s).or_insert_with(Default::default).push(t);
             }
-            MatchResult::Inferred(map) => {
-              let inferred =
-                matched.get_or_insert_with(Default::default).get_or_insert_with(Default::default);
-              for (s, t) in map {
-                inferred.entry(s).or_insert_with(Default::default).push(t);
-              }
-            }
-            MatchResult::Error => error = true,
           }
         });
         if error {
@@ -147,7 +168,6 @@ impl<'a> Analyzer<'a> {
           MatchResult::Unmatched
         }
       }
-      (_, Ty::Intersection(_)) => MatchResult::Unmatched,
 
       (Ty::Instance(target), Ty::Instance(pattern)) => {
         // See https://github.com/Microsoft/TypeScript/wiki/FAQ#structural-vs-instantiation-based-inference.
