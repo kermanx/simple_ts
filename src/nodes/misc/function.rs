@@ -24,7 +24,7 @@ impl<'a> Analyzer<'a> {
     let return_type = if let Some(body) = &node.body {
       self.exec_function_body(body, node.r#async, node.generator, this_param, annotated_ret)
     } else {
-      todo!()
+      annotated_ret.unwrap_or(Ty::Error)
     };
 
     Ty::Function(self.allocator.alloc(CallableType {

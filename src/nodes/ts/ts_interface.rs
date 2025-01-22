@@ -16,7 +16,7 @@ impl<'a> Analyzer<'a> {
     self.types.insert(symbol_id, Ty::Unresolved(UnresolvedType::UnInitType(symbol_id)));
   }
 
-  pub fn init_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) {
+  pub fn init_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) -> Ty<'a> {
     let symbol_id = node.id.symbol_id();
 
     let params =
@@ -69,6 +69,8 @@ impl<'a> Analyzer<'a> {
         }
       }
     }
+
+    *self.types.get(&symbol_id).unwrap()
   }
 
   pub fn print_interface_type(&self, interface: &InterfaceType<'a>) -> TSType<'a> {

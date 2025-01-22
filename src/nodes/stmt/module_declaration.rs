@@ -60,13 +60,17 @@ impl<'a> Analyzer<'a> {
             }
             self.declare_class(node);
           }
+          ExportDefaultDeclarationKind::TSInterfaceDeclaration(node) => {
+            self.declare_ts_interface(node);
+          }
           _expr => {}
         };
       }
-      ModuleDeclaration::ExportAllDeclaration(_node) => {
+      ModuleDeclaration::ExportAllDeclaration(_)
+      | ModuleDeclaration::TSExportAssignment(_)
+      | ModuleDeclaration::TSNamespaceExportDeclaration(_) => {
         // Nothing to do
       }
-      _ => unreachable!(),
     }
   }
 
@@ -93,13 +97,21 @@ impl<'a> Analyzer<'a> {
               self.init_class(node)
             }
           }
+          ExportDefaultDeclarationKind::TSInterfaceDeclaration(node) => {
+            self.init_ts_interface(node)
+          }
           node => self.exec_expression(node.to_expression(), None),
         };
       }
       ModuleDeclaration::ExportAllDeclaration(_node) => {
         // Nothing to do
       }
-      _ => unreachable!(),
+      ModuleDeclaration::TSExportAssignment(node) => {
+        self.exec_expression(&node.expression, None);
+      }
+      ModuleDeclaration::TSNamespaceExportDeclaration(node) => {
+        todo!()
+      }
     }
   }
 }
