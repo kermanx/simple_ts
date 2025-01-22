@@ -14,7 +14,7 @@ impl<'a> Analyzer<'a> {
       .unwrap_or_default();
     let this_param =
       node.this_param.as_ref().map(|this_param| self.resovle_this_parameter(this_param));
-    let (_, params, rest_param) = self.exec_formal_parameters(&node.params);
+    let (_, params, rest_param) = self.resolve_formal_parameters(&node.params);
     let return_type = self.resolve_type_annotation(&node.return_type);
 
     Ty::Function(self.allocator.alloc(CallableType {

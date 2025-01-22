@@ -308,13 +308,12 @@ impl<'a> Analyzer<'a> {
 
     // Step5: Match return type
     match self.match_types_no_dispatch(target.return_type, pattern.return_type) {
-      MatchResult::Error => MatchResult::Error,
-      MatchResult::Unmatched => MatchResult::Unmatched,
-      MatchResult::Matched => MatchResult::Matched,
-      MatchResult::Inferred(map) => {
-        inferred.extend(map);
-        MatchResult::Inferred(inferred)
-      }
+      MatchResult::Error => return MatchResult::Error,
+      MatchResult::Unmatched => return MatchResult::Unmatched,
+      MatchResult::Matched => {}
+      MatchResult::Inferred(map) => inferred.extend(map),
     }
+
+    MatchResult::Inferred(inferred)
   }
 }
