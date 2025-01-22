@@ -17,8 +17,8 @@ pub enum PropertyKeyType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn to_property_key(&mut self, from: Ty<'a>) -> PropertyKeyType<'a> {
-    match from {
+  pub fn to_property_key(&mut self, ty: Ty<'a>) -> PropertyKeyType<'a> {
+    match ty {
       Ty::Error => PropertyKeyType::Error,
 
       Ty::Any => {
@@ -93,12 +93,9 @@ impl<'a> Analyzer<'a> {
 
       Ty::Generic(_) | Ty::Intrinsic(_) => PropertyKeyType::Error,
 
-      Ty::Unresolved(u) => {
-        if let Some(base) = self.get_unresolved_lowest_type(u) {
-          self.to_property_key(base)
-        } else {
-          PropertyKeyType::Error
-        }
+      Ty::Instance(_) | Ty::Unresolved(_) => {
+        let lowest = self.get_lowest_type(ty);
+        self.to_property_key(lowest)
       }
     }
   }

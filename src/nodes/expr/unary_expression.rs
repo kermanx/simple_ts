@@ -5,7 +5,7 @@ use oxc::{
 
 use crate::{
   analyzer::Analyzer,
-  ty::{facts::Facts, property_key::PropertyKeyType, union::into_union, Ty},
+  ty::{facts::Facts, property_key::PropertyKeyType, Ty},
 };
 
 impl<'a> Analyzer<'a> {
@@ -55,7 +55,7 @@ impl<'a> Analyzer<'a> {
           .iter()
           .filter_map(|(fact, value)| facts.contains(*fact).then_some(Ty::StringLiteral(value)))
           .collect::<Vec<_>>();
-        into_union(self.allocator, values)
+        self.into_union(values)
       }
       UnaryOperator::Void => Ty::Undefined,
       UnaryOperator::Delete => unreachable!(),

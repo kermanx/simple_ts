@@ -3,7 +3,7 @@ use rustc_hash::FxHashMap;
 
 use crate::{
   analyzer::Analyzer,
-  ty::{union::into_union, unresolved::UnresolvedType, Ty},
+  ty::{unresolved::UnresolvedType, Ty},
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -98,7 +98,7 @@ impl<'a> Analyzer<'a> {
       if !complementary || values.len() != len {
         values.push(self.read_variable(symbol));
       }
-      let value = into_union(self.allocator, values);
+      let value = self.into_union(values);
       self.write_variable(symbol, value);
     }
   }

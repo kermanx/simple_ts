@@ -1,9 +1,6 @@
 use oxc::ast::ast::TSIntersectionType;
 
-use crate::{
-  ty::{intersection::into_intersection, Ty},
-  Analyzer,
-};
+use crate::{ty::Ty, Analyzer};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_intersection_type(&mut self, node: &'a TSIntersectionType<'a>) -> Ty<'a> {
@@ -11,6 +8,6 @@ impl<'a> Analyzer<'a> {
     for node in &node.types {
       types.push(self.resolve_type(node));
     }
-    into_intersection(self.allocator, types)
+    self.into_intersection(types)
   }
 }

@@ -1,6 +1,9 @@
 use oxc::ast::ast::{TSTypeName, TSTypeReference};
 
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{generic::GenericInstanceType, Ty},
+};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type_reference(&mut self, node: &'a TSTypeReference<'a>) -> Ty<'a> {
@@ -14,7 +17,7 @@ impl<'a> Analyzer<'a> {
 
     if let Some(type_parameters) = &node.type_parameters {
       let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
-      self.instantiate_generic_type(base, type_parameters)
+      Ty::Instance(self.allocator.alloc(GenericInstanceType::new(base, type_parameters)))
     } else {
       base
     }

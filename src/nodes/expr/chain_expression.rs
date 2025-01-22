@@ -3,10 +3,7 @@ use oxc::ast::{
   match_member_expression,
 };
 
-use crate::{
-  analyzer::Analyzer,
-  ty::{union::into_union, Ty},
-};
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_chain_expression(
@@ -24,7 +21,7 @@ impl<'a> Analyzer<'a> {
     };
     if indeterminate {
       self.pop_scope();
-      into_union(self.allocator, [Ty::Undefined, value])
+      self.into_union([Ty::Undefined, value])
     } else {
       value
     }

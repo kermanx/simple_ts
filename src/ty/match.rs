@@ -71,7 +71,7 @@ impl<'a> Analyzer<'a> {
                 matched.get_or_insert_with(Default::default).get_or_insert_with(Default::default);
               for (s, t) in map {
                 let builder = inferred.entry(s).or_insert_with(Default::default);
-                builder.add(t);
+                builder.add(self, t);
               }
             }
             MatchResult::Multiple(results) => todo!(),
@@ -84,7 +84,7 @@ impl<'a> Analyzer<'a> {
           if let Some(inferred) = matched {
             let mut map = FxHashMap::default();
             for (s, builder) in inferred {
-              map.insert(s, builder.build(self.allocator));
+              map.insert(s, builder.build(self));
             }
             MatchResult::Inferred(map)
           } else {

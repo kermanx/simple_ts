@@ -16,7 +16,7 @@ impl<'a> Analyzer<'a> {
     let body = self.resolve_type(&node.type_annotation);
     let ty = if let Some(type_parameters) = &node.type_parameters {
       let params = self.resolve_type_parameter_declaration(type_parameters);
-      Ty::Generic(self.allocator.alloc(GenericType { params, body }))
+      Ty::Generic(self.allocator.alloc(GenericType { name: &node.id.name, params, body }))
     } else {
       body
     };

@@ -53,6 +53,7 @@ impl<'a> Analyzer<'a> {
       Ty::Union(u) => self.print_union_type(u),
       Ty::Intersection(i) => self.print_intersection_type(i),
 
+      Ty::Instance(i) => self.print_instance_type(i),
       Ty::Generic(g) => self.print_generic_type(g),
       Ty::Intrinsic(i) => self.print_intrinsic_type(i),
 

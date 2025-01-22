@@ -1,14 +1,9 @@
-use std::mem;
+use std::{cell::RefCell, mem};
 
-use oxc::{ast::ast::TSType, semantic::SymbolId};
+use oxc::{ast::ast::TSType, semantic::SymbolId, span::Atom};
 use rustc_hash::FxHashMap;
 
-use super::{
-  intersection::{self, IntersectionType},
-  union::UnionType,
-  unresolved::{UnresolvedGenericInstantiation, UnresolvedType},
-  Ty,
-};
+use super::{intersection::IntersectionType, union::UnionType, Ty};
 use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone)]
@@ -23,8 +18,22 @@ pub struct GenericParam<'a> {
 
 #[derive(Debug, Clone)]
 pub struct GenericType<'a> {
+  pub name: &'a Atom<'a>,
   pub params: Vec<GenericParam<'a>>,
   pub body: Ty<'a>,
+}
+
+#[derive(Debug, Clone)]
+pub struct GenericInstanceType<'a> {
+  pub generic: Ty<'a>,
+  pub args: Vec<Ty<'a>>,
+  pub resolved: RefCell<Option<Ty<'a>>>,
+}
+
+impl<'a> GenericInstanceType<'a> {
+  pub fn new(generic: Ty<'a>, args: Vec<Ty<'a>>) -> Self {
+    Self { generic, args, resolved: RefCell::new(None) }
+  }
 }
 
 impl<'a> Analyzer<'a> {
@@ -48,21 +57,25 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn instantiate_generic_type(&mut self, ty: Ty<'a>, args: Vec<Ty<'a>>) -> Ty<'a> {
-    match ty {
-      Ty::Generic(generic) => {
-        let old_generics = self.take_generics();
-        self.instantiate_generic_param(&generic.params, &args);
-        let result = self.resolve_unresolved(generic.body);
-        self.restore_generics(old_generics);
-        result
+  pub fn resolve_generic_instance(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
+    *instance.resolved.borrow_mut().get_or_insert_with(|| {
+      match instance.generic {
+        Ty::Unresolved(_) => unreachable!(),
+
+        // instance.generic is a generic type
+        Ty::Generic(generic) => {
+          let old_generics = self.take_generics();
+          self.instantiate_generic_param(&generic.params, &instance.args);
+          let result = self.resolve_unresolved(generic.body);
+          self.restore_generics(old_generics);
+          result
+        }
+        Ty::Intrinsic(_) => todo!(),
+
+        // instance.generic is a generic value (function or constructor or compound of them)
+        _ => self.instantiate_generic_value(instance.generic, &instance.args),
       }
-      Ty::Intrinsic(intrinsic) => todo!(),
-      Ty::Unresolved(generic) => Ty::Unresolved(UnresolvedType::GenericInstantiation(
-        self.allocator.alloc(UnresolvedGenericInstantiation { generic, args }),
-      )),
-      _ => unreachable!("Cannot instantiate non-generic type"),
-    }
+    })
   }
 
   /// Returns `None` if the type parameters of callable unmatch the length of args.
@@ -97,9 +110,9 @@ impl<'a> Analyzer<'a> {
         }
       }
 
-      Ty::Unresolved(u) => Some(Ty::Unresolved(UnresolvedType::GenericInstantiation(
-        self.allocator.alloc(UnresolvedGenericInstantiation { generic: u, args: args.clone() }),
-      ))),
+      Ty::Unresolved(_) => {
+        Some(Ty::Instance(self.allocator.alloc(GenericInstanceType::new(ty, args.clone()))))
+      }
 
       ty => Some(ty),
     }
@@ -109,6 +122,10 @@ impl<'a> Analyzer<'a> {
     self
       .try_instantiate_generic_value(ty, args)
       .unwrap_or_else(|| Ty::Record(self.allocator.alloc(Default::default())))
+  }
+
+  pub fn print_instance_type(&self, instance: &GenericInstanceType<'a>) -> TSType<'a> {
+    todo!()
   }
 
   pub fn print_generic_type(&self, generic: &GenericType<'a>) -> TSType<'a> {

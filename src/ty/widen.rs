@@ -1,4 +1,4 @@
-use super::{union::UnionType, Ty};
+use super::Ty;
 use crate::Analyzer;
 
 impl<'a> Analyzer<'a> {
@@ -31,11 +31,14 @@ impl<'a> Analyzer<'a> {
       | Ty::Namespace(_) => ty,
 
       Ty::Union(u) => {
-        let widened = self.allocator.alloc(UnionType::default());
-        u.for_each(|ty| widened.add(self.get_widened_type(ty)));
-        Ty::Union(widened)
+        let mut widened = Vec::new();
+        u.for_each(|ty| widened.push(self.get_widened_type(ty)));
+        self.into_union(widened)
       }
       Ty::Intersection(_) => ty,
+
+      // This is not accurate. But this is OK because we only widen untyped variables.
+      Ty::Instance(_) => ty,
 
       Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
 

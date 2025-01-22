@@ -29,12 +29,9 @@ impl<'a> Analyzer<'a> {
 
       Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
 
-      Ty::Unresolved(u) => {
-        if let Some(base) = self.get_unresolved_lowest_type(u) {
-          self.get_property(base, key)
-        } else {
-          Ty::Error
-        }
+      Ty::Instance(_) | Ty::Unresolved(_) => {
+        let lowest = self.get_lowest_type(target);
+        self.get_property(lowest, key)
       }
     }
   }

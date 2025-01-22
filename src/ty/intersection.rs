@@ -6,7 +6,6 @@ use oxc::{
 };
 
 use super::{
-  union::into_union,
   unresolved::{UnresolvedIntersection, UnresolvedType},
   Ty,
 };
@@ -81,10 +80,10 @@ pub struct IntersectionTypeBuilder<'a> {
 }
 
 impl<'a> IntersectionTypeBuilder<'a> {
-  pub fn add(&mut self, ty: Ty<'a>) {
+  pub fn add(&mut self, analyzer: &mut Analyzer<'a>, ty: Ty<'a>) {
     if let Some(union) = &mut self.union {
       for builder in union {
-        builder.add(ty);
+        builder.add(analyzer, ty);
       }
     } else if self.kind != IntersectionBuilderState::Never {
       let kind = match ty {
@@ -123,7 +122,7 @@ impl<'a> IntersectionTypeBuilder<'a> {
           u.for_each(|ty| {
             let mut builder = IntersectionTypeBuilder::default();
             builder.kind = self.kind;
-            builder.add(ty);
+            builder.add(analyzer, ty);
             if builder.kind != IntersectionBuilderState::Never {
               union.push(builder);
             }
@@ -136,10 +135,15 @@ impl<'a> IntersectionTypeBuilder<'a> {
           }
         }
         Ty::Intersection(i) => {
-          i.for_each(|ty| self.add(ty));
+          i.for_each(|ty| self.add(analyzer, ty));
           return;
         }
 
+        Ty::Instance(i) => {
+          let resolved = analyzer.resolve_generic_instance(i);
+          self.add(analyzer, resolved);
+          return;
+        }
         Ty::Generic(_) | Ty::Intrinsic(_) => IntersectionBuilderState::Error,
 
         Ty::Unresolved(u) => {
@@ -200,7 +204,8 @@ impl<'a> IntersectionTypeBuilder<'a> {
     Ty::Intersection(allocator.alloc(IntersectionType { kind, object_like }))
   }
 
-  pub fn build(self, allocator: &'a Allocator) -> Ty<'a> {
+  pub fn build(self, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
+    let allocator = analyzer.allocator;
     let Self { kind, object_like, unresolved, union } = self;
     let base = Self::build_without_union_and_unresolved(allocator, kind, object_like);
     if base == Ty::Never {
@@ -214,13 +219,14 @@ impl<'a> IntersectionTypeBuilder<'a> {
       ))
     };
     if let Some(union) = union {
-      into_union(
-        allocator,
-        union.into_iter().map(|mut builder| {
-          builder.add(with_unresolved);
-          builder.build(allocator)
-        }),
-      )
+      let types: Vec<_> = union
+        .into_iter()
+        .map(|mut builder| {
+          builder.add(analyzer, with_unresolved);
+          builder.build(analyzer)
+        })
+        .collect();
+      analyzer.into_union(types)
     } else {
       with_unresolved
     }
@@ -274,28 +280,28 @@ impl<'a> IntersectionType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn into_intersection<Iter>(
+    &mut self,
+    types: impl IntoIterator<Item = Ty<'a>, IntoIter = Iter>,
+  ) -> Ty<'a>
+  where
+    Iter: Iterator<Item = Ty<'a>> + ExactSizeIterator,
+  {
+    let mut iter = types.into_iter();
+    match iter.len() {
+      0 => unreachable!(),
+      1 => iter.next().unwrap(),
+      _ => {
+        let mut builder = IntersectionTypeBuilder::default();
+        iter.for_each(|ty| builder.add(self, ty));
+        builder.build(self)
+      }
+    }
+  }
+
   pub fn print_intersection_type(&self, intersection: &IntersectionType<'a>) -> TSType<'a> {
     let mut types = self.ast_builder.vec();
     intersection.for_each(|ty| types.push(self.print_type(ty)));
     self.ast_builder.ts_type_intersection_type(SPAN, types)
-  }
-}
-
-pub fn into_intersection<'a, Iter>(
-  allocator: &'a Allocator,
-  types: impl IntoIterator<Item = Ty<'a>, IntoIter = Iter>,
-) -> Ty<'a>
-where
-  Iter: Iterator<Item = Ty<'a>> + ExactSizeIterator,
-{
-  let mut iter = types.into_iter();
-  match iter.len() {
-    0 => unreachable!(),
-    1 => iter.next().unwrap(),
-    _ => {
-      let mut builder = IntersectionTypeBuilder::default();
-      iter.for_each(|ty| builder.add(ty));
-      builder.build(allocator)
-    }
   }
 }

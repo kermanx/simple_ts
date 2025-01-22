@@ -1,9 +1,6 @@
 use oxc::ast::ast::LogicalExpression;
 
-use crate::{
-  analyzer::Analyzer,
-  ty::{union::into_union, Ty},
-};
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_logical_expression(
@@ -17,6 +14,6 @@ impl<'a> Analyzer<'a> {
     let right = self.exec_expression(&node.right, sat);
     self.pop_scope();
 
-    into_union(self.allocator, [left, right])
+    self.into_union([left, right])
   }
 }

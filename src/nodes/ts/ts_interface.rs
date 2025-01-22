@@ -2,7 +2,7 @@ use oxc::ast::ast::{Expression, TSInterfaceDeclaration, TSType};
 
 use crate::{
   ty::{
-    generic::GenericType,
+    generic::{GenericInstanceType, GenericType},
     interface::{InterfaceType, InterfaceTypeInner},
     unresolved::UnresolvedType,
     Ty,
@@ -28,7 +28,11 @@ impl<'a> Analyzer<'a> {
       Ty::Unresolved(UnresolvedType::UnInitType(_)) => {
         let interface = &*self.allocator.alloc(InterfaceType::default());
         *ty = if let Some(params) = params {
-          Ty::Generic(self.allocator.alloc(GenericType { params, body: Ty::Interface(interface) }))
+          Ty::Generic(self.allocator.alloc(GenericType {
+            name: &node.id.name,
+            params,
+            body: Ty::Interface(interface),
+          }))
         } else {
           Ty::Interface(interface)
         };
@@ -53,7 +57,7 @@ impl<'a> Analyzer<'a> {
             let base = self.read_type(reference.symbol_id());
             let extends = if let Some(type_parameters) = &heritage.type_parameters {
               let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
-              self.instantiate_generic_type(base, type_parameters)
+              Ty::Instance(self.allocator.alloc(GenericInstanceType::new(base, type_parameters)))
             } else {
               base
             };

@@ -1,25 +1,14 @@
 use oxc::{ast::ast::TSType, semantic::SymbolId};
 
-use super::{
-  generic::GenericType,
-  intersection::{into_intersection, IntersectionType},
-  union::{into_union, UnionType},
-  Ty,
-};
+use super::Ty;
 use crate::Analyzer;
 
 #[derive(Debug, Clone)]
 pub struct UnresolvedConditionalType<'a> {
-  check: Ty<'a>,
-  extends: Ty<'a>,
-  true_ty: Ty<'a>,
-  false_ty: Ty<'a>,
-}
-
-#[derive(Debug, Clone)]
-pub struct UnresolvedGenericInstantiation<'a> {
-  pub generic: UnresolvedType<'a>,
-  pub args: Vec<Ty<'a>>,
+  pub check: Ty<'a>,
+  pub extends: Ty<'a>,
+  pub true_ty: Ty<'a>,
+  pub false_ty: Ty<'a>,
 }
 
 #[derive(Debug, Clone)]
@@ -42,7 +31,6 @@ pub enum UnresolvedType<'a> {
   Conditional(&'a UnresolvedConditionalType<'a>),
   Keyof(&'a Ty<'a>),
   InferType(SymbolId),
-  GenericInstantiation(&'a UnresolvedGenericInstantiation<'a>),
   Union(&'a UnresolvedUnion<'a>),
   Intersection(&'a UnresolvedIntersection<'a>),
 }
@@ -84,9 +72,6 @@ impl<'a> Analyzer<'a> {
           todo!()
         }
         UnresolvedType::InferType(_) => None,
-        UnresolvedType::GenericInstantiation(g) => {
-          todo!()
-        }
         UnresolvedType::Union(u) => {
           let base = self.try_resolve_unresolved(u.base);
           let mut changed = base.is_some();
@@ -101,7 +86,7 @@ impl<'a> Analyzer<'a> {
             }
           }
           changed.then(|| {
-            let base = into_union(self.allocator, types);
+            let base = self.into_union(types);
             if unresolved.is_empty() {
               base
             } else {
@@ -125,7 +110,7 @@ impl<'a> Analyzer<'a> {
             }
           }
           changed.then(|| {
-            let base = into_intersection(self.allocator, types);
+            let base = self.into_intersection(types);
             if unresolved.is_empty() {
               base
             } else {
@@ -146,27 +131,6 @@ impl<'a> Analyzer<'a> {
       Ty::Intersection(_) => todo!(),
 
       _ => Some(ty),
-    }
-  }
-
-  /// Returns `None` if the type is singular.
-  /// This function only unwrap one level of `UnresolvedType`.
-  pub fn get_unresolved_lowest_type(&self, unresolved: UnresolvedType<'a>) -> Option<Ty<'a>> {
-    match unresolved {
-      UnresolvedType::UnInitVariable(_) => None,
-      UnresolvedType::UnInitType(symbol) => match *self.types.get(&symbol).unwrap() {
-        Ty::Unresolved(UnresolvedType::UnInitType(s)) if s == symbol => None,
-        ty => Some(ty),
-      },
-      UnresolvedType::GenericParam(symbol) => self.generic_constraints.get(&symbol).copied(),
-      UnresolvedType::Conditional(cond) => {
-        Some(into_union(self.allocator, [cond.true_ty, cond.false_ty]))
-      }
-      UnresolvedType::Keyof(_) => Some(Ty::String),
-      UnresolvedType::InferType(_) => None,
-      UnresolvedType::GenericInstantiation(g) => todo!(),
-      UnresolvedType::Union(_) => None,
-      UnresolvedType::Intersection(i) => Some(i.base),
     }
   }
 

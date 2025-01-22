@@ -1,9 +1,6 @@
 use oxc::ast::ast::{AssignmentExpression, AssignmentOperator, BinaryOperator};
 
-use crate::{
-  analyzer::Analyzer,
-  ty::{union::into_union, Ty},
-};
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_assignment_expression(
@@ -21,7 +18,7 @@ impl<'a> Analyzer<'a> {
 
       self.push_indeterminate_scope();
       let right = self.exec_expression(&node.right, Some(left));
-      let value = into_union(self.allocator, [left, right]);
+      let value = self.into_union([left, right]);
       self.pop_scope();
 
       // Execute write outside of the indeterminate scope, because the value is already an union

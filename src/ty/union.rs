@@ -1,7 +1,6 @@
 use std::{hash::Hash, mem};
 
 use oxc::{
-  allocator::Allocator,
   ast::ast::TSType,
   semantic::SymbolId,
   span::{Atom, SPAN},
@@ -27,24 +26,29 @@ pub enum UnionTypeBuilder<'a> {
 }
 
 impl<'a> UnionTypeBuilder<'a> {
-  pub fn add(&mut self, ty: Ty<'a>) {
+  pub fn add(&mut self, analyzer: &mut Analyzer<'a>, ty: Ty<'a>) {
     match (self, ty) {
       (UnionTypeBuilder::Error | UnionTypeBuilder::Any | UnionTypeBuilder::Unknown, _) => {}
-      (s, Ty::Error) => *s = UnionTypeBuilder::Error,
+      (s, Ty::Error | Ty::Generic(_) | Ty::Intrinsic(_)) => *s = UnionTypeBuilder::Error,
       (s, Ty::Any) => *s = UnionTypeBuilder::Any,
       (s, Ty::Unknown) => *s = UnionTypeBuilder::Unknown,
       (_, Ty::Never) => {}
 
       (UnionTypeBuilder::WithUnresolved(_, t), Ty::Unresolved(u)) => t.push(u),
       (UnionTypeBuilder::WithUnresolved(s, _), ty) => {
-        s.add(ty);
+        s.add(analyzer, ty);
       }
       (s, Ty::Unresolved(u)) => {
         *s = UnionTypeBuilder::WithUnresolved(Box::new(mem::take(s)), vec![u])
       }
 
       (s, Ty::Union(tys)) => {
-        tys.for_each(|ty| s.add(ty));
+        tys.for_each(|ty| s.add(analyzer, ty));
+      }
+
+      (s, Ty::Instance(u)) => {
+        let resolved = analyzer.resolve_generic_instance(u);
+        s.add(analyzer, resolved);
       }
 
       // The rest should be added to compound
@@ -59,16 +63,18 @@ impl<'a> UnionTypeBuilder<'a> {
     }
   }
 
-  pub fn build(self, allocator: &'a Allocator) -> Ty<'a> {
+  pub fn build(self, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
     match self {
       UnionTypeBuilder::Never => Ty::Never,
       UnionTypeBuilder::Error => Ty::Error,
       UnionTypeBuilder::Any => Ty::Any,
       UnionTypeBuilder::Unknown => Ty::Unknown,
-      UnionTypeBuilder::Compound(compound) => Ty::Union(allocator.alloc(compound)),
+      UnionTypeBuilder::Compound(compound) => Ty::Union(analyzer.allocator.alloc(compound)),
       UnionTypeBuilder::WithUnresolved(builder, unresolved) => {
-        let base = builder.build(allocator);
-        Ty::Unresolved(UnresolvedType::Union(allocator.alloc(UnresolvedUnion { base, unresolved })))
+        let base = builder.build(analyzer);
+        Ty::Unresolved(UnresolvedType::Union(
+          analyzer.allocator.alloc(UnresolvedUnion { base, unresolved }),
+        ))
       }
     }
   }
@@ -94,10 +100,6 @@ pub struct UnionType<'a> {
 impl<'a> UnionType<'a> {
   pub fn add(&mut self, ty: Ty<'a>) {
     match ty {
-      Ty::Error | Ty::Any | Ty::Unknown | Ty::Never | Ty::Union(_) | Ty::Unresolved(_) => {
-        unreachable!("Handled in UnionTypeBuilder")
-      }
-
       Ty::Void => self.void = true,
       Ty::Null => self.null = true,
       Ty::Undefined => self.undefined = true,
@@ -125,7 +127,7 @@ impl<'a> UnionType<'a> {
         self.complex.insert(ty);
       }
 
-      Ty::Generic(_) | Ty::Intrinsic(_) => unreachable!("Non-value"),
+      _ => unreachable!("Handled in UnionTypeBuilder"),
     }
   }
 
@@ -200,30 +202,30 @@ impl<'a, L> LiteralAble<L> {
   }
 }
 
-pub fn into_union<'a, Iter>(
-  allocator: &'a Allocator,
-  types: impl IntoIterator<Item = Ty<'a>, IntoIter = Iter>,
-) -> Ty<'a>
-where
-  Iter: Iterator<Item = Ty<'a>> + ExactSizeIterator,
-{
-  let mut iter = types.into_iter();
-  match iter.len() {
-    // FIXME: Should be Ty::Never
-    0 => Ty::Undefined,
-    1 => iter.next().unwrap(),
-    _ => {
-      let mut builder = UnionTypeBuilder::default();
-      iter.for_each(|ty| builder.add(ty));
-      builder.build(allocator)
+impl<'a> Analyzer<'a> {
+  pub fn into_union<Iter>(
+    &mut self,
+    types: impl IntoIterator<Item = Ty<'a>, IntoIter = Iter>,
+  ) -> Ty<'a>
+  where
+    Iter: Iterator<Item = Ty<'a>> + ExactSizeIterator,
+  {
+    let mut iter = types.into_iter();
+    match iter.len() {
+      // FIXME: Should be Ty::Never
+      0 => Ty::Undefined,
+      1 => iter.next().unwrap(),
+      _ => {
+        let mut builder = UnionTypeBuilder::default();
+        iter.for_each(|ty| builder.add(self, ty));
+        builder.build(self)
+      }
     }
   }
-}
 
-impl<'a> Analyzer<'a> {
   pub fn get_optional_type(&mut self, optional: bool, ty: Ty<'a>) -> Ty<'a> {
     if optional {
-      into_union(self.allocator, [Ty::Undefined, ty])
+      self.into_union([Ty::Undefined, ty])
     } else {
       ty
     }
@@ -231,8 +233,11 @@ impl<'a> Analyzer<'a> {
 
   pub fn get_union_property(&mut self, union: &UnionType<'a>, key: PropertyKeyType<'a>) -> Ty<'a> {
     let mut builder = UnionTypeBuilder::default();
-    union.for_each(|ty| builder.add(self.get_property(ty, key)));
-    builder.build(self.allocator)
+    union.for_each(|ty| {
+      let property = self.get_property(ty, key);
+      builder.add(self, property)
+    });
+    builder.build(self)
   }
 
   pub fn print_union_type(&self, union: &UnionType<'a>) -> TSType<'a> {

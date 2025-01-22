@@ -6,6 +6,7 @@ pub mod get_property;
 pub mod interface;
 pub mod intersection;
 pub mod intrinsics;
+pub mod lowest;
 pub mod r#match;
 pub mod namespace;
 pub mod operations;
@@ -19,7 +20,7 @@ pub mod widen;
 use std::{hash, mem};
 
 use callable::{ConstructorType, FunctionType};
-use generic::GenericType;
+use generic::{GenericInstanceType, GenericType};
 use interface::InterfaceType;
 use intersection::IntersectionType;
 use intrinsics::IntrinsicType;
@@ -71,6 +72,7 @@ pub enum Ty<'a> {
   Intersection(&'a IntersectionType<'a>),
 
   /* Generic */
+  Instance(&'a GenericInstanceType<'a>),
   Generic(&'a GenericType<'a>),
   Intrinsic(&'a IntrinsicType),
 

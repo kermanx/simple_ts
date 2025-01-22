@@ -1,9 +1,6 @@
 use oxc::ast::ast::ConditionalExpression;
 
-use crate::{
-  analyzer::Analyzer,
-  ty::{union::into_union, Ty},
-};
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_conditional_expression(
@@ -23,6 +20,6 @@ impl<'a> Analyzer<'a> {
 
     self.finalize_complementary_scopes(scope_1, scope_2);
 
-    into_union(self.allocator, [consequent, alternate])
+    self.into_union([consequent, alternate])
   }
 }

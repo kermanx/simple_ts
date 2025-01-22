@@ -116,12 +116,9 @@ impl<'a> Analyzer<'a> {
         unreachable!("Cannot get facts of {ty:?}")
       }
 
-      Ty::Unresolved(u) => {
-        if let Some(base) = self.get_unresolved_lowest_type(u) {
-          self.get_facts(base)
-        } else {
-          Facts::NONE
-        }
+      Ty::Instance(_) | Ty::Unresolved(_) => {
+        let lowest = self.get_lowest_type(ty);
+        self.get_facts(lowest)
       }
     }
   }

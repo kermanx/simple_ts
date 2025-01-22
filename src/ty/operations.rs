@@ -1,11 +1,6 @@
 use oxc_syntax::operator::BinaryOperator;
 
-use super::{
-  intersection::IntersectionBaseKind,
-  union::into_union,
-  unresolved::{UnresolvedGenericInstantiation, UnresolvedType},
-  Ty,
-};
+use super::{generic::GenericInstanceType, intersection::IntersectionBaseKind, Ty};
 use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
@@ -23,19 +18,22 @@ impl<'a> Analyzer<'a> {
         u.for_each(|t| {
           types.push(self.non_nullable(t));
         });
-        into_union(self.allocator, types)
+        self.into_union(types)
       }
       Ty::Intersection(i) => match i.kind {
         IntersectionBaseKind::Void => Ty::Never,
         _ => ty,
       },
 
-      Ty::Unresolved(u) => Ty::Unresolved(UnresolvedType::GenericInstantiation(
-        self.allocator.alloc(UnresolvedGenericInstantiation {
-          generic: todo!("builtins::NonNullable"),
-          args: vec![ty],
-        }),
-      )),
+      Ty::Instance(i) => {
+        let resolved = self.resolve_generic_instance(i);
+        self.non_nullable(resolved)
+      }
+      Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
+
+      Ty::Unresolved(_) => Ty::Instance(
+        self.allocator.alloc(GenericInstanceType::new(todo!("builtins::NonNullable"), vec![ty])),
+      ),
 
       _ => ty,
     }

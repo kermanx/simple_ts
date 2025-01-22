@@ -2,7 +2,7 @@ use oxc::ast::ast::{ArrayExpression, ArrayExpressionElement};
 
 use crate::{
   analyzer::Analyzer,
-  ty::{property_key::PropertyKeyType, union::into_union, Ty},
+  ty::{property_key::PropertyKeyType, Ty},
 };
 
 impl<'a> Analyzer<'a> {
@@ -29,6 +29,6 @@ impl<'a> Analyzer<'a> {
       values.push(value);
     }
 
-    into_union(self.allocator, values)
+    self.into_union(values)
   }
 }
