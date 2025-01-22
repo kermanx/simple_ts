@@ -87,7 +87,27 @@ impl<'a> Analyzer<'a> {
       }
       (Ty::Union(_), _) => MatchResult::Unmatched,
       (target, Ty::Union(pattern)) => {
-        todo!()
+        let mut error = false;
+        let mut matched = false;
+        let mut inferred = FxHashMap::default();
+
+        pattern.for_each(|pattern| match self.match_types_no_dispatch(target, pattern) {
+          MatchResult::Error => error = true,
+          MatchResult::Unmatched => {}
+          MatchResult::Matched => matched = true,
+          MatchResult::Inferred(i) => {
+            matched = true;
+            inferred.extend(i);
+          }
+        });
+
+        if error {
+          MatchResult::Error
+        } else if matched {
+          MatchResult::Inferred(inferred)
+        } else {
+          MatchResult::Unmatched
+        }
       }
 
       (Ty::Intersection(target), Ty::Intersection(pattern)) => {
