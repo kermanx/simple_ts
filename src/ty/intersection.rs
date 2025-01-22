@@ -108,11 +108,7 @@ impl<'a> IntersectionTypeBuilder<'a> {
         Ty::BooleanLiteral(b) => IntersectionBuilderState::Boolean(Some(b)),
         Ty::UniqueSymbol(s) => IntersectionBuilderState::Symbol(Some(s)),
 
-        Ty::Record(_)
-        | Ty::Function(_)
-        | Ty::Constructor(_)
-        | Ty::Interface(_)
-        | Ty::Namespace(_) => {
+        Ty::Record(_) | Ty::Function(_) | Ty::Constructor(_) | Ty::Interface(_) => {
           self.object_like.push(ty);
           IntersectionBuilderState::ObjectLike
         }
@@ -144,7 +140,7 @@ impl<'a> IntersectionTypeBuilder<'a> {
           self.add(analyzer, resolved);
           return;
         }
-        Ty::Generic(_) | Ty::Intrinsic(_) => IntersectionBuilderState::Error,
+        Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => IntersectionBuilderState::Error,
 
         Ty::Unresolved(u) => {
           self.unresolved.push(u);

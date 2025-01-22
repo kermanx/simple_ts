@@ -43,6 +43,7 @@ impl<'a> Analyzer<'a> {
     match (target, pattern) {
       (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,
       (_, Ty::Generic(_) | Ty::Intrinsic(_)) => MatchResult::Error,
+      (_, Ty::Namespace(_)) | (Ty::Namespace(_), _) => MatchResult::Error,
 
       (target, pattern) if target == pattern => MatchResult::Matched,
 
@@ -207,6 +208,11 @@ impl<'a> Analyzer<'a> {
       (Ty::Record(_), Ty::Object) => MatchResult::Matched,
       (_, Ty::Record(_)) | (Ty::Record(_), _) => MatchResult::Unmatched,
 
+      (Ty::Interface(target), Ty::Interface(pattern)) => todo!(),
+      (Ty::Object, Ty::Interface(pattern)) => MatchResult::from(pattern.is_empty()),
+      (Ty::Interface(_), Ty::Object) => MatchResult::Matched,
+      (_, Ty::Interface(_)) | (Ty::Interface(_), _) => MatchResult::Unmatched,
+
       (Ty::Function(target), Ty::Function(pattern)) => self.match_callable_types(target, pattern),
       (Ty::Function(_), Ty::Object) => MatchResult::Matched,
       (Ty::Function(_), _) | (_, Ty::Function(_)) => MatchResult::Unmatched,
@@ -217,13 +223,7 @@ impl<'a> Analyzer<'a> {
       (Ty::Constructor(_), Ty::Object) => MatchResult::Matched,
       (Ty::Constructor(_), _) | (_, Ty::Constructor(_)) => MatchResult::Unmatched,
 
-      (Ty::Interface(target), Ty::Interface(pattern)) => todo!(),
-      (Ty::Object, Ty::Interface(pattern)) => MatchResult::from(pattern.is_empty()),
-      (Ty::Interface(_), Ty::Object) => MatchResult::Matched,
-      (_, Ty::Interface(_)) | (Ty::Interface(_), _) => MatchResult::Unmatched,
-
       (Ty::Namespace(target), Ty::Namespace(pattern)) => todo!(),
-      (_, Ty::Namespace(_)) | (Ty::Namespace(_), _) => todo!(),
 
       (Ty::Undefined, Ty::Void) => MatchResult::Matched,
       (Ty::Undefined, _) => MatchResult::Unmatched,

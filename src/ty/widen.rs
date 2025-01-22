@@ -24,11 +24,7 @@ impl<'a> Analyzer<'a> {
       Ty::BooleanLiteral(_) => Ty::Boolean,
       Ty::UniqueSymbol(_) => Ty::Symbol,
 
-      Ty::Record(_)
-      | Ty::Function(_)
-      | Ty::Constructor(_)
-      | Ty::Interface(_)
-      | Ty::Namespace(_) => ty,
+      Ty::Record(_) | Ty::Function(_) | Ty::Constructor(_) | Ty::Interface(_) => ty,
 
       Ty::Union(u) => {
         let mut widened = Vec::new();
@@ -40,7 +36,7 @@ impl<'a> Analyzer<'a> {
       // This is not accurate. But this is OK because we only widen untyped variables.
       Ty::Instance(_) => ty,
 
-      Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
+      Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => Ty::Error,
 
       Ty::Unresolved(_) => todo!(),
     }

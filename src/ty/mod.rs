@@ -62,10 +62,9 @@ pub enum Ty<'a> {
 
   /* Object like */
   Record(&'a RecordType<'a>),
+  Interface(&'a InterfaceType<'a>),
   Function(&'a FunctionType<'a>),
   Constructor(&'a ConstructorType<'a>),
-  Interface(&'a InterfaceType<'a>),
-  Namespace(&'a NamespaceType<'a>),
 
   /* Compound */
   Union(&'a UnionType<'a>),
@@ -73,9 +72,12 @@ pub enum Ty<'a> {
 
   /* Generic */
   Instance(&'a GenericInstanceType<'a>),
+  // -- HKT starts here
   Generic(&'a GenericType<'a>),
   Intrinsic(&'a IntrinsicType),
 
+  Namespace(&'a NamespaceType<'a>),
+  // -- HKT ends here
   Unresolved(UnresolvedType<'a>),
 }
 

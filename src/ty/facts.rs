@@ -95,11 +95,10 @@ impl<'a> Analyzer<'a> {
       Ty::BooleanLiteral(b) => self.get_facts(Ty::Boolean) | Facts::truthy(b),
       Ty::UniqueSymbol(_) => self.get_facts(Ty::Symbol),
 
-      Ty::Record(_) => self.get_facts(Ty::Object),
+      Ty::Record(_) | Ty::Interface(_) => self.get_facts(Ty::Object),
       Ty::Function(_) | Ty::Constructor(_) => {
         Facts::T_EQ_FUNCTION | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_FUNCTION
       }
-      Ty::Interface(_) | Ty::Namespace(_) => self.get_facts(Ty::Object),
 
       Ty::Union(union) => {
         let mut facts = Facts::all();
@@ -112,9 +111,7 @@ impl<'a> Analyzer<'a> {
         facts
       }
 
-      Ty::Generic(_) | Ty::Intrinsic(_) => {
-        unreachable!("Cannot get facts of {ty:?}")
-      }
+      Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => Facts::NONE,
 
       Ty::Instance(_) | Ty::Unresolved(_) => {
         let lowest = self.get_lowest_type(ty);
