@@ -1,7 +1,7 @@
 use oxc::ast::ast::TSTypeAliasDeclaration;
 
 use crate::{
-  ty::{generic::GenericType, unresolved::UnresolvedType, Ty},
+  ty::{generic::GenericType, Ty},
   Analyzer,
 };
 
@@ -21,8 +21,12 @@ impl<'a> Analyzer<'a> {
   pub fn init_ts_type_alias(&mut self, node: &'a TSTypeAliasDeclaration<'a>) {
     let symbol_id = node.id.symbol_id();
     let unresolved = *self.types.get(&symbol_id).unwrap();
-    if let Some(resolved) = self.try_resolve_unresolved(unresolved) {
+    let ty = if let Some(resolved) = self.try_resolve_unresolved(unresolved) {
       self.types.insert(symbol_id, resolved);
-    }
+      resolved
+    } else {
+      unresolved
+    };
+    self.accumulate_type(&node.id, ty);
   }
 }

@@ -1,0 +1,8 @@
+---
+source: tests/mod.rs
+input_file: tests/fixtures/conditional.ts
+---
+type T1 = 1;
+type T2 = 1;
+type T3 = 2 | 1;
+type T4 = 1;

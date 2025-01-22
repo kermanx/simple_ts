@@ -37,6 +37,13 @@ impl<'a> GenericInstanceType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn replace_generics(
+    &mut self,
+    generics: Box<FxHashMap<SymbolId, Ty<'a>>>,
+  ) -> Box<FxHashMap<SymbolId, Ty<'a>>> {
+    mem::replace(&mut self.generics, generics)
+  }
+
   pub fn take_generics(&mut self) -> Box<FxHashMap<SymbolId, Ty<'a>>> {
     mem::take(&mut self.generics)
   }
@@ -60,7 +67,9 @@ impl<'a> Analyzer<'a> {
   pub fn resolve_generic_instance(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
     *instance.resolved.borrow_mut().get_or_insert_with(|| {
       match instance.generic {
-        Ty::Unresolved(_) => unreachable!("Generic itself should always be resolved when analyzing declaration"),
+        Ty::Unresolved(_) => {
+          unreachable!("Generic itself should always be resolved when analyzing declaration")
+        }
 
         // instance.generic is a generic type
         Ty::Generic(generic) => {

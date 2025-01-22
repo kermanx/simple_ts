@@ -19,9 +19,10 @@ impl<'a> Analyzer<'a> {
     target: Ty<'a>,
     pattern: Ty<'a>,
   ) -> Vec<MatchResult<'a>> {
-    match target {
-      Ty::Any | Ty::Error => vec![MatchResult::Matched, MatchResult::Unmatched],
-      Ty::Union(u) => {
+    match (target, pattern) {
+      (_, Ty::Any | Ty::Error | Ty::Unknown) => vec![MatchResult::Matched],
+      (Ty::Any | Ty::Error, _) => vec![MatchResult::Matched, MatchResult::Unmatched],
+      (Ty::Union(u), _) => {
         let mut results = Vec::new();
         u.for_each(|ty| results.extend(self.match_types_with_dispatch(ty, pattern)));
         results
@@ -63,6 +64,10 @@ impl<'a> Analyzer<'a> {
         todo!()
       }
       (Ty::Union(target), pattern) => MatchResult::Unmatched,
+      (target, Ty::Union(pattern)) => {
+        todo!()
+      }
+
       (Ty::Intersection(target), Ty::Intersection(pattern)) => {
         todo!()
       }
@@ -102,6 +107,9 @@ impl<'a> Analyzer<'a> {
         } else {
           MatchResult::Unmatched
         }
+      }
+      (target, Ty::Intersection(pattern)) => {
+        todo!()
       }
 
       (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,

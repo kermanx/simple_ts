@@ -6,6 +6,7 @@ mod ts_interface;
 mod ts_intersection_type;
 mod ts_literal;
 mod ts_non_null_expression;
+mod ts_optional_type;
 mod ts_satisfies_expression;
 mod ts_signature_vec;
 mod ts_this_parameter;
@@ -49,6 +50,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSTypeLiteral(node) => self.resolve_type_literal(node),
       TSType::TSInferType(node) => self.resolve_infer_type(node),
       TSType::TSFunctionType(node) => self.resolve_function_type(node),
+      TSType::TSConditionalType(node) => self.resolve_conditional_type(node),
 
       _ => todo!(),
     }
