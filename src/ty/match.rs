@@ -11,15 +11,26 @@ pub enum MatchResult<'a> {
   Unmatched,
   Matched,
   Inferred(FxHashMap<SymbolId, Ty<'a>>),
-  Multiple(Vec<MatchResult<'a>>),
 }
 
 impl<'a> Analyzer<'a> {
-  /// `Target extends Pattern`
-  /// Returns
-  /// - `None` if the types do not match
-  /// - `Some` with a map of `infer T` in pattern
-  pub fn match_types(&mut self, target: Ty<'a>, pattern: Ty<'a>) -> MatchResult<'a> {
+  pub fn match_types_with_dispatch(
+    &mut self,
+    target: Ty<'a>,
+    pattern: Ty<'a>,
+  ) -> Vec<MatchResult<'a>> {
+    match target {
+      Ty::Any | Ty::Error => vec![MatchResult::Matched, MatchResult::Unmatched],
+      Ty::Union(u) => {
+        let mut results = Vec::new();
+        u.for_each(|ty| results.extend(self.match_types_with_dispatch(ty, pattern)));
+        results
+      }
+      _ => vec![self.match_types_no_dispatch(target, pattern)],
+    }
+  }
+
+  pub fn match_types_no_dispatch(&mut self, target: Ty<'a>, pattern: Ty<'a>) -> MatchResult<'a> {
     match (target, pattern) {
       (target, pattern) if target == pattern => MatchResult::Matched,
 
@@ -30,9 +41,7 @@ impl<'a> Analyzer<'a> {
         map
       }),
 
-      (Ty::Any | Ty::Error, _) => {
-        MatchResult::Multiple(vec![MatchResult::Unmatched, MatchResult::Matched])
-      }
+      (Ty::Any | Ty::Error, _) => MatchResult::Matched,
       (_, Ty::Any | Ty::Error | Ty::Unknown) => MatchResult::Matched,
 
       (Ty::Undefined, Ty::Void) => MatchResult::Matched,
@@ -53,11 +62,7 @@ impl<'a> Analyzer<'a> {
       (Ty::Union(target), Ty::Union(pattern)) => {
         todo!()
       }
-      (Ty::Union(target), pattern) => {
-        let mut results = Vec::new();
-        target.for_each(|ty| results.push(self.match_types(ty, pattern)));
-        MatchResult::Multiple(results)
-      }
+      (Ty::Union(target), pattern) => MatchResult::Unmatched,
       (Ty::Intersection(target), Ty::Intersection(pattern)) => {
         todo!()
       }
@@ -65,7 +70,7 @@ impl<'a> Analyzer<'a> {
         let mut error = false;
         let mut matched: Option<Option<FxHashMap<SymbolId, IntersectionTypeBuilder<'a>>>> = None;
         target.for_each(|ty| {
-          let result = self.match_types(ty, pattern);
+          let result = self.match_types_no_dispatch(ty, pattern);
           match result {
             MatchResult::Unmatched => {}
             MatchResult::Matched => {
@@ -79,7 +84,6 @@ impl<'a> Analyzer<'a> {
                 builder.add(self, t);
               }
             }
-            MatchResult::Multiple(results) => todo!(),
             MatchResult::Error => error = true,
           }
         });
@@ -121,7 +125,7 @@ impl<'a> Analyzer<'a> {
         continue;
       }
       // Note: Contravariance - `pattern.constraint extends target.constraint`
-      match self.match_types(
+      match self.match_types_no_dispatch(
         pattern.constraint.unwrap_or(Ty::Unknown),
         target.constraint.unwrap_or(Ty::Unknown),
       ) {
@@ -131,7 +135,6 @@ impl<'a> Analyzer<'a> {
         MatchResult::Inferred(_) => {
           // Somehow in TypeScript this is ignored
         }
-        MatchResult::Multiple(_) => unreachable!("Unmatch or single match"),
       }
     }
 
@@ -139,14 +142,13 @@ impl<'a> Analyzer<'a> {
 
     // Step2: Match this type
     if let (Some(target), Some(pattern)) = (target.this_param, pattern.this_param) {
-      match self.match_types(pattern, target) {
+      match self.match_types_no_dispatch(pattern, target) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
         MatchResult::Inferred(map) => {
           inferred.extend(map);
         }
-        MatchResult::Multiple(_) => unreachable!("Unmatch or single match"),
       }
     }
 
@@ -157,14 +159,13 @@ impl<'a> Analyzer<'a> {
           target = self.get_optional_type(*target_optional, target);
           pattern = self.get_optional_type(*pattern_optional, pattern);
         }
-        match self.match_types(pattern, target) {
+        match self.match_types_no_dispatch(pattern, target) {
           MatchResult::Error => return MatchResult::Error,
           MatchResult::Unmatched => return MatchResult::Unmatched,
           MatchResult::Matched => {}
           MatchResult::Inferred(map) => {
             inferred.extend(map);
           }
-          MatchResult::Multiple(_) => unreachable!("Unmatch or single match"),
         }
       } else if *target_optional {
         // Optional parameter, matched
@@ -178,7 +179,7 @@ impl<'a> Analyzer<'a> {
     // TODO: Check rest parameter
 
     // Step5: Match return type
-    match self.match_types(target.return_type, pattern.return_type) {
+    match self.match_types_no_dispatch(target.return_type, pattern.return_type) {
       MatchResult::Error => MatchResult::Error,
       MatchResult::Unmatched => MatchResult::Unmatched,
       MatchResult::Matched => MatchResult::Matched,
@@ -186,7 +187,6 @@ impl<'a> Analyzer<'a> {
         inferred.extend(map);
         MatchResult::Inferred(inferred)
       }
-      MatchResult::Multiple(_) => unreachable!("Unmatch or single match"),
     }
   }
 }
