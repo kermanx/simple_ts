@@ -4,7 +4,7 @@ use rustc_hash::FxHashMap;
 use super::{intersection::IntersectionTypeBuilder, unresolved::UnresolvedType, Ty};
 use crate::Analyzer;
 
-enum MatchResult<'a> {
+pub enum MatchResult<'a> {
   Unmatched,
   Matched,
   Inferred(FxHashMap<SymbolId, Ty<'a>>),

@@ -5,7 +5,19 @@ use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
   pub fn binary_operation(&mut self, operator: BinaryOperator, lhs: Ty<'a>, rhs: Ty<'a>) -> Ty<'a> {
-    todo!()
+    match operator {
+      BinaryOperator::Equality
+      | BinaryOperator::Inequality
+      | BinaryOperator::StrictEquality
+      | BinaryOperator::StrictInequality => Ty::Boolean,
+
+      BinaryOperator::LessThan
+      | BinaryOperator::LessEqualThan
+      | BinaryOperator::GreaterThan
+      | BinaryOperator::GreaterEqualThan => Ty::Boolean,
+
+      _ => todo!(),
+    }
   }
 
   /// A fast path for `NonNullable<T>`
