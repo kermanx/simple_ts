@@ -180,9 +180,7 @@ impl<'a> Analyzer<'a> {
               match self.match_types_no_dispatch(*target, *pattern) {
                 MatchResult::Error | MatchResult::Unmatched => break 'instantiation_based_inference,
                 MatchResult::Matched => {}
-                MatchResult::Inferred(map) => {
-                  inferred.extend(map);
-                }
+                MatchResult::Inferred(map) => inferred.extend(map),
               }
             }
             return MatchResult::Inferred(inferred);
@@ -274,9 +272,7 @@ impl<'a> Analyzer<'a> {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
-        MatchResult::Inferred(map) => {
-          inferred.extend(map);
-        }
+        MatchResult::Inferred(map) => inferred.extend(map),
       }
     }
 
@@ -291,9 +287,7 @@ impl<'a> Analyzer<'a> {
           MatchResult::Error => return MatchResult::Error,
           MatchResult::Unmatched => return MatchResult::Unmatched,
           MatchResult::Matched => {}
-          MatchResult::Inferred(map) => {
-            inferred.extend(map);
-          }
+          MatchResult::Inferred(map) => inferred.extend(map),
         }
       } else if *target_optional {
         // Optional parameter, matched

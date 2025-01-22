@@ -2,7 +2,7 @@ use oxc::ast::ast::{Expression, TSInterfaceDeclaration, TSType};
 
 use crate::{
   ty::{
-    generic::{GenericInstanceType, GenericType},
+    generic::GenericType,
     interface::{InterfaceType, InterfaceTypeInner},
     unresolved::UnresolvedType,
     Ty,

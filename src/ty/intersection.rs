@@ -5,10 +5,7 @@ use oxc::{
   span::{Atom, SPAN},
 };
 
-use super::{
-  unresolved::{UnresolvedIntersection, UnresolvedType},
-  Ty,
-};
+use super::{unresolved::UnresolvedType, Ty};
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]

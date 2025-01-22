@@ -1,9 +1,6 @@
 use oxc::ast::ast::{TSTypeName, TSTypeReference};
 
-use crate::{
-  analyzer::Analyzer,
-  ty::{generic::GenericInstanceType, Ty},
-};
+use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type_reference(&mut self, node: &'a TSTypeReference<'a>) -> Ty<'a> {
