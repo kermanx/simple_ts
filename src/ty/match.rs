@@ -58,6 +58,7 @@ impl<'a> Analyzer<'a> {
       (Ty::Constructor(target), Ty::Constructor(pattern)) => {
         self.match_callable_types(target, pattern)
       }
+      (Ty::Interface(target), Ty::Interface(pattern)) => todo!(),
       (Ty::Namespace(target), Ty::Namespace(pattern)) => todo!(),
 
       (Ty::Union(target), Ty::Union(pattern)) => {
@@ -112,6 +113,30 @@ impl<'a> Analyzer<'a> {
         todo!()
       }
 
+      (Ty::Instance(target), Ty::Instance(pattern)) => {
+        // See https://github.com/Microsoft/TypeScript/wiki/FAQ#structural-vs-instantiation-based-inference.
+        // 1. Instantiation based inference
+        if target.generic == pattern.generic {
+          'instantiation_based_inference: {
+            let mut inferred = FxHashMap::default();
+            for (target, pattern) in target.args.iter().zip(pattern.args.iter()) {
+              match self.match_types_no_dispatch(*target, *pattern) {
+                MatchResult::Error | MatchResult::Unmatched => break 'instantiation_based_inference,
+                MatchResult::Matched => {}
+                MatchResult::Inferred(map) => {
+                  inferred.extend(map);
+                }
+              }
+            }
+            return MatchResult::Inferred(inferred);
+          }
+        }
+
+        // 2. Structural inference
+        let target = self.unwrap_generic_instance(target);
+        let pattern = self.unwrap_generic_instance(pattern);
+        self.match_types_no_dispatch(target, pattern)
+      }
       (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,
       (_, Ty::Generic(_) | Ty::Intrinsic(_)) => MatchResult::Error,
 

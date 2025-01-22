@@ -43,9 +43,7 @@ impl<'a> Analyzer<'a> {
       }
       Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
 
-      Ty::Unresolved(_) => Ty::Instance(
-        self.allocator.alloc(GenericInstanceType::new(todo!("builtins::NonNullable"), vec![ty])),
-      ),
+      Ty::Unresolved(_) => self.create_generic_instance(todo!("builtins::NonNullable"), vec![ty]),
 
       _ => ty,
     }

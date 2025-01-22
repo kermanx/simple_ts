@@ -57,7 +57,7 @@ impl<'a> Analyzer<'a> {
             let base = self.read_type(reference.symbol_id());
             let extends = if let Some(type_parameters) = &heritage.type_parameters {
               let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
-              Ty::Instance(self.allocator.alloc(GenericInstanceType::new(base, type_parameters)))
+              self.create_generic_instance(base, type_parameters)
             } else {
               base
             };

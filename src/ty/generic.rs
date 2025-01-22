@@ -26,14 +26,9 @@ pub struct GenericType<'a> {
 #[derive(Debug, Clone)]
 pub struct GenericInstanceType<'a> {
   pub generic: Ty<'a>,
+  /// Defaults should already be applied
   pub args: Vec<Ty<'a>>,
   pub unwrapped: RefCell<Option<Ty<'a>>>,
-}
-
-impl<'a> GenericInstanceType<'a> {
-  pub fn new(generic: Ty<'a>, args: Vec<Ty<'a>>) -> Self {
-    Self { generic, args, unwrapped: RefCell::new(None) }
-  }
 }
 
 impl<'a> Analyzer<'a> {
@@ -62,6 +57,27 @@ impl<'a> Analyzer<'a> {
         // TODO: Check constraint
       }
     }
+  }
+
+  pub fn create_generic_instance(&mut self, generic: Ty<'a>, mut args: Vec<Ty<'a>>) -> Ty<'a> {
+    match generic {
+      Ty::Generic(generic) => {
+        for g in generic.params.iter().skip(args.len()) {
+          if let Some(default) = g.default {
+            args.push(default);
+          } else {
+            args.push(Ty::Error);
+          }
+        }
+      }
+      Ty::Intrinsic(_) => {}
+      _ => return Ty::Error,
+    }
+    Ty::Instance(self.allocator.alloc(GenericInstanceType {
+      generic,
+      args,
+      unwrapped: RefCell::new(None),
+    }))
   }
 
   pub fn unwrap_generic_instance(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
@@ -119,9 +135,7 @@ impl<'a> Analyzer<'a> {
         }
       }
 
-      Ty::Unresolved(_) => {
-        Some(Ty::Instance(self.allocator.alloc(GenericInstanceType::new(ty, args.clone()))))
-      }
+      Ty::Unresolved(_) => Some(self.create_generic_instance(ty, args.clone())),
 
       ty => Some(ty),
     }

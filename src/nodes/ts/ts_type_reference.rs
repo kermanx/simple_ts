@@ -17,7 +17,7 @@ impl<'a> Analyzer<'a> {
 
     if let Some(type_parameters) = &node.type_parameters {
       let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
-      Ty::Instance(self.allocator.alloc(GenericInstanceType::new(base, type_parameters)))
+      self.create_generic_instance(base, type_parameters)
     } else {
       base
     }
