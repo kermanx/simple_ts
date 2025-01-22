@@ -60,7 +60,7 @@ impl<'a> Analyzer<'a> {
   pub fn resolve_generic_instance(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
     *instance.resolved.borrow_mut().get_or_insert_with(|| {
       match instance.generic {
-        Ty::Unresolved(_) => unreachable!(),
+        Ty::Unresolved(_) => unreachable!("Generic itself should always be resolved when analyzing declaration"),
 
         // instance.generic is a generic type
         Ty::Generic(generic) => {

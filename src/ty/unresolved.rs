@@ -41,7 +41,7 @@ impl<'a> Analyzer<'a> {
   }
 
   /// Returns `None` if unchanged
-  fn try_resolve_unresolved(&mut self, ty: Ty<'a>) -> Option<Ty<'a>> {
+  pub fn try_resolve_unresolved(&mut self, ty: Ty<'a>) -> Option<Ty<'a>> {
     match ty {
       Ty::Unresolved(u) => match u {
         UnresolvedType::UnInitVariable(_) => None,
