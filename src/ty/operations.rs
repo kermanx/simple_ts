@@ -1,6 +1,6 @@
 use oxc_syntax::operator::BinaryOperator;
 
-use super::{intersection::IntersectionBaseKind, Ty};
+use super::{facts::Facts, intersection::IntersectionBaseKind, Ty};
 use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
@@ -16,7 +16,42 @@ impl<'a> Analyzer<'a> {
       | BinaryOperator::GreaterThan
       | BinaryOperator::GreaterEqualThan => Ty::Boolean,
 
-      _ => todo!(),
+      BinaryOperator::Addition => {
+        let l = self.get_facts(lhs);
+        let r = self.get_facts(rhs);
+        if l.contains(Facts::T_EQ_STRING) || r.contains(Facts::T_EQ_STRING) {
+          Ty::String
+        } else if l.contains(Facts::T_EQ_NUMBER) && r.contains(Facts::T_EQ_NUMBER) {
+          Ty::Number
+        } else if l.contains(Facts::T_EQ_BIGINT) && r.contains(Facts::T_EQ_BIGINT) {
+          Ty::BigInt
+        } else {
+          Ty::Any
+        }
+      }
+      BinaryOperator::Subtraction
+      | BinaryOperator::Multiplication
+      | BinaryOperator::Division
+      | BinaryOperator::Remainder
+      | BinaryOperator::Exponential
+      | BinaryOperator::ShiftLeft
+      | BinaryOperator::ShiftRight
+      | BinaryOperator::ShiftRightZeroFill
+      | BinaryOperator::BitwiseAnd
+      | BinaryOperator::BitwiseOR
+      | BinaryOperator::BitwiseXOR => {
+        let l = self.get_facts(lhs);
+        let r = self.get_facts(rhs);
+        if l.contains(Facts::T_NE_BIGINT) && r.contains(Facts::T_NE_BIGINT) {
+          Ty::Number
+        } else if l.contains(Facts::T_EQ_BIGINT) && r.contains(Facts::T_EQ_BIGINT) {
+          Ty::BigInt
+        } else {
+          Ty::Any
+        }
+      }
+
+      BinaryOperator::In | BinaryOperator::Instanceof => Ty::Boolean,
     }
   }
 
