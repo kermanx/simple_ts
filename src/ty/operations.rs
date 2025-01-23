@@ -30,7 +30,7 @@ impl<'a> Analyzer<'a> {
         u.for_each(|t| {
           types.push(self.non_nullable(t));
         });
-        self.into_union(types)
+        self.into_union(types).unwrap()
       }
       Ty::Intersection(i) => match i.kind {
         IntersectionBaseKind::Void => Ty::Never,

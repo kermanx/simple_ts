@@ -20,6 +20,6 @@ impl<'a> Analyzer<'a> {
 
     self.finalize_complementary_scopes(scope_1, scope_2);
 
-    self.into_union([consequent, alternate])
+    self.into_union([consequent, alternate]).unwrap()
   }
 }

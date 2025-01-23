@@ -21,7 +21,9 @@ impl<'a> Analyzer<'a> {
         UnresolvedType::GenericParam(symbol) => {
           self.generic_constraints.get(&symbol).copied().unwrap_or(Ty::Unknown)
         }
-        UnresolvedType::Conditional(cond) => self.into_union([cond.true_ty, cond.false_ty]),
+        UnresolvedType::Conditional(cond) => {
+          self.into_union([cond.true_ty, cond.false_ty]).unwrap()
+        }
         UnresolvedType::Keyof(_) => Ty::String,
         UnresolvedType::InferType(_) => Ty::Unknown,
       },

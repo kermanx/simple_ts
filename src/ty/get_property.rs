@@ -21,7 +21,8 @@ impl<'a> Analyzer<'a> {
       }
 
       Ty::Record(r) => r.get_property(key),
-      Ty::Interface(i) => i.get_interface_property(key),
+      Ty::Interface(i) => i.get_property(key),
+      Ty::Tuple(t) => t.get_property(key, self),
 
       Ty::Union(u) => self.get_union_property(u, key),
       Ty::Intersection(_) => todo!(),

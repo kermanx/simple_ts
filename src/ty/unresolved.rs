@@ -78,20 +78,17 @@ impl<'a> Analyzer<'a> {
       Ty::Namespace(n) => todo!(),
 
       Ty::Union(u) => {
-        let mut changed = Vec::new();
-        let mut unchanged = Vec::new();
+        let mut changed = false;
+        let mut types = Vec::new();
         u.for_each(|ty| {
           if let Some(ty) = self.try_resolve_unresolved(ty) {
-            changed.push(ty);
+            changed = true;
+            types.push(ty);
           } else {
-            unchanged.push(ty);
+            types.push(ty);
           }
         });
-        if changed.is_empty() {
-          None
-        } else {
-          Some(self.into_union(changed))
-        }
+        changed.then(|| self.into_union(types).unwrap())
       }
       Ty::Intersection(_) => todo!(),
 

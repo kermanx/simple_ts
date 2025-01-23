@@ -98,7 +98,7 @@ impl<'a> Analyzer<'a> {
       if !complementary || values.len() != len {
         values.push(self.read_variable(symbol));
       }
-      let value = self.into_union(values);
+      let value = self.into_union(values).unwrap();
       self.write_variable(symbol, value);
     }
   }

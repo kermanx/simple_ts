@@ -38,9 +38,10 @@ impl<'a> Analyzer<'a> {
       Ty::BigIntLiteral(_) | Ty::BooleanLiteral(_) => PropertyKeyType::Error,
 
       Ty::Record(_)
+      | Ty::Interface(_)
+      | Ty::Tuple(_)
       | Ty::Function(_)
       | Ty::Constructor(_)
-      | Ty::Interface(_)
       | Ty::Namespace(_) => PropertyKeyType::Error,
 
       Ty::Union(union) => {

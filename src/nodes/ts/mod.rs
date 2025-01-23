@@ -10,6 +10,8 @@ mod ts_non_null_expression;
 mod ts_satisfies_expression;
 mod ts_signature_vec;
 mod ts_this_parameter;
+mod ts_tuple_element;
+mod ts_tuple_type;
 mod ts_type_alias;
 mod ts_type_annotation;
 mod ts_type_assertion;
@@ -51,6 +53,8 @@ impl<'a> Analyzer<'a> {
       TSType::TSInferType(node) => self.resolve_infer_type(node),
       TSType::TSFunctionType(node) => self.resolve_function_type(node),
       TSType::TSConditionalType(node) => self.resolve_conditional_type(node),
+      TSType::TSTupleType(node) => self.resolve_tuple_type(node),
+      TSType::TSNamedTupleMember(_) => unreachable!("Handled in TSTupleElement"),
 
       _ => todo!(),
     }

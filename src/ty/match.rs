@@ -82,7 +82,7 @@ impl<'a> Analyzer<'a> {
           MatchResult::Unmatched
         } else {
           MatchResult::Inferred(
-            inferred.into_iter().map(|(s, types)| (s, self.into_union(types))).collect(),
+            inferred.into_iter().map(|(s, types)| (s, self.into_union(types).unwrap())).collect(),
           )
         }
       }
@@ -210,6 +210,9 @@ impl<'a> Analyzer<'a> {
       (Ty::Object, Ty::Interface(pattern)) => MatchResult::from(pattern.is_empty()),
       (Ty::Interface(_), Ty::Object) => MatchResult::Matched,
       (_, Ty::Interface(_)) | (Ty::Interface(_), _) => MatchResult::Unmatched,
+
+      (Ty::Tuple(target), Ty::Tuple(pattern)) => todo!(),
+      (_, Ty::Tuple(_)) | (Ty::Tuple(_), _) => MatchResult::Unmatched,
 
       (Ty::Function(target), Ty::Function(pattern)) => self.match_callable_types(target, pattern),
       (Ty::Function(_), Ty::Object) => MatchResult::Matched,

@@ -8,6 +8,6 @@ impl<'a> Analyzer<'a> {
     for node in &node.types {
       types.push(self.resolve_type(node));
     }
-    self.into_union(types)
+    self.into_union(types).unwrap()
   }
 }

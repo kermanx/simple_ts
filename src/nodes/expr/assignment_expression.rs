@@ -18,7 +18,7 @@ impl<'a> Analyzer<'a> {
 
       self.push_indeterminate_scope();
       let right = self.exec_expression(&node.right, Some(left));
-      let value = self.into_union([left, right]);
+      let value = self.into_union([left, right]).unwrap();
       self.pop_scope();
 
       // Execute write outside of the indeterminate scope, because the value is already an union

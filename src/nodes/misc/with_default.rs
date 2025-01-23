@@ -8,6 +8,6 @@ impl<'a> Analyzer<'a> {
     let default_val = self.exec_expression(default, None);
     self.pop_scope();
 
-    self.into_union([default_val, value])
+    self.into_union([default_val, value]).unwrap()
   }
 }

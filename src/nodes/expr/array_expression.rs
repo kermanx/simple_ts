@@ -29,6 +29,6 @@ impl<'a> Analyzer<'a> {
       values.push(value);
     }
 
-    self.into_union(values)
+    self.into_union(values).unwrap_or(Ty::Never)
   }
 }

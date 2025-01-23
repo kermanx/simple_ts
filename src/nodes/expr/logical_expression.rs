@@ -14,6 +14,6 @@ impl<'a> Analyzer<'a> {
     let right = self.exec_expression(&node.right, sat);
     self.pop_scope();
 
-    self.into_union([left, right])
+    self.into_union([left, right]).unwrap()
   }
 }

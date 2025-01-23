@@ -52,7 +52,7 @@ impl<'a> UnionTypeBuilder<'a> {
     }
   }
 
-  pub fn build(self, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
+  pub fn build(self, analyzer: &Analyzer<'a>) -> Ty<'a> {
     match self {
       UnionTypeBuilder::Never => Ty::Never,
       UnionTypeBuilder::Error => Ty::Error,
@@ -193,26 +193,26 @@ impl<'a> Analyzer<'a> {
   pub fn into_union<Iter>(
     &mut self,
     types: impl IntoIterator<Item = Ty<'a>, IntoIter = Iter>,
-  ) -> Ty<'a>
+  ) -> Option<Ty<'a>>
   where
     Iter: Iterator<Item = Ty<'a>> + ExactSizeIterator,
   {
     let mut iter = types.into_iter();
     match iter.len() {
       // FIXME: Should be Ty::Never
-      0 => Ty::Undefined,
-      1 => iter.next().unwrap(),
+      0 => None,
+      1 => iter.next(),
       _ => {
         let mut builder = UnionTypeBuilder::default();
         iter.for_each(|ty| builder.add(self, ty));
-        builder.build(self)
+        Some(builder.build(self))
       }
     }
   }
 
   pub fn get_optional_type(&mut self, optional: bool, ty: Ty<'a>) -> Ty<'a> {
     if optional {
-      self.into_union([Ty::Undefined, ty])
+      self.into_union([Ty::Undefined, ty]).unwrap()
     } else {
       ty
     }

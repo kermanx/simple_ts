@@ -44,7 +44,7 @@ impl<'a> InterfaceTypeInner<'a> {
 }
 
 impl<'a> InterfaceType<'a> {
-  pub fn get_interface_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
+  pub fn get_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
     let inner = self.0.borrow();
     inner.record.get_property(key)
   }

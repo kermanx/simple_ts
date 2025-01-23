@@ -24,12 +24,12 @@ impl<'a> Analyzer<'a> {
       Ty::BooleanLiteral(_) => Ty::Boolean,
       Ty::UniqueSymbol(_) => Ty::Symbol,
 
-      Ty::Record(_) | Ty::Function(_) | Ty::Constructor(_) | Ty::Interface(_) => ty,
+      Ty::Record(_) | Ty::Interface(_) | Ty::Tuple(_) | Ty::Function(_) | Ty::Constructor(_) => ty,
 
       Ty::Union(u) => {
         let mut widened = Vec::new();
         u.for_each(|ty| widened.push(self.get_widened_type(ty)));
-        self.into_union(widened)
+        self.into_union(widened).unwrap()
       }
       Ty::Intersection(_) => ty,
 

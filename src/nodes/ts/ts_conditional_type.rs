@@ -43,6 +43,6 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    self.into_union(results)
+    self.into_union(results).unwrap()
   }
 }

@@ -55,7 +55,7 @@ impl<'a> Analyzer<'a> {
           .iter()
           .filter_map(|(fact, value)| facts.contains(*fact).then_some(Ty::StringLiteral(value)))
           .collect::<Vec<_>>();
-        self.into_union(values)
+        self.into_union(values).unwrap()
       }
       UnaryOperator::Void => Ty::Undefined,
       UnaryOperator::Delete => unreachable!(),

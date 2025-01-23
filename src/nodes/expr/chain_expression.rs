@@ -21,7 +21,7 @@ impl<'a> Analyzer<'a> {
     };
     if indeterminate {
       self.pop_scope();
-      self.into_union([Ty::Undefined, value])
+      self.into_union([Ty::Undefined, value]).unwrap()
     } else {
       value
     }

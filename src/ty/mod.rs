@@ -13,6 +13,7 @@ pub mod operations;
 pub mod print;
 pub mod property_key;
 pub mod record;
+pub mod tuple;
 pub mod union;
 pub mod unresolved;
 pub mod widen;
@@ -28,6 +29,7 @@ use namespace::NamespaceType;
 use oxc::{semantic::SymbolId, span::Atom};
 use property_key::PropertyKeyType;
 use record::RecordType;
+use tuple::TupleType;
 use union::UnionType;
 use unresolved::UnresolvedType;
 
@@ -63,6 +65,7 @@ pub enum Ty<'a> {
   /* Object like */
   Record(&'a RecordType<'a>),
   Interface(&'a InterfaceType<'a>),
+  Tuple(&'a TupleType<'a>),
   Function(&'a FunctionType<'a>),
   Constructor(&'a ConstructorType<'a>),
 

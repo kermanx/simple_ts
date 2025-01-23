@@ -95,7 +95,7 @@ impl<'a> Analyzer<'a> {
       Ty::BooleanLiteral(b) => self.get_facts(Ty::Boolean) | Facts::truthy(b),
       Ty::UniqueSymbol(_) => self.get_facts(Ty::Symbol),
 
-      Ty::Record(_) | Ty::Interface(_) => self.get_facts(Ty::Object),
+      Ty::Record(_) | Ty::Interface(_) | Ty::Tuple(_) => self.get_facts(Ty::Object),
       Ty::Function(_) | Ty::Constructor(_) => {
         Facts::T_EQ_FUNCTION | Facts::TRUTHY | Facts::T_NE_ALL & !Facts::T_EQ_FUNCTION
       }
