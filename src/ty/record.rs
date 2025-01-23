@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::{cell::RefCell, collections::hash_map::Entry, hash::Hash};
 
 use oxc::{
   ast::ast::{PropertyKey, TSSignature, TSType},
@@ -9,13 +9,63 @@ use oxc_syntax::number::ToJsString;
 use rustc_hash::FxHashMap;
 
 use super::{accumulator::TypeAccumulator, property_key::PropertyKeyType, Ty};
-use crate::analyzer::Analyzer;
+use crate::{analyzer::Analyzer, ty::union::UnionType};
 
 #[derive(Debug, Clone)]
 pub struct KeyedProperty<'a> {
   value: Ty<'a>,
   optional: bool,
   readonly: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct KeyedPropertyMap<'a, K>(FxHashMap<K, KeyedProperty<'a>>);
+
+// FIXME: Why is this not derived?
+impl<'a, K> Default for KeyedPropertyMap<'a, K> {
+  fn default() -> Self {
+    Self(FxHashMap::default())
+  }
+}
+
+impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
+  pub fn init(&mut self, analyzer: &mut Analyzer<'a>, key: K, mut value: KeyedProperty<'a>) {
+    fn union_is_bivariant<'a>(u: &UnionType<'a>) -> bool {
+      let mut bivariant = true;
+      u.for_each(|ty| match ty {
+        Ty::Function(f) => bivariant &= f.bivariant,
+        _ => bivariant = false,
+      });
+      bivariant
+    }
+
+    match self.0.entry(key) {
+      Entry::Occupied(mut entry) => {
+        let prev = entry.get();
+        value.value = match (prev.value, value.value) {
+          (Ty::Function(f1), Ty::Function(f2)) if f1.bivariant && f2.bivariant => {
+            analyzer.into_union([prev.value, value.value]).unwrap()
+          }
+          (Ty::Union(u1), Ty::Function(f2)) if union_is_bivariant(u1) && f2.bivariant => {
+            analyzer.into_union([prev.value, value.value]).unwrap()
+          }
+          _ => value.value,
+        };
+        entry.insert(value);
+      }
+      Entry::Vacant(entry) => {
+        entry.insert(value);
+      }
+    }
+  }
+
+  pub fn get(&self, key: K) -> Ty<'a> {
+    if let Some(property) = self.0.get(&key) {
+      property.value.clone()
+    } else {
+      Ty::Error
+    }
+  }
 }
 
 #[derive(Debug, Default)]
@@ -32,8 +82,8 @@ impl<'a> Clone for MappedProperty<'a> {
 
 #[derive(Debug, Default)]
 pub struct RecordType<'a> {
-  pub string_keyed: FxHashMap<&'a str, KeyedProperty<'a>>,
-  pub symbol_keyed: FxHashMap<SymbolId, KeyedProperty<'a>>,
+  pub string_keyed: KeyedPropertyMap<'a, &'a str>,
+  pub symbol_keyed: KeyedPropertyMap<'a, SymbolId>,
 
   pub string_mapped: MappedProperty<'a>,
   pub number_mapped: MappedProperty<'a>,
@@ -63,14 +113,14 @@ impl<'a> RecordType<'a> {
         self.symbol_mapped.value.borrow_mut().add(value, analyzer.allocator);
       }
       PropertyKeyType::StringLiteral(s) => {
-        self.string_keyed.insert(s.as_str(), keyed_property);
+        self.string_keyed.init(analyzer, s.as_str(), keyed_property);
       }
       PropertyKeyType::NumericLiteral(n) => {
         let s = analyzer.allocator.alloc(n.0.to_js_string());
-        self.string_keyed.insert(s, keyed_property);
+        self.string_keyed.init(analyzer, s, keyed_property);
       }
       PropertyKeyType::UniqueSymbol(s) => {
-        self.symbol_keyed.insert(s, keyed_property);
+        self.symbol_keyed.init(analyzer, s, keyed_property);
       }
     }
   }
@@ -91,27 +141,9 @@ impl<'a> RecordType<'a> {
       PropertyKeyType::AnySymbol => {
         self.symbol_mapped.value.borrow_mut().to_ty().unwrap_or(Ty::Error)
       }
-      PropertyKeyType::StringLiteral(s) => {
-        if let Some(property) = self.string_keyed.get(s.as_str()) {
-          property.value.clone()
-        } else {
-          Ty::Error
-        }
-      }
-      PropertyKeyType::NumericLiteral(n) => {
-        if let Some(property) = self.string_keyed.get(n.0.to_js_string().as_str()) {
-          property.value.clone()
-        } else {
-          Ty::Error
-        }
-      }
-      PropertyKeyType::UniqueSymbol(s) => {
-        if let Some(property) = self.symbol_keyed.get(&s) {
-          property.value.clone()
-        } else {
-          Ty::Error
-        }
-      }
+      PropertyKeyType::StringLiteral(s) => self.string_keyed.get(s.as_str()),
+      PropertyKeyType::NumericLiteral(n) => self.string_keyed.get(n.0.to_js_string().as_str()),
+      PropertyKeyType::UniqueSymbol(s) => self.symbol_keyed.get(s),
     }
   }
 
@@ -120,16 +152,17 @@ impl<'a> RecordType<'a> {
   }
 
   pub fn extend(&mut self, other: &RecordType<'a>) {
-    self.string_keyed.extend(other.string_keyed.clone());
-    self.symbol_keyed.extend(other.symbol_keyed.clone());
+    // FIXME: overload
+    self.string_keyed.0.extend(other.string_keyed.0.clone());
+    self.symbol_keyed.0.extend(other.symbol_keyed.0.clone());
     self.string_mapped = other.string_mapped.clone();
     self.number_mapped = other.number_mapped.clone();
     self.symbol_mapped = other.symbol_mapped.clone();
   }
 
   pub fn is_empty(&self) -> bool {
-    self.string_keyed.is_empty()
-      && self.symbol_keyed.is_empty()
+    self.string_keyed.0.is_empty()
+      && self.symbol_keyed.0.is_empty()
       && self.string_mapped.value.borrow().is_empty()
       && self.number_mapped.value.borrow().is_empty()
       && self.symbol_mapped.value.borrow().is_empty()
@@ -173,7 +206,7 @@ impl<'a> Analyzer<'a> {
 
   pub fn print_record_type(&self, record: &RecordType<'a>) -> TSType<'a> {
     let mut members = self.ast_builder.vec();
-    for (key, property) in &record.string_keyed {
+    for (key, property) in &record.string_keyed.0 {
       members.push(
         self.print_keyed_property(
           self.ast_builder.property_key_identifier_name(SPAN, *key),
@@ -181,7 +214,7 @@ impl<'a> Analyzer<'a> {
         ),
       );
     }
-    for (key, property) in &record.symbol_keyed {
+    for (key, property) in &record.symbol_keyed.0 {
       members.push(self.print_keyed_property(todo!(), property));
     }
     if let Some(node) = self
