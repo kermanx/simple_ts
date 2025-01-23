@@ -62,8 +62,9 @@ impl Facts {
 impl<'a> Analyzer<'a> {
   pub fn get_facts(&mut self, ty: Ty<'a>) -> Facts {
     match ty {
-      Ty::Error => Facts::NONE,
+      Ty::WithCtx(w) => self.resolve_with_ctx(w, |a, t| a.get_facts(t)),
 
+      Ty::Error => Facts::NONE,
       Ty::Any => Facts::NONE,
       Ty::Unknown => Facts::NONE,
       Ty::Never => Facts::T_NE_ALL,

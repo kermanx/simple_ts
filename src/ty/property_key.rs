@@ -19,6 +19,8 @@ pub enum PropertyKeyType<'a> {
 impl<'a> Analyzer<'a> {
   pub fn to_property_key(&mut self, ty: Ty<'a>) -> PropertyKeyType<'a> {
     match ty {
+      Ty::WithCtx(w) => self.resolve_with_ctx(w, |a, t| a.to_property_key(t)),
+
       Ty::Error => PropertyKeyType::Error,
 
       Ty::Any => {

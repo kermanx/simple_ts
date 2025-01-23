@@ -17,6 +17,7 @@ pub mod tuple;
 pub mod union;
 pub mod unresolved;
 pub mod widen;
+pub mod with_ctx;
 
 use std::{hash, mem};
 
@@ -32,14 +33,18 @@ use record::RecordType;
 use tuple::TupleType;
 use union::UnionType;
 use unresolved::UnresolvedType;
+use with_ctx::WithCtxType;
 
 use crate::{analyzer::Analyzer, utils::F64WithEq};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Ty<'a> {
-  Error,
+  /* Contextual */
+  WithCtx(&'a WithCtxType<'a>),
+  Unresolved(UnresolvedType<'a>),
 
   /* Intrinsics */
+  Error,
   Any,
   Unknown,
   Never,
@@ -81,13 +86,14 @@ pub enum Ty<'a> {
 
   Namespace(&'a NamespaceType<'a>),
   // -- HKT ends here
-  Unresolved(UnresolvedType<'a>),
 }
 
 impl<'a> PartialEq for Ty<'a> {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
       (Ty::Error, Ty::Error) => true,
+      (Ty::WithCtx(a), Ty::WithCtx(b)) => a as *const _ == b,
+      (Ty::Unresolved(a), Ty::Unresolved(b)) => a as *const _ == b,
       (Ty::Any, Ty::Any) => true,
       (Ty::Unknown, Ty::Unknown) => true,
       (Ty::Never, Ty::Never) => true,
@@ -115,7 +121,6 @@ impl<'a> PartialEq for Ty<'a> {
       (Ty::Generic(a), Ty::Generic(b)) => a as *const _ == b,
       (Ty::Intrinsic(a), Ty::Intrinsic(b)) => a as *const _ == b,
       (Ty::Namespace(a), Ty::Namespace(b)) => a as *const _ == b,
-      (Ty::Unresolved(a), Ty::Unresolved(b)) => a as *const _ == b,
       _ => false,
     }
   }
@@ -134,6 +139,7 @@ impl<'a> hash::Hash for Ty<'a> {
       Ty::UniqueSymbol(id) => id.hash(state),
       Ty::Record(r) => (r as *const _ as usize).hash(state),
       Ty::Interface(i) => (i as *const _ as usize).hash(state),
+      Ty::Tuple(t) => (t as *const _ as usize).hash(state),
       Ty::Function(f) => (f as *const _ as usize).hash(state),
       Ty::Constructor(c) => (c as *const _ as usize).hash(state),
       Ty::Union(u) => (u as *const _ as usize).hash(state),
@@ -143,6 +149,7 @@ impl<'a> hash::Hash for Ty<'a> {
       Ty::Intrinsic(i) => (i as *const _ as usize).hash(state),
       Ty::Namespace(n) => (n as *const _ as usize).hash(state),
       Ty::Unresolved(u) => (u as *const _ as usize).hash(state),
+      Ty::WithCtx(w) => (w as *const _ as usize).hash(state),
       _ => {}
     }
   }

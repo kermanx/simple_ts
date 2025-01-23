@@ -51,14 +51,14 @@ impl<'a> Analyzer<'a> {
 
     self.type_scopes.push();
     self.instantiate_generic_param(&callable.type_params, type_args);
-    let this_type = callable.this_param.map(|ty| self.resolve_unresolved(ty));
+    let this_type = callable.this_param.map(|ty| self.wrap_with_ctx(ty));
     let params = callable
       .params
       .iter()
-      .map(|(optional, ty)| (*optional, self.resolve_unresolved(*ty)))
+      .map(|(optional, ty)| (*optional, self.wrap_with_ctx(*ty)))
       .collect();
-    let rest_param = callable.rest_param.map(|ty| self.resolve_unresolved(ty));
-    let return_type = self.resolve_unresolved(callable.return_type);
+    let rest_param = callable.rest_param.map(|ty| self.wrap_with_ctx(ty));
+    let return_type = self.wrap_with_ctx(callable.return_type);
     self.type_scopes.pop();
     Some(self.allocator.alloc(CallableType {
       bivariant: callable.bivariant,
@@ -225,7 +225,7 @@ impl<'a> Analyzer<'a> {
             self.instantiate_generic_param(&callable.type_params, &type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
-            let ret = self.resolve_unresolved(callable.return_type);
+            let ret = self.wrap_with_ctx(callable.return_type);
             self.type_scopes.pop();
             ret
           } else {

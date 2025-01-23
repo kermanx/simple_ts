@@ -70,7 +70,7 @@ impl<'a> Analyzer<'a> {
       Ty::Generic(generic) => {
         self.type_scopes.push();
         self.instantiate_generic_param(&generic.params, &instance.args);
-        let result = self.resolve_unresolved(generic.body);
+        let result = self.wrap_with_ctx(generic.body);
         self.type_scopes.pop();
         result
       }

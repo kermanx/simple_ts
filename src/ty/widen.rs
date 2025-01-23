@@ -4,6 +4,9 @@ use crate::Analyzer;
 impl<'a> Analyzer<'a> {
   pub fn get_widened_type(&mut self, ty: Ty<'a>) -> Ty<'a> {
     match ty {
+      Ty::WithCtx(w) => self.resolve_with_ctx(w, |this, ty| this.get_widened_type(ty)),
+      Ty::Unresolved(_) => todo!(),
+
       Ty::Error
       | Ty::Any
       | Ty::Unknown
@@ -37,8 +40,6 @@ impl<'a> Analyzer<'a> {
       Ty::Instance(_) => ty,
 
       Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => Ty::Error,
-
-      Ty::Unresolved(_) => todo!(),
     }
   }
 }

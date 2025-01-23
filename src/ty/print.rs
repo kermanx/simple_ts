@@ -10,6 +10,9 @@ use crate::analyzer::Analyzer;
 impl<'a> Analyzer<'a> {
   pub fn print_type(&mut self, ty: Ty<'a>) -> TSType<'a> {
     match ty {
+      Ty::WithCtx(w) => self.resolve_with_ctx(&w, |a, t| a.print_type(t)),
+      Ty::Unresolved(u) => self.print_unresolved_type(u),
+
       Ty::Error | Ty::Any => self.ast_builder.ts_type_any_keyword(SPAN),
       Ty::Unknown => self.ast_builder.ts_type_unknown_keyword(SPAN),
       Ty::Never => self.ast_builder.ts_type_never_keyword(SPAN),
@@ -57,8 +60,6 @@ impl<'a> Analyzer<'a> {
       Ty::Instance(i) => self.print_instance_type(i),
       Ty::Generic(g) => self.print_generic_type(g),
       Ty::Intrinsic(i) => self.print_intrinsic_type(i),
-
-      Ty::Unresolved(u) => self.print_unresolved_type(u),
     }
   }
 }

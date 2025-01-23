@@ -84,6 +84,17 @@ impl<'a> IntersectionTypeBuilder<'a> {
       }
     } else if self.kind != IntersectionBuilderState::Never {
       let kind = match ty {
+        Ty::WithCtx(w) => {
+          analyzer.resolve_with_ctx(w, |a, t| {
+            self.add(a, t);
+          });
+          return;
+        }
+        Ty::Unresolved(u) => {
+          self.unresolved.push(u);
+          return;
+        }
+
         Ty::Error => IntersectionBuilderState::Error,
         Ty::Any => IntersectionBuilderState::Any,
         Ty::Unknown => IntersectionBuilderState::Unknown,
@@ -138,11 +149,6 @@ impl<'a> IntersectionTypeBuilder<'a> {
           return;
         }
         Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => IntersectionBuilderState::Error,
-
-        Ty::Unresolved(u) => {
-          self.unresolved.push(u);
-          return;
-        }
       };
       self.kind = self.kind.intersect(kind);
     }

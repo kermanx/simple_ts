@@ -34,15 +34,6 @@ pub enum UnresolvedType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn resolve_unresolved(&mut self, ty: Ty<'a>) -> Ty<'a> {
-    self.try_resolve_unresolved(ty).unwrap_or(ty)
-  }
-
-  /// Returns `None` if unchanged
-  pub fn try_resolve_unresolved(&mut self, ty: Ty<'a>) -> Option<Ty<'a>> {
-    todo!()
-  }
-
   pub fn print_unresolved_type(&mut self, unresolved: UnresolvedType<'a>) -> TSType<'a> {
     todo!("{:#?}", unresolved)
   }

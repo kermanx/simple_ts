@@ -4,6 +4,8 @@ use crate::Analyzer;
 impl<'a> Analyzer<'a> {
   pub fn get_property(&mut self, target: Ty<'a>, key: PropertyKeyType<'a>) -> Ty<'a> {
     match target {
+      Ty::WithCtx(w) => self.resolve_with_ctx(w, |a, t| a.get_property(t, key)),
+
       Ty::Error | Ty::Any | Ty::Never | Ty::Unknown => target,
 
       Ty::Void | Ty::Null | Ty::Undefined => Ty::Error,

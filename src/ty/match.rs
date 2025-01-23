@@ -41,6 +41,13 @@ impl<'a> Analyzer<'a> {
 
   fn match_covariant_types(&mut self, target: Ty<'a>, pattern: Ty<'a>) -> MatchResult<'a> {
     match (target, pattern) {
+      (Ty::WithCtx(w), _) => self.resolve_with_ctx(w, |this, ty| {
+        this.match_covariant_types(ty, pattern)
+      }),
+      (_, Ty::WithCtx(w)) => self.resolve_with_ctx(w, |this, ty| {
+        this.match_covariant_types(target, ty)
+      }),
+
       (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,
       (_, Ty::Generic(_) | Ty::Intrinsic(_)) => MatchResult::Error,
       (_, Ty::Namespace(_)) | (Ty::Namespace(_), _) => MatchResult::Error,

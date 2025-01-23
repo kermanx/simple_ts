@@ -15,18 +15,11 @@ impl<'a> Analyzer<'a> {
     } else {
       body
     };
+    self.accumulate_type(&node.id, ty);
     self.type_scopes.insert(symbol_id, ty);
   }
 
-  pub fn init_ts_type_alias(&mut self, node: &'a TSTypeAliasDeclaration<'a>) {
-    let symbol_id = node.id.symbol_id();
-    let unresolved = self.type_scopes.search(symbol_id);
-    let ty = if let Some(resolved) = self.try_resolve_unresolved(unresolved) {
-      self.type_scopes.insert(symbol_id, resolved);
-      resolved
-    } else {
-      unresolved
-    };
-    self.accumulate_type(&node.id, ty);
+  pub fn init_ts_type_alias(&mut self, _node: &'a TSTypeAliasDeclaration<'a>) {
+    // do nothing
   }
 }

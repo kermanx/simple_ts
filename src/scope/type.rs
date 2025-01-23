@@ -1,4 +1,4 @@
-use std::collections::hash_map::Entry;
+use std::{collections::hash_map::Entry, mem};
 
 use oxc::semantic::SymbolId;
 use oxc_index::{define_index_type, IndexVec};
@@ -77,5 +77,13 @@ impl<'a> TypeScopeTree<'a> {
 
   pub fn get_mut(&mut self, id: SymbolId) -> Option<&mut Ty<'a>> {
     self.nodes[self.top].types.get_mut(&id)
+  }
+
+  pub fn top(&self) -> TypeScopeId {
+    self.top
+  }
+
+  pub fn replace_top(&mut self, id: TypeScopeId) -> TypeScopeId {
+    mem::replace(&mut self.top, id)
   }
 }
