@@ -28,7 +28,6 @@ pub struct GenericInstanceType<'a> {
   pub generic: Ty<'a>,
   /// Defaults should already be applied
   pub args: Vec<Ty<'a>>,
-  pub unwrapped: RefCell<Option<Ty<'a>>>,
 }
 
 impl<'a> Analyzer<'a> {
@@ -73,34 +72,28 @@ impl<'a> Analyzer<'a> {
       Ty::Intrinsic(_) => {}
       _ => return Ty::Error,
     }
-    Ty::Instance(self.allocator.alloc(GenericInstanceType {
-      generic,
-      args,
-      unwrapped: RefCell::new(None),
-    }))
+    Ty::Instance(self.allocator.alloc(GenericInstanceType { generic, args }))
   }
 
   pub fn unwrap_generic_instance(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
-    *instance.unwrapped.borrow_mut().get_or_insert_with(|| {
-      match instance.generic {
-        Ty::Unresolved(_) => {
-          unreachable!("Generic itself should always be resolved when analyzing declaration")
-        }
-
-        // instance.generic is a generic type
-        Ty::Generic(generic) => {
-          let old_generics = self.take_generics();
-          self.instantiate_generic_param(&generic.params, &instance.args);
-          let result = self.resolve_unresolved(generic.body);
-          self.restore_generics(old_generics);
-          result
-        }
-        Ty::Intrinsic(_) => todo!(),
-
-        // instance.generic is a generic value (function or constructor or compound of them)
-        _ => self.instantiate_generic_value(instance.generic, &instance.args),
+    match instance.generic {
+      Ty::Unresolved(_) => {
+        unreachable!("Generic itself should always be resolved when analyzing declaration")
       }
-    })
+
+      // instance.generic is a generic type
+      Ty::Generic(generic) => {
+        let old_generics = self.take_generics();
+        self.instantiate_generic_param(&generic.params, &instance.args);
+        let result = self.resolve_unresolved(generic.body);
+        self.restore_generics(old_generics);
+        result
+      }
+      Ty::Intrinsic(_) => todo!(),
+
+      // instance.generic is a generic value (function or constructor or compound of them)
+      _ => self.instantiate_generic_value(instance.generic, &instance.args),
+    }
   }
 
   /// Returns `None` if the type parameters of callable unmatch the length of args.
