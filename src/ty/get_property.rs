@@ -20,9 +20,8 @@ impl<'a> Analyzer<'a> {
         self.get_property(self.builtins.function_prototype, key)
       }
 
-      Ty::Record(r) => self.get_record_property(r, key),
-      Ty::Interface(i) => todo!(),
-      Ty::Namespace(_) => todo!(),
+      Ty::Record(r) => r.get_property(key),
+      Ty::Interface(i) => i.get_interface_property(key),
 
       Ty::Union(u) => self.get_union_property(u, key),
       Ty::Intersection(_) => todo!(),
@@ -33,6 +32,8 @@ impl<'a> Analyzer<'a> {
         let lowest = self.get_lowest_type(target);
         self.get_property(lowest, key)
       }
+
+      Ty::Namespace(_) => todo!(),
     }
   }
 }

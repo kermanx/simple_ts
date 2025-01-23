@@ -69,13 +69,4 @@ impl<'a> TypeAccumulator<'a> {
       TypeAccumulator::FrozenUnion(union) => Some(Ty::Union(*union)),
     }
   }
-
-  pub fn get_property(&self, analyzer: &mut Analyzer<'a>, key: PropertyKeyType<'a>) -> Ty<'a> {
-    match self {
-      TypeAccumulator::None => Ty::Error,
-      TypeAccumulator::Single(ty) => analyzer.get_property(*ty, key),
-      TypeAccumulator::Union(union) => analyzer.get_union_property(union, key),
-      TypeAccumulator::FrozenUnion(union) => analyzer.get_union_property(union, key),
-    }
-  }
 }

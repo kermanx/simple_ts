@@ -1,9 +1,13 @@
 use std::cell::RefCell;
 
 use oxc::semantic::SymbolId;
+use oxc_syntax::number::ToJsString;
 use rustc_hash::FxHashMap;
 
-use super::{callable::FunctionType, record::RecordType, unresolved::UnresolvedType, Ty};
+use super::{
+  callable::FunctionType, property_key::PropertyKeyType, record::RecordType,
+  unresolved::UnresolvedType, Ty,
+};
 
 #[derive(Debug, Default)]
 pub struct InterfaceTypeInner<'a> {
@@ -48,6 +52,30 @@ impl<'a> InterfaceTypeInner<'a> {
 }
 
 impl<'a> InterfaceType<'a> {
+  pub fn get_interface_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
+    let inner = self.0.borrow();
+    match key {
+      PropertyKeyType::StringLiteral(s) => {
+        if let Some(property) = inner.string_keyed_methods.get(s.as_str()) {
+          return Ty::Function(property);
+        }
+      }
+      PropertyKeyType::NumericLiteral(n) => {
+        if let Some(property) = inner.string_keyed_methods.get(n.0.to_js_string().as_str()) {
+          return Ty::Function(property);
+        }
+      }
+      PropertyKeyType::UniqueSymbol(s) => {
+        if let Some(property) = inner.symbol_keyed_methods.get(&s) {
+          return Ty::Function(property);
+        }
+      }
+      _ => {}
+    }
+
+    inner.record.get_property(key)
+  }
+
   pub fn is_empty(&self) -> bool {
     let inner = self.0.borrow();
     inner.record.is_empty()

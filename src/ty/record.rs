@@ -78,6 +78,42 @@ impl<'a> RecordType<'a> {
     todo!()
   }
 
+  pub fn get_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
+    match key {
+      PropertyKeyType::Error => Ty::Error,
+      PropertyKeyType::AnyString => {
+        self.string_mapped.value.borrow_mut().to_ty().unwrap_or(Ty::Error)
+      }
+      PropertyKeyType::AnyNumber => {
+        self.number_mapped.value.borrow_mut().to_ty().unwrap_or(Ty::Error)
+      }
+      PropertyKeyType::AnySymbol => {
+        self.symbol_mapped.value.borrow_mut().to_ty().unwrap_or(Ty::Error)
+      }
+      PropertyKeyType::StringLiteral(s) => {
+        if let Some(property) = self.string_keyed.get(s.as_str()) {
+          property.value.clone()
+        } else {
+          Ty::Error
+        }
+      }
+      PropertyKeyType::NumericLiteral(n) => {
+        if let Some(property) = self.string_keyed.get(n.0.to_js_string().as_str()) {
+          property.value.clone()
+        } else {
+          Ty::Error
+        }
+      }
+      PropertyKeyType::UniqueSymbol(s) => {
+        if let Some(property) = self.symbol_keyed.get(&s) {
+          property.value.clone()
+        } else {
+          Ty::Error
+        }
+      }
+    }
+  }
+
   pub fn delete_property(&mut self, analyzer: &mut Analyzer<'a>, key: PropertyKeyType<'a>) {
     todo!()
   }
@@ -100,40 +136,6 @@ impl<'a> RecordType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn get_record_property(
-    &mut self,
-    record: &RecordType<'a>,
-    key: PropertyKeyType<'a>,
-  ) -> Ty<'a> {
-    match key {
-      PropertyKeyType::Error => Ty::Error,
-      PropertyKeyType::AnyString => record.string_mapped.value.borrow().get_property(self, key),
-      PropertyKeyType::AnyNumber => record.number_mapped.value.borrow().get_property(self, key),
-      PropertyKeyType::AnySymbol => record.symbol_mapped.value.borrow().get_property(self, key),
-      PropertyKeyType::StringLiteral(s) => {
-        if let Some(property) = record.string_keyed.get(s.as_str()) {
-          property.value.clone()
-        } else {
-          Ty::Error
-        }
-      }
-      PropertyKeyType::NumericLiteral(n) => {
-        if let Some(property) = record.string_keyed.get(n.0.to_js_string().as_str()) {
-          property.value.clone()
-        } else {
-          Ty::Error
-        }
-      }
-      PropertyKeyType::UniqueSymbol(s) => {
-        if let Some(property) = record.symbol_keyed.get(&s) {
-          property.value.clone()
-        } else {
-          Ty::Error
-        }
-      }
-    }
-  }
-
   fn print_keyed_property(
     &self,
     key: PropertyKey<'a>,
