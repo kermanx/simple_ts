@@ -1,6 +1,6 @@
-use oxc::semantic::ScopeId;
-
 use crate::ty::{accumulator::TypeAccumulator, Ty};
+
+use super::runtime::RuntimeScopeId;
 
 pub enum CallScopeReturnType<'a> {
   Annotated(Ty<'a>),
@@ -8,7 +8,7 @@ pub enum CallScopeReturnType<'a> {
 }
 
 pub struct CallScope<'a> {
-  pub body_scope: ScopeId,
+  pub body_scope: RuntimeScopeId,
 
   pub is_async: bool,
   pub is_generator: bool,
@@ -22,7 +22,7 @@ pub struct CallScope<'a> {
 
 impl<'a> CallScope<'a> {
   pub fn new(
-    body_scope: ScopeId,
+    body_scope: RuntimeScopeId,
     is_async: bool,
     is_generator: bool,
     this: Ty<'a>,

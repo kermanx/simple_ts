@@ -1,6 +1,8 @@
-use oxc::{ast::ast::LabeledStatement, semantic::ScopeId, span::Atom};
+use oxc::{ast::ast::LabeledStatement, span::Atom};
 
 use crate::analyzer::Analyzer;
+
+use super::runtime::RuntimeScopeId;
 
 #[derive(Debug, Clone, Copy)]
 pub enum CfScopeKind<'a> {
@@ -139,7 +141,11 @@ impl<'a> Analyzer<'a> {
     label_used
   }
 
-  pub fn apply_complementary_blocked_exits(&mut self, scope_1: ScopeId, scope_2: ScopeId) {
+  pub fn apply_complementary_blocked_exits(
+    &mut self,
+    scope_1: RuntimeScopeId,
+    scope_2: RuntimeScopeId,
+  ) {
     let blocked_1 = self.runtime_scopes.get(scope_1).kind.get_blocked_exit();
     let blocked_2 = self.runtime_scopes.get(scope_2).kind.get_blocked_exit();
     match (blocked_1, blocked_2) {

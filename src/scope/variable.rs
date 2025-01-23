@@ -1,4 +1,4 @@
-use oxc::semantic::{ScopeId, SymbolId};
+use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
 use crate::{
@@ -6,7 +6,7 @@ use crate::{
   ty::{unresolved::UnresolvedType, Ty},
 };
 
-use super::runtime::{RuntimeScope, RuntimeScopeTree};
+use super::runtime::{RuntimeScopeId, RuntimeScopeTree};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Variable<'a> {
@@ -89,7 +89,11 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn apply_shadows<const N: usize>(&mut self, scopes: [ScopeId; N], complementary: bool) {
+  pub fn apply_shadows<const N: usize>(
+    &mut self,
+    scopes: [RuntimeScopeId; N],
+    complementary: bool,
+  ) {
     let mut shadows: FxHashMap<SymbolId, Vec<Ty<'a>>> = FxHashMap::default();
     let mut len = 0;
     for scope in scopes {

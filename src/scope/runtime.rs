@@ -1,10 +1,14 @@
-use oxc::semantic::{ScopeId, SymbolId};
-use oxc_index::IndexVec;
+use oxc::semantic::SymbolId;
+use oxc_index::{define_index_type, IndexVec};
 use rustc_hash::FxHashMap;
 
 use crate::Analyzer;
 
 use super::{control::CfScopeKind, variable::Variable};
+
+define_index_type! {
+  pub struct RuntimeScopeId = u32;
+}
 
 #[derive(Debug)]
 pub struct RuntimeScope<'a> {
@@ -15,26 +19,26 @@ pub struct RuntimeScope<'a> {
 
 #[derive(Debug, Default)]
 pub struct RuntimeScopeTree<'a> {
-  pub nodes: IndexVec<ScopeId, RuntimeScope<'a>>,
-  pub stack: Vec<ScopeId>,
+  pub nodes: IndexVec<RuntimeScopeId, RuntimeScope<'a>>,
+  pub stack: Vec<RuntimeScopeId>,
 }
 
 impl<'a> RuntimeScopeTree<'a> {
-  pub fn push(&mut self, scope: RuntimeScope<'a>) -> ScopeId {
+  pub fn push(&mut self, scope: RuntimeScope<'a>) -> RuntimeScopeId {
     let id = self.nodes.push(scope);
     self.stack.push(id);
     id
   }
 
-  pub fn pop(&mut self) -> ScopeId {
+  pub fn pop(&mut self) -> RuntimeScopeId {
     self.stack.pop().unwrap()
   }
 
-  pub fn get(&self, id: ScopeId) -> &RuntimeScope<'a> {
+  pub fn get(&self, id: RuntimeScopeId) -> &RuntimeScope<'a> {
     &self.nodes.get(id).unwrap()
   }
 
-  pub fn get_mut(&mut self, id: ScopeId) -> &mut RuntimeScope<'a> {
+  pub fn get_mut(&mut self, id: RuntimeScopeId) -> &mut RuntimeScope<'a> {
     self.nodes.get_mut(id).unwrap()
   }
 
@@ -51,7 +55,7 @@ impl<'a> RuntimeScopeTree<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn push_scope(&mut self, kind: CfScopeKind<'a>) -> ScopeId {
+  pub fn push_scope(&mut self, kind: CfScopeKind<'a>) -> RuntimeScopeId {
     self.runtime_scopes.push(RuntimeScope {
       kind,
       exited: Some(false),
@@ -59,7 +63,7 @@ impl<'a> Analyzer<'a> {
     })
   }
 
-  pub fn push_indeterminate_scope(&mut self) -> ScopeId {
+  pub fn push_indeterminate_scope(&mut self) -> RuntimeScopeId {
     self.runtime_scopes.push(RuntimeScope {
       kind: CfScopeKind::Indeterminate,
       exited: None,
@@ -67,7 +71,7 @@ impl<'a> Analyzer<'a> {
     })
   }
 
-  pub fn push_exit_blocker_scope(&mut self) -> ScopeId {
+  pub fn push_exit_blocker_scope(&mut self) -> RuntimeScopeId {
     self.runtime_scopes.push(RuntimeScope {
       kind: CfScopeKind::ExitBlocker(None),
       exited: None,
@@ -75,7 +79,7 @@ impl<'a> Analyzer<'a> {
     })
   }
 
-  pub fn push_loop_scope(&mut self) -> ScopeId {
+  pub fn push_loop_scope(&mut self) -> RuntimeScopeId {
     self.runtime_scopes.push(RuntimeScope {
       kind: CfScopeKind::Loop,
       exited: None,
@@ -92,7 +96,11 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn finalize_complementary_scopes(&mut self, scope_1: ScopeId, scope_2: ScopeId) {
+  pub fn finalize_complementary_scopes(
+    &mut self,
+    scope_1: RuntimeScopeId,
+    scope_2: RuntimeScopeId,
+  ) {
     self.apply_shadows([scope_1, scope_2], true);
     self.apply_complementary_blocked_exits(scope_1, scope_2);
   }
