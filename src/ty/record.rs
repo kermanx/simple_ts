@@ -56,6 +56,7 @@ impl<'a> RecordType<'a> {
         self.string_mapped.value.borrow_mut().add(value, analyzer.allocator);
       }
       PropertyKeyType::AnyNumber => {
+        self.string_mapped.value.borrow_mut().add(value, analyzer.allocator);
         self.number_mapped.value.borrow_mut().add(value, analyzer.allocator);
       }
       PropertyKeyType::AnySymbol => {
