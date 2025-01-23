@@ -1,4 +1,4 @@
-use oxc::ast::ast::{Expression, TSInterfaceDeclaration, TSType};
+use oxc::ast::ast::{Expression, TSInterfaceDeclaration};
 
 use crate::{
   ty::{
@@ -71,9 +71,5 @@ impl<'a> Analyzer<'a> {
     }
 
     *self.types.get(&symbol_id).unwrap()
-  }
-
-  pub fn print_interface_type(&self, interface: &InterfaceType<'a>) -> TSType<'a> {
-    todo!()
   }
 }

@@ -3,7 +3,7 @@ mod ts_conditional_type;
 mod ts_function_type;
 mod ts_infer_type;
 mod ts_instantiation_expression;
-mod ts_interface;
+mod ts_interface_declaration;
 mod ts_intersection_type;
 mod ts_literal;
 mod ts_non_null_expression;

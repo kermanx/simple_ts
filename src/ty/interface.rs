@@ -1,8 +1,10 @@
 use std::cell::RefCell;
 
-use oxc::semantic::SymbolId;
+use oxc::{ast::ast::TSType, semantic::SymbolId};
 use oxc_syntax::number::ToJsString;
 use rustc_hash::FxHashMap;
+
+use crate::Analyzer;
 
 use super::{
   callable::FunctionType, property_key::PropertyKeyType, record::RecordType,
@@ -83,5 +85,11 @@ impl<'a> InterfaceType<'a> {
       && inner.string_keyed_methods.is_empty()
       && inner.symbol_keyed_methods.is_empty()
       && inner.unresolved_extends.is_empty()
+  }
+}
+
+impl<'a> Analyzer<'a> {
+  pub fn print_interface_type(&self, interface: &InterfaceType<'a>) -> TSType<'a> {
+    todo!()
   }
 }
