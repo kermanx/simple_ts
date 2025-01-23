@@ -210,6 +210,7 @@ impl<'a> Analyzer<'a> {
     type_parameters: &'a Option<allocator::Box<'a, TSTypeParameterInstantiation<'a>>>,
     this_arg: Ty<'a>,
     arguments: &'a allocator::Vec<'a, Argument<'a>>,
+    ret_sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
     if let Some(callable) = callable {
       match callable {

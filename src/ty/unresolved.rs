@@ -45,11 +45,11 @@ impl<'a> Analyzer<'a> {
         UnresolvedType::UnInitVariable(_) => None,
         UnresolvedType::UnInitType(symbol) => match *self.types.get(&symbol).unwrap() {
           Ty::Unresolved(UnresolvedType::UnInitType(s)) if s == symbol => None,
-          ty => self.try_resolve_unresolved(ty),
+          ty => Some(self.resolve_unresolved(ty)),
         },
         UnresolvedType::GenericParam(symbol) => match *self.generics.get(&symbol).unwrap() {
           Ty::Unresolved(UnresolvedType::GenericParam(s)) if s == symbol => None,
-          ty => self.try_resolve_unresolved(ty),
+          ty => Some(self.resolve_unresolved(ty)),
         },
         UnresolvedType::Conditional(cond) => {
           let c = self.try_resolve_unresolved(cond.check);
@@ -97,6 +97,6 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn print_unresolved_type(&self, unresolved: UnresolvedType<'a>) -> TSType<'a> {
-    todo!()
+    todo!("{:#?}", unresolved)
   }
 }
