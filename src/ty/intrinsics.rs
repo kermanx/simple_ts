@@ -9,7 +9,7 @@ pub struct IntrinsicType {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn print_intrinsic_type(&self, intrinsic: &IntrinsicType) -> TSType<'a> {
+  pub fn print_intrinsic_type(&mut self, intrinsic: &IntrinsicType) -> TSType<'a> {
     todo!()
   }
 }

@@ -49,16 +49,6 @@ impl<'a> TypeAccumulator<'a> {
     }
   }
 
-  pub fn frozen_clone(&mut self) -> TypeAccumulator<'a> {
-    self.frozen();
-    match self {
-      TypeAccumulator::None => TypeAccumulator::None,
-      TypeAccumulator::Single(ty) => TypeAccumulator::Single(*ty),
-      TypeAccumulator::Union(_) => unreachable!(),
-      TypeAccumulator::FrozenUnion(union) => TypeAccumulator::FrozenUnion(union),
-    }
-  }
-
   pub fn to_ty(&mut self) -> Option<Ty<'a>> {
     self.frozen();
     match &*self {
@@ -66,6 +56,14 @@ impl<'a> TypeAccumulator<'a> {
       TypeAccumulator::Single(ty) => Some(*ty),
       TypeAccumulator::Union(_) => unreachable!(),
       TypeAccumulator::FrozenUnion(union) => Some(Ty::Union(*union)),
+    }
+  }
+
+  pub fn duplicate(&mut self) -> TypeAccumulator<'a> {
+    if let Some(ty) = self.to_ty() {
+      TypeAccumulator::Single(ty)
+    } else {
+      TypeAccumulator::None
     }
   }
 }

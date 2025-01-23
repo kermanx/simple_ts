@@ -13,13 +13,13 @@ use crate::{analyzer::Analyzer, ty::union::UnionType};
 
 #[derive(Debug, Clone)]
 pub struct KeyedProperty<'a> {
-  value: Ty<'a>,
-  optional: bool,
-  readonly: bool,
+  pub value: Ty<'a>,
+  pub optional: bool,
+  pub readonly: bool,
 }
 
 #[derive(Debug, Clone)]
-pub struct KeyedPropertyMap<'a, K>(FxHashMap<K, KeyedProperty<'a>>);
+pub struct KeyedPropertyMap<'a, K>(pub FxHashMap<K, KeyedProperty<'a>>);
 
 // FIXME: Why is this not derived?
 impl<'a, K> Default for KeyedPropertyMap<'a, K> {
@@ -76,7 +76,7 @@ pub struct MappedProperty<'a> {
 
 impl<'a> Clone for MappedProperty<'a> {
   fn clone(&self) -> Self {
-    Self { value: RefCell::new(self.value.borrow_mut().frozen_clone()), readonly: self.readonly }
+    Self { value: RefCell::new(self.value.borrow_mut().duplicate()), readonly: self.readonly }
   }
 }
 
@@ -171,7 +171,7 @@ impl<'a> RecordType<'a> {
 
 impl<'a> Analyzer<'a> {
   fn print_keyed_property(
-    &self,
+    &mut self,
     key: PropertyKey<'a>,
     property: &KeyedProperty<'a>,
   ) -> TSSignature<'a> {
@@ -186,7 +186,7 @@ impl<'a> Analyzer<'a> {
   }
 
   fn print_mapped_property(
-    &self,
+    &mut self,
     key_type: TSType<'a>,
     property: &MappedProperty<'a>,
   ) -> Option<TSSignature<'a>> {
@@ -204,7 +204,7 @@ impl<'a> Analyzer<'a> {
     ))
   }
 
-  pub fn print_record_type(&self, record: &RecordType<'a>) -> TSType<'a> {
+  pub fn print_record_type(&mut self, record: &RecordType<'a>) -> TSType<'a> {
     let mut members = self.ast_builder.vec();
     for (key, property) in &record.string_keyed.0 {
       members.push(

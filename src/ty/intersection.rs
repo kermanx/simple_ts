@@ -286,7 +286,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn print_intersection_type(&self, intersection: &IntersectionType<'a>) -> TSType<'a> {
+  pub fn print_intersection_type(&mut self, intersection: &IntersectionType<'a>) -> TSType<'a> {
     let mut types = self.ast_builder.vec();
     intersection.for_each(|ty| types.push(self.print_type(ty)));
     self.ast_builder.ts_type_intersection_type(SPAN, types)

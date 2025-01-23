@@ -56,7 +56,7 @@ impl<'a> InterfaceType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn print_interface_type(&self, interface: &InterfaceType<'a>) -> TSType<'a> {
+  pub fn print_interface_type(&mut self, interface: &InterfaceType<'a>) -> TSType<'a> {
     todo!()
   }
 }

@@ -72,7 +72,10 @@ impl<'a> Analyzer<'a> {
         UnresolvedType::InferType(_) => None,
       },
 
-      Ty::Record(r) => todo!(),
+      Ty::Record(r) => {
+        println!("{:#?}", r);
+        todo!()
+      },
       Ty::Function(f) => todo!(),
       Ty::Constructor(c) => todo!(),
       Ty::Namespace(n) => todo!(),
@@ -96,7 +99,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn print_unresolved_type(&self, unresolved: UnresolvedType<'a>) -> TSType<'a> {
+  pub fn print_unresolved_type(&mut self, unresolved: UnresolvedType<'a>) -> TSType<'a> {
     todo!("{:#?}", unresolved)
   }
 }

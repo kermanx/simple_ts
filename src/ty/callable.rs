@@ -71,7 +71,7 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn print_callable_type<const CTOR: bool>(
-    &self,
+    &mut self,
     callable: &CallableType<'a, CTOR>,
   ) -> TSType<'a> {
     self.ast_builder.ts_type_function_type(

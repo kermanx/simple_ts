@@ -227,7 +227,7 @@ impl<'a> Analyzer<'a> {
     builder.build(self)
   }
 
-  pub fn print_union_type(&self, union: &UnionType<'a>) -> TSType<'a> {
+  pub fn print_union_type(&mut self, union: &UnionType<'a>) -> TSType<'a> {
     let mut types = self.ast_builder.vec();
     union.for_each(|ty| types.push(self.print_type(ty)));
     self.ast_builder.ts_type_union_type(SPAN, types)

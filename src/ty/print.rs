@@ -8,7 +8,7 @@ use super::Ty;
 use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
-  pub fn print_type(&self, ty: Ty<'a>) -> TSType<'a> {
+  pub fn print_type(&mut self, ty: Ty<'a>) -> TSType<'a> {
     match ty {
       Ty::Error | Ty::Any => self.ast_builder.ts_type_any_keyword(SPAN),
       Ty::Unknown => self.ast_builder.ts_type_unknown_keyword(SPAN),
