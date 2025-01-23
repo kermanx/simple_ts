@@ -46,8 +46,8 @@ impl<'a> CfScopeKind<'a> {
 impl<'a> Analyzer<'a> {
   fn exit_to_impl(&mut self, from_depth: usize, target_depth: usize, mut must_exit: bool) {
     for depth in (target_depth..from_depth).rev() {
-      let id = self.scopes.stack[depth];
-      let cf_scope = self.scopes.get_mut(id);
+      let id = self.cf_scopes.stack[depth];
+      let cf_scope = self.cf_scopes.get_mut(id);
 
       // Update exited state
       if must_exit {
@@ -76,7 +76,7 @@ impl<'a> Analyzer<'a> {
     let mut is_closest_breakable = true;
     let mut target_depth = None;
     let mut label_used = false;
-    for (idx, cf_scope) in self.scopes.iter_stack().enumerate().rev() {
+    for (idx, cf_scope) in self.cf_scopes.iter_stack().enumerate().rev() {
       if cf_scope.kind.is_function() {
         break;
       }
@@ -102,11 +102,11 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn exit_to(&mut self, target_depth: usize) {
-    self.exit_to_impl(target_depth, self.scopes.stack.len(), true);
+    self.exit_to_impl(target_depth, self.cf_scopes.stack.len(), true);
   }
 
   pub fn exit_to_not_must(&mut self, target_depth: usize) {
-    self.exit_to_impl(target_depth, self.scopes.stack.len(), false);
+    self.exit_to_impl(target_depth, self.cf_scopes.stack.len(), false);
   }
 
   /// If the label is used, `true` is returned.
@@ -114,7 +114,7 @@ impl<'a> Analyzer<'a> {
     let mut is_closest_continuable = true;
     let mut target_depth = None;
     let mut label_used = false;
-    for (idx, cf_scope) in self.scopes.iter_stack().enumerate().rev() {
+    for (idx, cf_scope) in self.cf_scopes.iter_stack().enumerate().rev() {
       if cf_scope.kind.is_function() {
         break;
       }
@@ -140,9 +140,9 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn is_indeterminate_to(&self, target: ScopeId) -> bool {
-    let first_different = self.scopes.find_lca(target).0 + 1;
-    for depth in first_different..self.scopes.stack.len() {
-      if self.scopes.get_from_depth(depth).exited.is_none() {
+    let first_different = self.cf_scopes.find_lca(target).0 + 1;
+    for depth in first_different..self.cf_scopes.stack.len() {
+      if self.cf_scopes.get_from_depth(depth).exited.is_none() {
         return true;
       }
     }
@@ -150,17 +150,17 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn apply_complementary_blocked_exits(&mut self, scope_1: ScopeId, scope_2: ScopeId) {
-    let blocked_1 = self.scopes.get(scope_1).kind.get_blocked_exit();
-    let blocked_2 = self.scopes.get(scope_2).kind.get_blocked_exit();
+    let blocked_1 = self.cf_scopes.get(scope_1).kind.get_blocked_exit();
+    let blocked_2 = self.cf_scopes.get(scope_2).kind.get_blocked_exit();
     match (blocked_1, blocked_2) {
       (Some(blocked_1), Some(blocked_2)) => {
         let inner = blocked_1.max(blocked_2);
         let outer = blocked_1.min(blocked_2);
-        self.exit_to_impl(self.scopes.stack.len(), inner, true);
+        self.exit_to_impl(self.cf_scopes.stack.len(), inner, true);
         self.exit_to_impl(inner, outer, false);
       }
       (Some(blocked), None) | (None, Some(blocked)) => {
-        self.exit_to_impl(self.scopes.stack.len(), blocked, false);
+        self.exit_to_impl(self.cf_scopes.stack.len(), blocked, false);
       }
       (None, None) => {}
     }

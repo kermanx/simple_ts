@@ -12,11 +12,11 @@ impl<'a> Analyzer<'a> {
 
     self.push_exit_blocker_scope();
     let consequent = self.exec_expression(&node.consequent, sat);
-    let scope_1 = self.scopes.pop();
+    let scope_1 = self.cf_scopes.pop();
 
     self.push_exit_blocker_scope();
     let alternate = self.exec_expression(&node.alternate, sat);
-    let scope_2 = self.scopes.pop();
+    let scope_2 = self.cf_scopes.pop();
 
     self.finalize_complementary_scopes(scope_1, scope_2);
 

@@ -75,7 +75,7 @@ impl<'a> Analyzer<'a> {
       Ty::Record(r) => {
         println!("{:#?}", r);
         todo!()
-      },
+      }
       Ty::Function(f) => todo!(),
       Ty::Constructor(c) => todo!(),
       Ty::Namespace(n) => todo!(),

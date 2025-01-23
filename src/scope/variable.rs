@@ -27,7 +27,7 @@ impl<'a> Analyzer<'a> {
     if typed {
       self.variables.insert(symbol, Ty::Unresolved(UnresolvedType::UnInitVariable(symbol)));
     } else {
-      self.scopes.get_current_mut().variables.insert(symbol, Variable::inferred(Ty::Undefined));
+      self.cf_scopes.get_current_mut().variables.insert(symbol, Variable::inferred(Ty::Undefined));
     }
   }
 
@@ -35,8 +35,8 @@ impl<'a> Analyzer<'a> {
     if let Some(resolved) = self.variables.get_mut(&symbol) {
       *resolved = value;
     } else {
-      for depth in (0..self.scopes.stack.len()).rev() {
-        let scope = self.scopes.get_mut_from_depth(depth);
+      for depth in (0..self.cf_scopes.stack.len()).rev() {
+        let scope = self.cf_scopes.get_mut_from_depth(depth);
         if let Some(variable) = scope.variables.get_mut(&symbol) {
           variable.value = value;
           return;
@@ -49,7 +49,7 @@ impl<'a> Analyzer<'a> {
     if let Some(resolved) = self.variables.get(&symbol) {
       *resolved
     } else {
-      for scope in self.scopes.iter_stack().rev() {
+      for scope in self.cf_scopes.iter_stack().rev() {
         if let Some(variable) = scope.variables.get(&symbol) {
           return variable.value;
         }
@@ -73,7 +73,7 @@ impl<'a> Analyzer<'a> {
       // CHECKER: Should check type compatibility
     } else {
       self
-        .scopes
+        .cf_scopes
         .get_current_mut()
         .variables
         .entry(symbol)
@@ -87,7 +87,7 @@ impl<'a> Analyzer<'a> {
     let mut len = 0;
     for scope in scopes {
       len += 1;
-      let scope = self.scopes.get(scope);
+      let scope = self.cf_scopes.get(scope);
       for (symbol, variable) in &scope.variables {
         if variable.is_shadow {
           shadows.entry(*symbol).or_default().push(variable.value);
