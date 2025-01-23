@@ -49,7 +49,7 @@ impl<'a> Analyzer<'a> {
       return None;
     }
 
-    let old_generics = self.take_generics();
+    self.type_scopes.push();
     self.instantiate_generic_param(&callable.type_params, type_args);
     let this_type = callable.this_param.map(|ty| self.resolve_unresolved(ty));
     let params = callable
@@ -59,7 +59,7 @@ impl<'a> Analyzer<'a> {
       .collect();
     let rest_param = callable.rest_param.map(|ty| self.resolve_unresolved(ty));
     let return_type = self.resolve_unresolved(callable.return_type);
-    self.restore_generics(old_generics);
+    self.type_scopes.pop();
     Some(self.allocator.alloc(CallableType {
       bivariant: callable.bivariant,
       type_params: vec![],
@@ -221,12 +221,12 @@ impl<'a> Analyzer<'a> {
             callable.return_type
           } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
-            let old_generics = self.take_generics();
+            self.type_scopes.push();
             self.instantiate_generic_param(&callable.type_params, &type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
             let ret = self.resolve_unresolved(callable.return_type);
-            self.restore_generics(old_generics);
+            self.type_scopes.pop();
             ret
           } else {
             todo!()

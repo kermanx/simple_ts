@@ -12,10 +12,7 @@ impl<'a> Analyzer<'a> {
   ) -> Vec<GenericParam<'a>> {
     for param in &node.params {
       let symbol_id = param.name.symbol_id();
-      self
-        .types
-        .entry(symbol_id)
-        .or_insert_with(|| Ty::Unresolved(UnresolvedType::GenericParam(symbol_id)));
+      self.type_scopes.insert(symbol_id, Ty::Unresolved(UnresolvedType::GenericParam(symbol_id)));
     }
     node
       .params

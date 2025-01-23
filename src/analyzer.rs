@@ -15,6 +15,7 @@ use crate::{
   scope::{
     call::CallScope,
     control::CfScopeKind,
+    r#type::TypeScopeTree,
     runtime::{RuntimeScope, RuntimeScopeTree},
   },
   ty::{accumulator::TypeAccumulator, unresolved::UnresolvedType, Ty},
@@ -32,17 +33,12 @@ pub struct Analyzer<'a> {
   pub span_stack: Vec<Span>,
   pub call_scopes: Vec<CallScope<'a>>,
   pub runtime_scopes: RuntimeScopeTree<'a>,
+  pub type_scopes: TypeScopeTree<'a>,
 
   /// Variables with a unique type
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
-  /// - Resolved type aliases
-  /// - generic parameters, which always map to `UnresolvedType::GenericParam`
-  pub types: FxHashMap<SymbolId, Ty<'a>>,
   /// Generic parameter with its constraint
   pub generic_constraints: FxHashMap<SymbolId, Ty<'a>>,
-  /// Instantiated generic parameters
-  /// Use `Box` to make `mem::replace` faster
-  pub generics: Box<FxHashMap<SymbolId, Ty<'a>>>,
 
   pub diagnostics: BTreeSet<String>,
   pub span_to_type: FxHashMap<Span, TypeAccumulator<'a>>,
@@ -78,11 +74,10 @@ impl<'a> Analyzer<'a> {
       span_stack: Vec::new(),
       call_scopes: Vec::from([root_call_scope]),
       runtime_scopes,
+      type_scopes: TypeScopeTree::new(),
 
       variables: Default::default(),
-      types: Default::default(),
       generic_constraints: Default::default(),
-      generics: Default::default(),
 
       diagnostics: Default::default(),
       span_to_type: Default::default(),
@@ -132,21 +127,6 @@ impl<'a> Analyzer<'a> {
 
   pub fn resolve_global_type(&mut self, id: &'a str) -> Ty<'a> {
     todo!()
-  }
-
-  pub fn read_type(&self, symbol: Option<SymbolId>) -> Ty<'a> {
-    if let Some(symbol) = symbol {
-      if let Some(generic) = self.generics.get(&symbol) {
-        *generic
-      } else if let Some(resolved) = self.types.get(&symbol) {
-        *resolved
-      } else {
-        Ty::Unresolved(UnresolvedType::UnInitType(symbol))
-      }
-    } else {
-      // Global symbol
-      Ty::Any
-    }
   }
 
   pub fn accumulate_type(&mut self, span: &impl GetSpan, ty: Ty<'a>) {
