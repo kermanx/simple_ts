@@ -1,7 +1,7 @@
 use oxc::{allocator, ast::ast::TSSignature};
 
 use crate::{
-  ty::{callable::CallableType, record::RecordType, Ty},
+  ty::{callable::CallableType, property_key::PropertyKeyType, record::RecordType, Ty},
   Analyzer,
 };
 
@@ -59,6 +59,7 @@ impl<'a> Analyzer<'a> {
             .map_or(Ty::Any, |return_type| self.resolve_type_annotation(return_type));
 
           callables.push(Ty::Function(self.allocator.alloc(CallableType {
+            bivariant: false,
             type_params,
             this_param,
             params,
@@ -67,7 +68,48 @@ impl<'a> Analyzer<'a> {
           })))
         }
         TSSignature::TSConstructSignatureDeclaration(node) => todo!(),
-        TSSignature::TSMethodSignature(node) => todo!(),
+        TSSignature::TSMethodSignature(node) => {
+          let type_params = node
+            .type_parameters
+            .as_ref()
+            .map(|type_params| self.resolve_type_parameter_declaration(type_params))
+            .unwrap_or_default();
+          let this_param =
+            node.this_param.as_ref().map(|this_param| self.resovle_this_parameter(this_param));
+          let (_, params, rest_param) = self.resolve_formal_parameters(&node.params);
+          let return_type = node
+            .return_type
+            .as_ref()
+            .map_or(Ty::Any, |return_type| self.resolve_type_annotation(return_type));
+
+          let function = Ty::Function(self.allocator.alloc(CallableType {
+            bivariant: true,
+            type_params,
+            this_param,
+            params,
+            rest_param,
+            return_type,
+          }));
+
+          let key = self.exec_property_key(&node.key);
+
+          if matches!(
+            key,
+            PropertyKeyType::NumericLiteral(_)
+              | PropertyKeyType::StringLiteral(_)
+              | PropertyKeyType::UniqueSymbol(_)
+          ) {
+            record.get_or_insert_with(alloc_record).init_property(
+              self,
+              key,
+              function,
+              node.optional,
+              false,
+            );
+          } else {
+            // A computed property name in an interface must refer to an expression whose type is a literal type or a 'unique symbol' type.
+          }
+        }
       }
     }
   }

@@ -18,6 +18,7 @@ impl<'a> Analyzer<'a> {
     let return_type = self.resolve_type_annotation(&node.return_type);
 
     Ty::Function(self.allocator.alloc(CallableType {
+      bivariant: false,
       type_params,
       this_param,
       params,

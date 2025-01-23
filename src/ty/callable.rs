@@ -25,6 +25,9 @@ pub enum ReturnType<'a> {
 
 #[derive(Debug, Clone)]
 pub struct CallableType<'a, const CTOR: bool> {
+  /// Method is bivariant
+  pub bivariant: bool,
+
   pub type_params: Vec<GenericParam<'a>>,
   pub this_param: Option<Ty<'a>>,
   /// (optional, type)
@@ -58,6 +61,7 @@ impl<'a> Analyzer<'a> {
     let return_type = self.resolve_unresolved(callable.return_type);
     self.restore_generics(old_generics);
     Some(self.allocator.alloc(CallableType {
+      bivariant: callable.bivariant,
       type_params: vec![],
       this_param: this_type,
       params,
