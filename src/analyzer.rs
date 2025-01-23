@@ -12,7 +12,11 @@ use rustc_hash::FxHashMap;
 use crate::{
   builtins::Builtins,
   config::Config,
-  scope::{call::CallScope, cf::CfScopeKind, tree::ScopeTree, CfScope},
+  scope::{
+    call::CallScope,
+    control::CfScopeKind,
+    runtime::{RuntimeScope, RuntimeScopeTree},
+  },
   ty::{accumulator::TypeAccumulator, unresolved::UnresolvedType, Ty},
 };
 
@@ -27,7 +31,7 @@ pub struct Analyzer<'a> {
 
   pub span_stack: Vec<Span>,
   pub call_scopes: Vec<CallScope<'a>>,
-  pub cf_scopes: ScopeTree<CfScope<'a>>,
+  pub runtime_scopes: RuntimeScopeTree<'a>,
 
   /// Variables with a unique type
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
@@ -49,8 +53,8 @@ impl<'a> Analyzer<'a> {
   pub fn new(allocator: &'a Allocator, config: Config, semantic: Semantic<'a>) -> Self {
     let config = allocator.alloc(config);
 
-    let mut scopes = ScopeTree::new();
-    let root_scope = scopes.push(CfScope {
+    let mut runtime_scopes = RuntimeScopeTree::default();
+    let root_scope = runtime_scopes.push(RuntimeScope {
       kind: CfScopeKind::Module,
       exited: None,
       variables: Default::default(),
@@ -73,7 +77,7 @@ impl<'a> Analyzer<'a> {
 
       span_stack: Vec::new(),
       call_scopes: Vec::from([root_call_scope]),
-      cf_scopes: scopes,
+      runtime_scopes,
 
       variables: Default::default(),
       types: Default::default(),
@@ -89,7 +93,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_program(&mut self, node: &'a Program<'a>) {
     self.exec_statement_vec(&node.body);
 
-    assert_eq!(self.cf_scopes.stack.len(), 1);
+    assert_eq!(self.runtime_scopes.stack.len(), 1);
 
     #[cfg(feature = "flame")]
     flamescope::dump(&mut std::fs::File::create("flamescope.json").unwrap()).unwrap();

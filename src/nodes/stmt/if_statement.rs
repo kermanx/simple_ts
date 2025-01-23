@@ -15,11 +15,11 @@ impl<'a> Analyzer<'a> {
     self.exec_statement(&node.consequent);
 
     if let Some(alternate) = &node.alternate {
-      let scope_1 = self.cf_scopes.pop();
+      let scope_1 = self.runtime_scopes.pop();
 
       self.push_exit_blocker_scope();
       self.exec_statement(alternate);
-      let scope_2 = self.cf_scopes.pop();
+      let scope_2 = self.runtime_scopes.pop();
 
       self.finalize_complementary_scopes(scope_1, scope_2);
     } else {

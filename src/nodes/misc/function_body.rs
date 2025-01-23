@@ -4,7 +4,7 @@ use crate::{
   analyzer::Analyzer,
   scope::{
     call::{CallScope, CallScopeReturnType},
-    cf::CfScopeKind,
+    control::CfScopeKind,
   },
   ty::Ty,
 };
