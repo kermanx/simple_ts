@@ -13,7 +13,7 @@ impl<'a> Analyzer<'a> {
       Ty::Generic(self.allocator.alloc(GenericType {
         name: &node.id.name,
         params,
-        body: &node.type_annotation,
+        body: self.ctx_ty_from_ts_type(&node.type_annotation),
       }))
     } else {
       self.resolve_type(&node.type_annotation)

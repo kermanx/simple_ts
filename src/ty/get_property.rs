@@ -27,14 +27,18 @@ impl<'a> Analyzer<'a> {
       Ty::Union(u) => self.get_union_property(u, key),
       Ty::Intersection(_) => todo!(),
 
-      Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
+      Ty::Instance(i) => {
+        let unwrapped = self.unwrap_generic_instance(i);
+        self.get_property(unwrapped, key)
+      }
 
-      Ty::Instance(_) | Ty::Unresolved(_) => {
+      Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
+      Ty::Namespace(_) => todo!(),
+
+      Ty::Unresolved(_) => {
         let lowest = self.get_lowest_type(target);
         self.get_property(lowest, key)
       }
-
-      Ty::Namespace(_) => todo!(),
     }
   }
 }

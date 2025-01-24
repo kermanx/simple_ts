@@ -18,24 +18,24 @@ impl<'a> Analyzer<'a> {
         MatchResult::Error => return Ty::Error,
         MatchResult::Matched => {
           results.push(*matched_no_infer.get_or_insert_with(|| {
-            let old_generics = self.take_generics();
+            self.type_scopes.push();
             let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
             for symbol in infer_declarations.values() {
               self.type_scopes.insert(*symbol, Ty::Unknown);
             }
             let result = self.resolve_type(&node.true_type);
-            self.restore_generics(old_generics);
+            self.type_scopes.pop();
             result
           }));
         }
         MatchResult::Inferred(inferred) => {
-          let old_generics = self.replace_generics(Box::new(inferred));
+          self.type_scopes.push_with_types(inferred);
           let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
           for symbol in infer_declarations.values() {
             self.type_scopes.entry(*symbol).or_insert(Ty::Unknown);
           }
           results.push(self.resolve_type(&node.true_type));
-          self.restore_generics(old_generics);
+          self.type_scopes.pop();
         }
         MatchResult::Unmatched => {
           results.push(*unmatched.get_or_insert_with(|| self.resolve_type(&node.false_type)));

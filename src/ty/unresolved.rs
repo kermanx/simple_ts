@@ -3,7 +3,7 @@ use oxc::{ast::ast::TSType, semantic::SymbolId};
 use super::Ty;
 use crate::Analyzer;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UnresolvedType<'a> {
   UnInitVariable(SymbolId),
   UnInitType(SymbolId),

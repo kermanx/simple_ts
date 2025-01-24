@@ -9,7 +9,6 @@ mod ts_literal;
 mod ts_non_null_expression;
 mod ts_satisfies_expression;
 mod ts_signature_vec;
-mod ts_this_parameter;
 mod ts_tuple_element;
 mod ts_tuple_type;
 mod ts_type_alias;

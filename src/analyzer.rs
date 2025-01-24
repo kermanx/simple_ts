@@ -18,7 +18,7 @@ use crate::{
     r#type::TypeScopeTree,
     runtime::{RuntimeScope, RuntimeScopeTree},
   },
-  ty::{accumulator::TypeAccumulator, unresolved::UnresolvedType, Ty},
+  ty::{accumulator::TypeAccumulator, ctx::CtxTy, unresolved::UnresolvedType, Ty},
 };
 
 pub struct Analyzer<'a> {
@@ -38,7 +38,7 @@ pub struct Analyzer<'a> {
   /// Variables with a unique type
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
   /// Generic parameter with its constraint
-  pub generic_constraints: FxHashMap<SymbolId, Ty<'a>>,
+  pub generic_constraints: FxHashMap<SymbolId, CtxTy<'a>>,
 
   pub diagnostics: BTreeSet<String>,
   pub span_to_type: FxHashMap<Span, TypeAccumulator<'a>>,

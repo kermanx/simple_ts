@@ -261,7 +261,7 @@ impl<'a> Analyzer<'a> {
     if bivariant {
       self.match_bivariant_types(target, pattern)
     } else {
-      self.match_covariant_types(target, pattern)
+      self.match_contravariant_types(target, pattern)
     }
   }
 
@@ -280,10 +280,9 @@ impl<'a> Analyzer<'a> {
         continue;
       }
       // Note: Contravariance - `pattern.constraint extends target.constraint`
-      match self.match_covariant_types(
-        pattern.constraint.unwrap_or(Ty::Unknown),
-        target.constraint.unwrap_or(Ty::Unknown),
-      ) {
+      let target = target.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(ty));
+      let pattern = pattern.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(ty));
+      match self.match_contravariant_types(target, pattern) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
@@ -298,7 +297,9 @@ impl<'a> Analyzer<'a> {
 
     // Step2: Match this type
     if let (Some(target), Some(pattern)) = (target.this_param, pattern.this_param) {
-      match self.match_parameter_types(bivariant, pattern, target) {
+      let target = self.resolve_ctx_ty(target);
+      let pattern = self.resolve_ctx_ty(pattern);
+      match self.match_parameter_types(bivariant, target, pattern) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
@@ -307,8 +308,10 @@ impl<'a> Analyzer<'a> {
     }
 
     // Step3: Match parameters
-    for (index, (target_optional, mut target)) in target.params.iter().enumerate() {
-      if let Some((pattern_optional, mut pattern)) = pattern.params.get(index) {
+    for (index, (target_optional, target)) in target.params.iter().enumerate() {
+      if let Some((pattern_optional, pattern)) = pattern.params.get(index) {
+        let mut target = self.resolve_ctx_ty(*target);
+        let mut pattern = self.resolve_ctx_ty(*pattern);
         if target_optional != pattern_optional {
           target = self.get_optional_type(*target_optional, target);
           pattern = self.get_optional_type(*pattern_optional, pattern);
@@ -331,11 +334,15 @@ impl<'a> Analyzer<'a> {
     // TODO: Check rest parameter
 
     // Step5: Match return type
-    match self.match_covariant_types(target.return_type, pattern.return_type) {
-      MatchResult::Error => return MatchResult::Error,
-      MatchResult::Unmatched => return MatchResult::Unmatched,
-      MatchResult::Matched => {}
-      MatchResult::Inferred(map) => inferred.extend(map),
+    {
+      let target = self.resolve_ctx_ty(target.return_type);
+      let pattern = self.resolve_ctx_ty(pattern.return_type);
+      match self.match_covariant_types(target, pattern) {
+        MatchResult::Error => return MatchResult::Error,
+        MatchResult::Unmatched => return MatchResult::Unmatched,
+        MatchResult::Matched => {}
+        MatchResult::Inferred(map) => inferred.extend(map),
+      }
     }
 
     MatchResult::Inferred(inferred)

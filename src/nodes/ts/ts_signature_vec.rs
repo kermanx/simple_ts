@@ -51,12 +51,9 @@ impl<'a> Analyzer<'a> {
             .map(|type_params| self.resolve_type_parameter_declaration(type_params))
             .unwrap_or_default();
           let this_param =
-            node.this_param.as_ref().map(|this_param| self.resovle_this_parameter(this_param));
+            node.this_param.as_ref().map(|n| self.ctx_ty_from_annotation(&n.type_annotation, None));
           let (_, params, rest_param) = self.resolve_formal_parameters(&node.params);
-          let return_type = node.return_type.as_ref().map_or_else(
-            || &*self.allocator.alloc(self.ast_builder.ts_type_any_keyword(SPAN)),
-            |n| &n.type_annotation,
-          );
+          let return_type = self.ctx_ty_from_annotation(&node.return_type, None);
 
           callables.push(Ty::Function(self.allocator.alloc(CallableType {
             bivariant: false,
@@ -75,12 +72,9 @@ impl<'a> Analyzer<'a> {
             .map(|type_params| self.resolve_type_parameter_declaration(type_params))
             .unwrap_or_default();
           let this_param =
-            node.this_param.as_ref().map(|this_param| self.resovle_this_parameter(this_param));
+            node.this_param.as_ref().map(|n| self.ctx_ty_from_annotation(&n.type_annotation, None));
           let (_, params, rest_param) = self.resolve_formal_parameters(&node.params);
-          let return_type = node.return_type.as_ref().map_or_else(
-            || &*self.allocator.alloc(self.ast_builder.ts_type_any_keyword(SPAN)),
-            |n| &n.type_annotation,
-          );
+          let return_type = self.ctx_ty_from_annotation(&node.return_type, None);
 
           let function = Ty::Function(self.allocator.alloc(CallableType {
             bivariant: true,

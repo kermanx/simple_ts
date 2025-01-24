@@ -1,5 +1,6 @@
 pub mod accumulator;
 pub mod callable;
+pub mod ctx;
 pub mod facts;
 pub mod generic;
 pub mod get_property;
@@ -16,7 +17,6 @@ pub mod record;
 pub mod tuple;
 pub mod union;
 pub mod unresolved;
-pub mod ctx;
 pub mod widen;
 
 use std::{hash, mem};
@@ -116,7 +116,7 @@ impl<'a> PartialEq for Ty<'a> {
       (Ty::Generic(a), Ty::Generic(b)) => a as *const _ == b,
       (Ty::Intrinsic(a), Ty::Intrinsic(b)) => a as *const _ == b,
       (Ty::Namespace(a), Ty::Namespace(b)) => a as *const _ == b,
-      (Ty::Unresolved(a), Ty::Unresolved(b)) => a as *const _ == b,
+      (Ty::Unresolved(a), Ty::Unresolved(b)) => a == b,
       _ => false,
     }
   }

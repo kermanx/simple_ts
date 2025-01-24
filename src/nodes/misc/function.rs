@@ -18,12 +18,17 @@ impl<'a> Analyzer<'a> {
     let annotated_ret = node.return_type.as_ref().map(|n| &n.type_annotation);
     let inferred_ret = if let Some(body) = &node.body {
       let resolved_annotated = annotated_ret.map(|t| self.resolve_type(t));
-      self.exec_function_body(body, node.r#async, node.generator, this_param, resolved_annotated)
+      self.exec_function_body(
+        body,
+        node.r#async,
+        node.generator,
+        /*TODO:*/ None,
+        resolved_annotated,
+      )
     } else {
       Ty::Error
     };
-    let return_type =
-      annotated_ret.unwrap_or_else(|| self.allocator.alloc(self.serialize_type(inferred_ret)));
+    let return_type = self.ctx_ty_from_annotation(&node.return_type, Some(inferred_ret));
 
     Ty::Function(self.allocator.alloc(CallableType {
       bivariant: false,

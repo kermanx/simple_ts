@@ -7,7 +7,7 @@ use oxc::{
   span::SPAN,
 };
 
-use super::{generic::GenericParam, union::UnionType, Ty};
+use super::{ctx::CtxTy, generic::GenericParam, union::UnionType, Ty};
 use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone)]
@@ -16,11 +16,11 @@ pub struct CallableType<'a, const CTOR: bool> {
   pub bivariant: bool,
 
   pub type_params: Vec<GenericParam<'a>>,
-  pub this_param: Option<Ty<'a>>,
+  pub this_param: Option<CtxTy<'a>>,
   /// (optional, type)
-  pub params: Vec<(bool, &'a TSType<'a>)>,
-  pub rest_param: Option<&'a TSType<'a>>,
-  pub return_type: &'a TSType<'a>,
+  pub params: Vec<(bool, CtxTy<'a>)>,
+  pub rest_param: Option<CtxTy<'a>>,
+  pub return_type: CtxTy<'a>,
 }
 
 pub type FunctionType<'a> = CallableType<'a, false>;
@@ -36,17 +36,14 @@ impl<'a> Analyzer<'a> {
       return None;
     }
 
-    let old_generics = self.take_generics();
+    self.type_scopes.push();
     self.instantiate_generic_params(&callable.type_params, type_args);
-    let this_type = callable.this_param.map(|ty| self.resolve_unresolved(ty));
-    let params = callable
-      .params
-      .iter()
-      .map(|(optional, ty)| (*optional, self.resolve_unresolved(*ty)))
-      .collect();
-    let rest_param = callable.rest_param.map(|ty| self.resolve_unresolved(ty));
-    let return_type = self.resolve_unresolved(callable.return_type);
-    self.restore_generics(old_generics);
+    let this_type = callable.this_param.map(|ty| self.refresh_ctx_ty(ty));
+    let params =
+      callable.params.iter().map(|(optional, ty)| (*optional, self.refresh_ctx_ty(*ty))).collect();
+    let rest_param = callable.rest_param.map(|ty| self.refresh_ctx_ty(ty));
+    let return_type = self.refresh_ctx_ty(callable.return_type);
+    self.type_scopes.pop();
     Some(self.allocator.alloc(CallableType {
       bivariant: callable.bivariant,
       type_params: vec![],
@@ -68,7 +65,7 @@ impl<'a> Analyzer<'a> {
         self.ast_builder.ts_this_parameter(
           SPAN,
           SPAN,
-          Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(ty))),
+          Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_ctx_ty(ty))),
         )
       }),
       self.ast_builder.formal_parameters(
@@ -85,7 +82,7 @@ impl<'a> Analyzer<'a> {
                   SPAN,
                   &*self.allocator.alloc(format!("a{i}")),
                 ),
-                Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(*param))),
+                Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_ctx_ty(*param))),
                 *optional,
               ),
               None,
@@ -101,13 +98,13 @@ impl<'a> Analyzer<'a> {
             SPAN,
             self.ast_builder.binding_pattern(
               self.ast_builder.binding_pattern_kind_binding_identifier(SPAN, "rest"),
-              Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(ty))),
+              Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_ctx_ty(ty))),
               false,
             ),
           )
         }),
       ),
-      self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(callable.return_type)),
+      self.ast_builder.ts_type_annotation(SPAN, self.serialize_ctx_ty(callable.return_type)),
     )
   }
 }
@@ -149,6 +146,10 @@ macro_rules! impl_extract_callable {
               _ => Some(ExtractedCallable::Overloaded(res)),
             }
           }
+          Ty::Instance(i) => {
+            let unwrapped = self.unwrap_generic_instance(i);
+            self.$name(unwrapped)
+          }
           _ => None,
         }
       }
@@ -169,7 +170,10 @@ impl<'a> Analyzer<'a> {
         .params
         .iter()
         .copied()
-        .map(|(optional, ty)| self.get_optional_type(optional, ty))
+        .map(|(optional, ty)| {
+          let ty = self.resolve_ctx_ty(ty);
+          self.get_optional_type(optional, ty)
+        })
         .collect(),
       ExtractedCallable::Overloaded(callables) => {
         let allocator = self.allocator;
@@ -205,15 +209,15 @@ impl<'a> Analyzer<'a> {
           if callable.type_params.is_empty() {
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
-            callable.return_type
+            self.resolve_ctx_ty(callable.return_type)
           } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
-            let old_generics = self.take_generics();
+            self.type_scopes.push();
             self.instantiate_generic_params(&callable.type_params, &type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
-            let ret = self.resolve_unresolved(callable.return_type);
-            self.restore_generics(old_generics);
+            let ret = self.resolve_ctx_ty(callable.return_type);
+            self.type_scopes.pop();
             ret
           } else {
             todo!()
