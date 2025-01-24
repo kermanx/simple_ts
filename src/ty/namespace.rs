@@ -10,7 +10,7 @@ pub struct NamespaceType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn print_namespace_type(&mut self, namespace: &NamespaceType<'a>) -> TSType<'a> {
+  pub fn serialize_namespace_type(&mut self, namespace: &NamespaceType<'a>) -> TSType<'a> {
     todo!()
   }
 }

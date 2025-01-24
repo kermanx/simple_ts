@@ -166,12 +166,12 @@ impl<'a> Analyzer<'a> {
       .unwrap_or_else(|| Ty::Record(self.allocator.alloc(Default::default())))
   }
 
-  pub fn print_instance_type(&mut self, instance: &GenericInstanceType<'a>) -> TSType<'a> {
+  pub fn serialize_instance_type(&mut self, instance: &GenericInstanceType<'a>) -> TSType<'a> {
     let unwrapped = self.unwrap_generic_instance(instance);
-    self.print_type(unwrapped)
+    self.serialize_type(unwrapped)
   }
 
-  pub fn print_generic_type(&mut self, generic: &GenericType<'a>) -> TSType<'a> {
+  pub fn serialize_generic_type(&mut self, generic: &GenericType<'a>) -> TSType<'a> {
     todo!()
   }
 }

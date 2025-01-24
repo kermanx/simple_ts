@@ -4,7 +4,6 @@ use oxc::{
     ast::{Argument, FormalParameterKind, TSType, TSTypeParameterInstantiation},
     NONE,
   },
-  semantic::SymbolId,
   span::SPAN,
 };
 
@@ -58,7 +57,7 @@ impl<'a> Analyzer<'a> {
     }))
   }
 
-  pub fn print_callable_type<const CTOR: bool>(
+  pub fn serialize_callable_type<const CTOR: bool>(
     &mut self,
     callable: &CallableType<'a, CTOR>,
   ) -> TSType<'a> {
@@ -69,7 +68,7 @@ impl<'a> Analyzer<'a> {
         self.ast_builder.ts_this_parameter(
           SPAN,
           SPAN,
-          Some(self.ast_builder.ts_type_annotation(SPAN, self.print_type(ty))),
+          Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(ty))),
         )
       }),
       self.ast_builder.formal_parameters(
@@ -86,7 +85,7 @@ impl<'a> Analyzer<'a> {
                   SPAN,
                   &*self.allocator.alloc(format!("a{i}")),
                 ),
-                Some(self.ast_builder.ts_type_annotation(SPAN, self.print_type(*param))),
+                Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(*param))),
                 *optional,
               ),
               None,
@@ -102,13 +101,13 @@ impl<'a> Analyzer<'a> {
             SPAN,
             self.ast_builder.binding_pattern(
               self.ast_builder.binding_pattern_kind_binding_identifier(SPAN, "rest"),
-              Some(self.ast_builder.ts_type_annotation(SPAN, self.print_type(ty))),
+              Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(ty))),
               false,
             ),
           )
         }),
       ),
-      self.ast_builder.ts_type_annotation(SPAN, self.print_type(callable.return_type)),
+      self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(callable.return_type)),
     )
   }
 }

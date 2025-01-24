@@ -32,7 +32,7 @@ pub enum UnresolvedType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn print_unresolved_type(&mut self, unresolved: UnresolvedType<'a>) -> TSType<'a> {
+  pub fn serialize_unresolved_type(&mut self, unresolved: UnresolvedType<'a>) -> TSType<'a> {
     todo!("{:#?}", unresolved)
   }
 }

@@ -170,7 +170,7 @@ impl<'a> RecordType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  fn print_keyed_property(
+  fn serialize_keyed_property(
     &mut self,
     key: PropertyKey<'a>,
     property: &KeyedProperty<'a>,
@@ -181,11 +181,11 @@ impl<'a> Analyzer<'a> {
       property.optional,
       property.readonly,
       key,
-      Some(self.ast_builder.ts_type_annotation(SPAN, self.print_type(property.value))),
+      Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(property.value))),
     )
   }
 
-  fn print_mapped_property(
+  fn serialize_mapped_property(
     &mut self,
     key_type: TSType<'a>,
     property: &MappedProperty<'a>,
@@ -198,37 +198,37 @@ impl<'a> Analyzer<'a> {
         "1",
         self.ast_builder.ts_type_annotation(SPAN, key_type),
       )),
-      self.ast_builder.ts_type_annotation(SPAN, self.print_type(ty)),
+      self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(ty)),
       property.readonly,
       false,
     ))
   }
 
-  pub fn print_record_type(&mut self, record: &RecordType<'a>) -> TSType<'a> {
+  pub fn serialize_record_type(&mut self, record: &RecordType<'a>) -> TSType<'a> {
     let mut members = self.ast_builder.vec();
     for (key, property) in &record.string_keyed.0 {
       members.push(
-        self.print_keyed_property(
+        self.serialize_keyed_property(
           self.ast_builder.property_key_identifier_name(SPAN, *key),
           property,
         ),
       );
     }
     for (key, property) in &record.symbol_keyed.0 {
-      members.push(self.print_keyed_property(todo!(), property));
+      members.push(self.serialize_keyed_property(todo!(), property));
     }
     if let Some(node) = self
-      .print_mapped_property(self.ast_builder.ts_type_number_keyword(SPAN), &record.number_mapped)
+      .serialize_mapped_property(self.ast_builder.ts_type_number_keyword(SPAN), &record.number_mapped)
     {
       members.push(node);
     }
     if let Some(node) = self
-      .print_mapped_property(self.ast_builder.ts_type_symbol_keyword(SPAN), &record.symbol_mapped)
+      .serialize_mapped_property(self.ast_builder.ts_type_symbol_keyword(SPAN), &record.symbol_mapped)
     {
       members.push(node);
     }
     if let Some(node) = self
-      .print_mapped_property(self.ast_builder.ts_type_string_keyword(SPAN), &record.string_mapped)
+      .serialize_mapped_property(self.ast_builder.ts_type_string_keyword(SPAN), &record.string_mapped)
     {
       members.push(node);
     }

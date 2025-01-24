@@ -8,7 +8,7 @@ use super::Ty;
 use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {
-  pub fn print_type(&mut self, ty: Ty<'a>) -> TSType<'a> {
+  pub fn serialize_type(&mut self, ty: Ty<'a>) -> TSType<'a> {
     match ty {
       Ty::Error | Ty::Any => self.ast_builder.ts_type_any_keyword(SPAN),
       Ty::Unknown => self.ast_builder.ts_type_unknown_keyword(SPAN),
@@ -44,21 +44,21 @@ impl<'a> Analyzer<'a> {
         self.ast_builder.ts_type_symbol_keyword(SPAN),
       ),
 
-      Ty::Record(r) => self.print_record_type(r),
-      Ty::Interface(i) => self.print_interface_type(i),
-      Ty::Tuple(t) => self.print_tuple_type(t),
-      Ty::Function(r) => self.print_callable_type(r),
-      Ty::Constructor(r) => self.print_callable_type(r),
-      Ty::Namespace(r) => self.print_namespace_type(r),
+      Ty::Record(r) => self.serialize_record_type(r),
+      Ty::Interface(i) => self.serialize_interface_type(i),
+      Ty::Tuple(t) => self.serialize_tuple_type(t),
+      Ty::Function(r) => self.serialize_callable_type(r),
+      Ty::Constructor(r) => self.serialize_callable_type(r),
+      Ty::Namespace(r) => self.serialize_namespace_type(r),
 
-      Ty::Union(u) => self.print_union_type(u),
-      Ty::Intersection(i) => self.print_intersection_type(i),
+      Ty::Union(u) => self.serialize_union_type(u),
+      Ty::Intersection(i) => self.serialize_intersection_type(i),
 
-      Ty::Instance(i) => self.print_instance_type(i),
-      Ty::Generic(g) => self.print_generic_type(g),
-      Ty::Intrinsic(i) => self.print_intrinsic_type(i),
+      Ty::Instance(i) => self.serialize_instance_type(i),
+      Ty::Generic(g) => self.serialize_generic_type(g),
+      Ty::Intrinsic(i) => self.serialize_intrinsic_type(i),
 
-      Ty::Unresolved(u) => self.print_unresolved_type(u),
+      Ty::Unresolved(u) => self.serialize_unresolved_type(u),
     }
   }
 }

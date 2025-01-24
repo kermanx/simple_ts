@@ -81,10 +81,10 @@ impl<'a> TupleType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn print_tuple_type(&mut self, tuple: &TupleType<'a>) -> TSType<'a> {
+  pub fn serialize_tuple_type(&mut self, tuple: &TupleType<'a>) -> TSType<'a> {
     let mut elements = self.ast_builder.vec();
     for element in &tuple.0 {
-      let ty = self.print_type(element.ty);
+      let ty = self.serialize_type(element.ty);
       let mut node = if element.optional && element.name.is_none() {
         self.ast_builder.ts_tuple_element_optional_type(SPAN, ty)
       } else if element.spread {

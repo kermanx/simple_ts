@@ -12,7 +12,7 @@ use simple_ts::{analyze, Config};
 
 static TYPE_QUERY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\^\? (\w+)").unwrap());
 
-pub fn print_queried_types(code: String) -> String {
+pub fn serialize_queried_types(code: String) -> String {
   let allocator = Allocator::default();
   let code = allocator.alloc(code);
   let mut analyzer = analyze(&allocator, code, Config::default());
@@ -32,7 +32,7 @@ pub fn print_queried_types(code: String) -> String {
       SPAN,
       analyzer.ast_builder.binding_identifier(SPAN, name),
       NONE,
-      analyzer.print_type(ty),
+      analyzer.serialize_type(ty),
       false,
     )));
   }
@@ -58,7 +58,7 @@ fn test() {
     settings.set_omit_expression(true);
     settings.set_prepend_module_to_snapshot(false);
     settings.bind(|| {
-      assert_snapshot!(print_queried_types(input));
+      assert_snapshot!(serialize_queried_types(input));
     })
   });
 }
