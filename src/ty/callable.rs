@@ -186,27 +186,36 @@ impl<'a> Analyzer<'a> {
         })
         .collect(),
       ExtractedCallable::Overloaded(callables) => {
-        let allocator = self.allocator;
-        let callables = callables.iter().map(|c| self.get_callable_parameter_types(scope, c));
-        let mut res = Vec::new();
-        for callable in callables {
-          for _ in res.len()..callable.len() {
-            res.push(allocator.alloc(UnionType::default()));
-          }
-          for (i, (spread, item)) in callable.into_iter().enumerate() {
-            if spread {
-              todo!()
-            } else {
-              res[i].add(item);
-            }
-          }
-        }
-        res.into_iter().map(|u| (false, Ty::Union(u))).collect()
+        let res = self.get_transposed_callable_parameter_types(scope, callables);
+        res.into_iter().map(|u| (false, self.into_union(u).unwrap())).collect()
       }
       ExtractedCallable::Union(callables) => {
-        todo!()
+        let res = self.get_transposed_callable_parameter_types(scope, callables);
+        res.into_iter().map(|u| (false, self.into_intersection(u))).collect()
       }
     }
+  }
+
+  fn get_transposed_callable_parameter_types<const CTOR: bool>(
+    &mut self,
+    scope: TypeScopeId,
+    callables: &Vec<ExtractedCallable<'a, CTOR>>,
+  ) -> Vec<Vec<Ty<'a>>> {
+    let callables = callables.iter().map(|c| self.get_callable_parameter_types(scope, c));
+    let mut res = Vec::new();
+    for callable in callables {
+      for _ in res.len()..callable.len() {
+        res.push(Vec::new());
+      }
+      for (i, (spread, item)) in callable.into_iter().enumerate() {
+        if spread {
+          todo!()
+        } else {
+          res[i].push(item);
+        }
+      }
+    }
+    res
   }
 
   /// Returns `None` if the signature does not match. Otherwise, returns the return type.
@@ -261,6 +270,7 @@ impl<'a> Analyzer<'a> {
     ret_sat: Option<Ty<'a>>,
   ) -> Option<Ty<'a>> {
     if callable.type_params.is_empty() {
+      // Not generic
       let params = self.get_callable_parameter_types(
         self.type_scopes.empty_scope,
         &ExtractedCallable::Single(callable),
@@ -268,12 +278,14 @@ impl<'a> Analyzer<'a> {
       self.exec_arguments(arguments, Some(params));
       Some(self.resolve_ctx_ty(self.type_scopes.empty_scope, callable.return_type))
     } else if let Some(type_args) = type_args {
+      // Generic, and type arguments are provided
       let type_args = self.resolve_type_parameter_instantiation(type_args);
       let scope = self.instantiate_generic_params(&callable.type_params, &type_args);
       let params = self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
       self.exec_arguments(arguments, Some(params));
       Some(self.resolve_ctx_ty(scope, callable.return_type))
     } else {
+      // Generic, and need inference
       self.exec_call_with_inference(callable, this_arg, arguments, ret_sat)
     }
   }
@@ -304,12 +316,12 @@ impl<'a> Analyzer<'a> {
     let params = self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
 
     #[derive(Default)]
-    struct State<'a> {
+    struct InferenceState<'a> {
       upmost_output: Option<Ty<'a>>,
       lowest_input: Option<Ty<'a>>,
     }
 
-    impl<'a> State<'a> {
+    impl<'a> InferenceState<'a> {
       pub fn update(&mut self, analyzer: &mut Analyzer<'a>, specificity: i32, ty: Ty<'a>) {
         if specificity > 0 {
           if let Some(upmost) = &mut self.upmost_output {
@@ -331,11 +343,11 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    let mut inferred = FxHashMap::<SymbolId, State<'a>>::default();
+    let mut inferred = FxHashMap::<SymbolId, InferenceState<'a>>::default();
 
     fn handle_match_result<'a>(
       analyzer: &mut Analyzer<'a>,
-      inferred: &mut FxHashMap<SymbolId, State<'a>>,
+      inferred: &mut FxHashMap<SymbolId, InferenceState<'a>>,
       result: MatchResult<'a>,
     ) -> Option<()> {
       match result {
