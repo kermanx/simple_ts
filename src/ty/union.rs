@@ -1,4 +1,4 @@
-use std::hash::Hash;
+use std::{hash::Hash, i32};
 
 use oxc::{
   ast::ast::TSType,
@@ -206,6 +206,30 @@ impl<'a> Analyzer<'a> {
         let mut builder = UnionTypeBuilder::default();
         iter.for_each(|ty| builder.add(self, ty));
         Some(builder.build(self))
+      }
+    }
+  }
+
+  pub fn into_union_with_specificity<Iter>(
+    &mut self,
+    types: impl IntoIterator<Item = (i32, Ty<'a>), IntoIter = Iter>,
+  ) -> (i32, Ty<'a>)
+  where
+    Iter: Iterator<Item = (i32, Ty<'a>)> + ExactSizeIterator,
+  {
+    let mut iter = types.into_iter();
+    match iter.len() {
+      // FIXME: Should be Ty::Never
+      0 => unreachable!(),
+      1 => iter.next().unwrap(),
+      _ => {
+        let mut specificity = i32::MAX;
+        let mut builder = UnionTypeBuilder::default();
+        iter.for_each(|(s, ty)| {
+          specificity = specificity.min(s);
+          builder.add(self, ty)
+        });
+        (specificity, builder.build(self))
       }
     }
   }

@@ -8,7 +8,7 @@ pub enum MatchResult<'a> {
   Error,
   Unmatched,
   Matched,
-  Inferred(FxHashMap<SymbolId, Ty<'a>>),
+  Inferred(FxHashMap<SymbolId, (i32, Ty<'a>)>),
 }
 
 impl<'a> From<bool> for MatchResult<'a> {
@@ -35,11 +35,16 @@ impl<'a> Analyzer<'a> {
         u.for_each(|ty| results.extend(self.match_types_with_dispatch(ty, pattern)));
         results
       }
-      _ => vec![self.match_covariant_types(target, pattern)],
+      _ => vec![self.match_covariant_types(0, target, pattern)],
     }
   }
 
-  fn match_covariant_types(&mut self, target: Ty<'a>, pattern: Ty<'a>) -> MatchResult<'a> {
+  fn match_covariant_types(
+    &mut self,
+    specificity: i32,
+    target: Ty<'a>,
+    pattern: Ty<'a>,
+  ) -> MatchResult<'a> {
     match (target, pattern) {
       (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,
       (_, Ty::Generic(_) | Ty::Intrinsic(_)) => MatchResult::Error,
@@ -47,12 +52,12 @@ impl<'a> Analyzer<'a> {
 
       (target, pattern) if target == pattern => MatchResult::Matched,
 
-      (matched, Ty::Unresolved(UnresolvedType::InferType(s)))
-      | (Ty::Unresolved(UnresolvedType::InferType(s)), matched) => MatchResult::Inferred({
-        let mut map = FxHashMap::default();
-        map.insert(s, matched);
-        map
-      }),
+      (matched, Ty::Unresolved(UnresolvedType::InferType(s))) => {
+        MatchResult::Inferred(FxHashMap::from_iter([(s, (specificity, matched))]))
+      }
+      (Ty::Unresolved(UnresolvedType::InferType(s)), matched) => {
+        MatchResult::Inferred(FxHashMap::from_iter([(s, (-specificity, matched))]))
+      }
 
       (_, Ty::Never) => MatchResult::Unmatched,
       (Ty::Error | Ty::Any | Ty::Never, _) => MatchResult::Matched,
@@ -67,12 +72,12 @@ impl<'a> Analyzer<'a> {
       },
       (Ty::Unresolved(_), _) | (_, Ty::Unresolved(_)) => todo!(),
 
-      (Ty::Union(target), Ty::Union(_)) => {
+      (Ty::Union(target), pattern) => {
         let mut error = false;
         let mut unmatched = false;
-        let mut inferred = FxHashMap::<SymbolId, Vec<Ty<'a>>>::default();
+        let mut inferred = FxHashMap::<SymbolId, Vec<(i32, Ty<'a>)>>::default();
 
-        target.for_each(|ty| match self.match_covariant_types(ty, pattern) {
+        target.for_each(|ty| match self.match_covariant_types(specificity, ty, pattern) {
           MatchResult::Error => error = true,
           MatchResult::Unmatched => unmatched = true,
           MatchResult::Matched => {}
@@ -89,23 +94,27 @@ impl<'a> Analyzer<'a> {
           MatchResult::Unmatched
         } else {
           MatchResult::Inferred(
-            inferred.into_iter().map(|(s, types)| (s, self.into_union(types).unwrap())).collect(),
+            inferred
+              .into_iter()
+              .map(|(s, types)| (s, self.into_union_with_specificity(types)))
+              .collect(),
           )
         }
       }
-      (Ty::Union(_), _) => MatchResult::Unmatched,
       (target, Ty::Union(pattern)) => {
         let mut error = false;
         let mut matched = false;
         let mut inferred = FxHashMap::default();
 
-        pattern.for_each(|pattern| match self.match_covariant_types(target, pattern) {
-          MatchResult::Error => error = true,
-          MatchResult::Unmatched => {}
-          MatchResult::Matched => matched = true,
-          MatchResult::Inferred(i) => {
-            matched = true;
-            inferred.extend(i);
+        pattern.for_each(|pattern| {
+          match self.match_covariant_types(specificity, target, pattern) {
+            MatchResult::Error => error = true,
+            MatchResult::Unmatched => {}
+            MatchResult::Matched => matched = true,
+            MatchResult::Inferred(i) => {
+              matched = true;
+              inferred.extend(i);
+            }
           }
         });
 
@@ -121,15 +130,17 @@ impl<'a> Analyzer<'a> {
       (Ty::Intersection(_), Ty::Intersection(pattern)) => {
         let mut error = false;
         let mut matched = true;
-        let mut inferred = FxHashMap::<SymbolId, Vec<Ty<'a>>>::default();
+        let mut inferred = FxHashMap::<SymbolId, Vec<(i32, Ty<'a>)>>::default();
 
-        pattern.for_each(|pattern| match self.match_covariant_types(target, pattern) {
-          MatchResult::Error => error = true,
-          MatchResult::Unmatched => matched = false,
-          MatchResult::Matched => {}
-          MatchResult::Inferred(map) => {
-            for (s, t) in map {
-              inferred.entry(s).or_insert_with(Default::default).push(t);
+        pattern.for_each(|pattern| {
+          match self.match_covariant_types(specificity, target, pattern) {
+            MatchResult::Error => error = true,
+            MatchResult::Unmatched => matched = false,
+            MatchResult::Matched => {}
+            MatchResult::Inferred(map) => {
+              for (s, t) in map {
+                inferred.entry(s).or_insert_with(Default::default).push(t);
+              }
             }
           }
         });
@@ -138,7 +149,10 @@ impl<'a> Analyzer<'a> {
           MatchResult::Error
         } else if matched {
           MatchResult::Inferred(
-            inferred.into_iter().map(|(s, types)| (s, self.into_intersection(types))).collect(),
+            inferred
+              .into_iter()
+              .map(|(s, types)| (s, self.into_intersection_with_specificity(types)))
+              .collect(),
           )
         } else {
           MatchResult::Unmatched
@@ -147,16 +161,14 @@ impl<'a> Analyzer<'a> {
       (_, Ty::Intersection(_)) => MatchResult::Unmatched,
       (Ty::Intersection(target), pattern) => {
         let mut error = false;
-        let mut matched: Option<Option<FxHashMap<SymbolId, Vec<Ty<'a>>>>> = None;
-        target.for_each(|target| match self.match_covariant_types(target, pattern) {
+        let mut matched = false;
+        let mut inferred = FxHashMap::<SymbolId, Vec<(i32, Ty<'a>)>>::default();
+        target.for_each(|target| match self.match_covariant_types(specificity, target, pattern) {
           MatchResult::Error => error = true,
           MatchResult::Unmatched => {}
-          MatchResult::Matched => {
-            matched.get_or_insert_with(Default::default);
-          }
+          MatchResult::Matched => matched = true,
           MatchResult::Inferred(map) => {
-            let inferred =
-              matched.get_or_insert_with(Default::default).get_or_insert_with(Default::default);
+            matched = true;
             for (s, t) in map {
               inferred.entry(s).or_insert_with(Default::default).push(t);
             }
@@ -164,14 +176,13 @@ impl<'a> Analyzer<'a> {
         });
         if error {
           MatchResult::Error
-        } else if let Some(matched) = matched {
-          if let Some(inferred) = matched {
-            MatchResult::Inferred(
-              inferred.into_iter().map(|(s, types)| (s, self.into_intersection(types))).collect(),
-            )
-          } else {
-            MatchResult::Matched
-          }
+        } else if matched {
+          MatchResult::Inferred(
+            inferred
+              .into_iter()
+              .map(|(s, types)| (s, self.into_intersection_with_specificity(types)))
+              .collect(),
+          )
         } else {
           MatchResult::Unmatched
         }
@@ -184,7 +195,7 @@ impl<'a> Analyzer<'a> {
           'instantiation_based_inference: {
             let mut inferred = FxHashMap::default();
             for (target, pattern) in target.args.iter().zip(pattern.args.iter()) {
-              match self.match_covariant_types(*target, *pattern) {
+              match self.match_covariant_types(specificity, *target, *pattern) {
                 MatchResult::Error | MatchResult::Unmatched => break 'instantiation_based_inference,
                 MatchResult::Matched => {}
                 MatchResult::Inferred(map) => inferred.extend(map),
@@ -197,15 +208,15 @@ impl<'a> Analyzer<'a> {
         // 2. Structural inference
         let target = self.unwrap_generic_instance(target);
         let pattern = self.unwrap_generic_instance(pattern);
-        self.match_covariant_types(target, pattern)
+        self.match_covariant_types(specificity, target, pattern)
       }
       (Ty::Instance(target), pattern) => {
         let target = self.unwrap_generic_instance(target);
-        self.match_covariant_types(target, pattern)
+        self.match_covariant_types(specificity, target, pattern)
       }
       (target, Ty::Instance(pattern)) => {
         let pattern = self.unwrap_generic_instance(pattern);
-        self.match_covariant_types(target, pattern)
+        self.match_covariant_types(specificity, target, pattern)
       }
 
       (Ty::Record(target), Ty::Record(pattern)) => todo!(),
@@ -221,12 +232,14 @@ impl<'a> Analyzer<'a> {
       (Ty::Tuple(target), Ty::Tuple(pattern)) => todo!(),
       (_, Ty::Tuple(_)) | (Ty::Tuple(_), _) => MatchResult::Unmatched,
 
-      (Ty::Function(target), Ty::Function(pattern)) => self.match_callable_types(target, pattern),
+      (Ty::Function(target), Ty::Function(pattern)) => {
+        self.match_callable_types(specificity, target, pattern)
+      }
       (Ty::Function(_), Ty::Object) => MatchResult::Matched,
       (Ty::Function(_), _) | (_, Ty::Function(_)) => MatchResult::Unmatched,
 
       (Ty::Constructor(target), Ty::Constructor(pattern)) => {
-        self.match_callable_types(target, pattern)
+        self.match_callable_types(specificity, target, pattern)
       }
       (Ty::Constructor(_), Ty::Object) => MatchResult::Matched,
       (Ty::Constructor(_), _) | (_, Ty::Constructor(_)) => MatchResult::Unmatched,
@@ -247,14 +260,24 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  fn match_contravariant_types(&mut self, target: Ty<'a>, pattern: Ty<'a>) -> MatchResult<'a> {
-    self.match_covariant_types(pattern, target)
+  fn match_contravariant_types(
+    &mut self,
+    specificity: i32,
+    target: Ty<'a>,
+    pattern: Ty<'a>,
+  ) -> MatchResult<'a> {
+    self.match_covariant_types(specificity, pattern, target)
   }
 
   /// Contravariant first, then covariant
-  fn match_bivariant_types(&mut self, target: Ty<'a>, pattern: Ty<'a>) -> MatchResult<'a> {
-    match self.match_contravariant_types(target, pattern) {
-      MatchResult::Unmatched => self.match_covariant_types(target, pattern),
+  fn match_bivariant_types(
+    &mut self,
+    specificity: i32,
+    target: Ty<'a>,
+    pattern: Ty<'a>,
+  ) -> MatchResult<'a> {
+    match self.match_contravariant_types(specificity, target, pattern) {
+      MatchResult::Unmatched => self.match_covariant_types(specificity, target, pattern),
       result => result,
     }
   }
@@ -262,21 +285,25 @@ impl<'a> Analyzer<'a> {
   fn match_parameter_types(
     &mut self,
     bivariant: bool,
+    specificity: i32,
     target: Ty<'a>,
     pattern: Ty<'a>,
   ) -> MatchResult<'a> {
     if bivariant {
-      self.match_bivariant_types(target, pattern)
+      self.match_bivariant_types(specificity, target, pattern)
     } else {
-      self.match_contravariant_types(target, pattern)
+      self.match_contravariant_types(specificity, target, pattern)
     }
   }
 
   fn match_callable_types<const CTOR: bool>(
     &mut self,
+    specificity: i32,
     target: &'a CallableType<'a, CTOR>,
     pattern: &'a CallableType<'a, CTOR>,
   ) -> MatchResult<'a> {
+    let specificity = specificity + 1;
+
     // Step1: Match type parameters
     // FIXME: Do not match unused type parameters
     if target.type_params.len() != pattern.type_params.len() {
@@ -293,7 +320,7 @@ impl<'a> Analyzer<'a> {
         target.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(target_scope, ty));
       let pattern_ty =
         pattern.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(pattern_scope, ty));
-      match self.match_contravariant_types(target_ty, pattern_ty) {
+      match self.match_contravariant_types(specificity, target_ty, pattern_ty) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
@@ -314,7 +341,7 @@ impl<'a> Analyzer<'a> {
     if let (Some(target), Some(pattern)) = (target.this_param, pattern.this_param) {
       let target_ty = self.resolve_ctx_ty(target_scope, target);
       let pattern_ty = self.resolve_ctx_ty(pattern_scope, pattern);
-      match self.match_parameter_types(bivariant, target_ty, pattern_ty) {
+      match self.match_parameter_types(bivariant, specificity, target_ty, pattern_ty) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
@@ -331,7 +358,7 @@ impl<'a> Analyzer<'a> {
           target_ty = self.get_optional_type(*target_optional, target_ty);
           pattern_ty = self.get_optional_type(*pattern_optional, pattern_ty);
         }
-        match self.match_parameter_types(bivariant, pattern_ty, target_ty) {
+        match self.match_parameter_types(bivariant, specificity, pattern_ty, target_ty) {
           MatchResult::Error => return MatchResult::Error,
           MatchResult::Unmatched => return MatchResult::Unmatched,
           MatchResult::Matched => {}
@@ -352,7 +379,7 @@ impl<'a> Analyzer<'a> {
     {
       let target_ty = self.resolve_ctx_ty(target_scope, target.return_type);
       let pattern_ty = self.resolve_ctx_ty(pattern_scope, pattern.return_type);
-      match self.match_covariant_types(target_ty, pattern_ty) {
+      match self.match_covariant_types(specificity, target_ty, pattern_ty) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}

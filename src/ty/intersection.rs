@@ -286,6 +286,30 @@ impl<'a> Analyzer<'a> {
     }
   }
 
+  pub fn into_intersection_with_specificity<Iter>(
+    &mut self,
+    types: impl IntoIterator<Item = (i32, Ty<'a>), IntoIter = Iter>,
+  ) -> (i32, Ty<'a>)
+  where
+    Iter: Iterator<Item = (i32, Ty<'a>)> + ExactSizeIterator,
+  {
+    let mut iter = types.into_iter();
+    match iter.len() {
+      // FIXME: Should be Ty::Never
+      0 => unreachable!(),
+      1 => iter.next().unwrap(),
+      _ => {
+        let mut specificity = i32::MAX;
+        let mut builder = IntersectionTypeBuilder::default();
+        iter.for_each(|(s, ty)| {
+          specificity = specificity.min(s);
+          builder.add(self, ty)
+        });
+        (specificity, builder.build(self))
+      }
+    }
+  }
+
   pub fn serialize_intersection_type(&mut self, intersection: &IntersectionType<'a>) -> TSType<'a> {
     let mut types = self.ast_builder.vec();
     intersection.for_each(|ty| types.push(self.serialize_type(ty)));

@@ -29,7 +29,9 @@ impl<'a> Analyzer<'a> {
           }));
         }
         MatchResult::Inferred(inferred) => {
-          self.type_scopes.push_with_types(inferred);
+          self.type_scopes.push_with_types({
+            inferred.into_iter().map(|(symbol, (_, ty))| (symbol, ty)).collect()
+          });
           let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
           for symbol in infer_declarations.values() {
             self.type_scopes.entry_on_top(*symbol).or_insert(Ty::Unknown);
