@@ -39,6 +39,7 @@ pub struct Analyzer<'a> {
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
   /// Generic parameter with its constraint
   pub generic_constraints: FxHashMap<SymbolId, CtxTy<'a>>,
+  pub type_placeholder_count: usize,
 
   pub diagnostics: BTreeSet<String>,
   pub span_to_type: FxHashMap<Span, TypeAccumulator<'a>>,
@@ -78,6 +79,7 @@ impl<'a> Analyzer<'a> {
 
       variables: Default::default(),
       generic_constraints: Default::default(),
+      type_placeholder_count: 0,
 
       diagnostics: Default::default(),
       span_to_type: Default::default(),

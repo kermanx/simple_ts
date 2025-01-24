@@ -30,6 +30,7 @@ impl<'a> Analyzer<'a> {
         }
         UnresolvedType::Keyof(_) => Ty::String,
         UnresolvedType::InferType(_) => Ty::Unknown,
+        UnresolvedType::Placeholder(_) => unreachable!(),
       },
 
       ty => ty,

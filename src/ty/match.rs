@@ -1,11 +1,7 @@
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
-use super::{
-  callable::CallableType,
-  unresolved::{get_placeholder_ty, UnresolvedType},
-  Ty,
-};
+use super::{callable::CallableType, unresolved::UnresolvedType, Ty};
 use crate::Analyzer;
 
 pub enum MatchResult<'a> {
@@ -57,12 +53,19 @@ impl<'a> Analyzer<'a> {
         map.insert(s, matched);
         map
       }),
-      (Ty::Unresolved(_), _) | (_, Ty::Unresolved(_)) => todo!(),
 
       (_, Ty::Never) => MatchResult::Unmatched,
       (Ty::Error | Ty::Any | Ty::Never, _) => MatchResult::Matched,
       (_, Ty::Error | Ty::Any | Ty::Unknown) => MatchResult::Matched,
       (Ty::Unknown, _) => MatchResult::Unmatched,
+
+      (Ty::Unresolved(target), Ty::Unresolved(pattern)) => match (target, pattern) {
+        (UnresolvedType::Placeholder(_), _) | (_, UnresolvedType::Placeholder(_)) => {
+          MatchResult::Unmatched
+        }
+        _ => todo!(),
+      },
+      (Ty::Unresolved(_), _) | (_, Ty::Unresolved(_)) => todo!(),
 
       (Ty::Union(target), Ty::Union(_)) => {
         let mut error = false;
@@ -281,9 +284,7 @@ impl<'a> Analyzer<'a> {
     }
     let target_scope = self.type_scopes.create_scope();
     let pattern_scope = self.type_scopes.create_scope();
-    for (index, (target, pattern)) in
-      target.type_params.iter().zip(pattern.type_params.iter()).enumerate()
-    {
+    for (target, pattern) in target.type_params.iter().zip(pattern.type_params.iter()) {
       if target.constraint == pattern.constraint {
         continue;
       }
@@ -301,7 +302,7 @@ impl<'a> Analyzer<'a> {
         }
       }
 
-      let placeholder = get_placeholder_ty(index);
+      let placeholder = self.alloc_placeholder_type();
       self.type_scopes.insert_on_scope(target_scope, target.symbol_id, placeholder);
       self.type_scopes.insert_on_scope(pattern_scope, pattern.symbol_id, placeholder);
     }

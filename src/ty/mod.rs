@@ -143,7 +143,7 @@ impl<'a> hash::Hash for Ty<'a> {
       Ty::Generic(g) => (g as *const _ as usize).hash(state),
       Ty::Intrinsic(i) => (i as *const _ as usize).hash(state),
       Ty::Namespace(n) => (n as *const _ as usize).hash(state),
-      Ty::Unresolved(u) => (u as *const _ as usize).hash(state),
+      Ty::Unresolved(u) => u.hash(state),
       _ => {}
     }
   }

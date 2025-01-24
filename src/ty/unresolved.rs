@@ -6,21 +6,26 @@ use oxc::{
   semantic::SymbolId,
   span::SPAN,
 };
-use oxc_index::Idx;
 
 use super::Ty;
 use crate::Analyzer;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub enum UnresolvedType<'a> {
   UnInitVariable(SymbolId),
   UnInitType(SymbolId),
   GenericParam(SymbolId),
   Keyof(&'a Ty<'a>),
   InferType(SymbolId),
+  Placeholder(usize),
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn alloc_placeholder_type(&mut self) -> Ty<'a> {
+    self.type_placeholder_count += 1;
+    Ty::Unresolved(UnresolvedType::Placeholder(self.type_placeholder_count))
+  }
+
   pub fn serialize_unresolved_type(&mut self, unresolved: UnresolvedType<'a>) -> TSType<'a> {
     match unresolved {
       UnresolvedType::UnInitVariable(symbol) => todo!(),
@@ -49,10 +54,7 @@ impl<'a> Analyzer<'a> {
           false,
         ),
       ),
+      UnresolvedType::Placeholder(_) => unreachable!(),
     }
   }
-}
-
-pub fn get_placeholder_ty<'a>(index: usize) -> Ty<'a> {
-  Ty::Unresolved(UnresolvedType::GenericParam(SymbolId::from_usize(usize::MAX - 1024 + index)))
 }
