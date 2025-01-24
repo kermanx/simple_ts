@@ -16,6 +16,7 @@ pub mod record;
 pub mod tuple;
 pub mod union;
 pub mod unresolved;
+pub mod ctx;
 pub mod widen;
 
 use std::{hash, mem};

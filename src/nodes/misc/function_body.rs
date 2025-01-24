@@ -15,17 +15,8 @@ impl<'a> Analyzer<'a> {
     node: &'a FunctionBody<'a>,
     is_async: bool,
     is_generator: bool,
-    this: Option<Ty<'a>>,
     annotated_ret: Option<Ty<'a>>,
   ) -> Ty<'a> {
-    let body_scope = self.push_scope(CfScopeKind::Function);
-    self.call_scopes.push(CallScope::new(
-      body_scope,
-      is_async,
-      is_generator,
-      this.unwrap_or(Ty::Any),
-      annotated_ret,
-    ));
 
     self.exec_statement_vec(&node.statements);
 

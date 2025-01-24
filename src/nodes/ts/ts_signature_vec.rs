@@ -1,4 +1,4 @@
-use oxc::{allocator, ast::ast::TSSignature};
+use oxc::{allocator, ast::ast::TSSignature, span::SPAN};
 
 use crate::{
   ty::{callable::CallableType, property_key::PropertyKeyType, record::RecordType, Ty},
@@ -53,10 +53,10 @@ impl<'a> Analyzer<'a> {
           let this_param =
             node.this_param.as_ref().map(|this_param| self.resovle_this_parameter(this_param));
           let (_, params, rest_param) = self.resolve_formal_parameters(&node.params);
-          let return_type = node
-            .return_type
-            .as_ref()
-            .map_or(Ty::Any, |return_type| self.resolve_type_annotation(return_type));
+          let return_type = node.return_type.as_ref().map_or_else(
+            || &*self.allocator.alloc(self.ast_builder.ts_type_any_keyword(SPAN)),
+            |n| &n.type_annotation,
+          );
 
           callables.push(Ty::Function(self.allocator.alloc(CallableType {
             bivariant: false,
@@ -77,10 +77,10 @@ impl<'a> Analyzer<'a> {
           let this_param =
             node.this_param.as_ref().map(|this_param| self.resovle_this_parameter(this_param));
           let (_, params, rest_param) = self.resolve_formal_parameters(&node.params);
-          let return_type = node
-            .return_type
-            .as_ref()
-            .map_or(Ty::Any, |return_type| self.resolve_type_annotation(return_type));
+          let return_type = node.return_type.as_ref().map_or_else(
+            || &*self.allocator.alloc(self.ast_builder.ts_type_any_keyword(SPAN)),
+            |n| &n.type_annotation,
+          );
 
           let function = Ty::Function(self.allocator.alloc(CallableType {
             bivariant: true,
