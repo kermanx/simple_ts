@@ -31,10 +31,25 @@ pub struct GenericInstanceType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
+  pub fn replace_generics(
+    &mut self,
+    generics: Box<FxHashMap<SymbolId, Ty<'a>>>,
+  ) -> Box<FxHashMap<SymbolId, Ty<'a>>> {
+    mem::replace(&mut self.generics, generics)
+  }
+
+  pub fn take_generics(&mut self) -> Box<FxHashMap<SymbolId, Ty<'a>>> {
+    mem::take(&mut self.generics)
+  }
+
+  pub fn restore_generics(&mut self, old_generics: Box<FxHashMap<SymbolId, Ty<'a>>>) {
+    self.generics = old_generics;
+  }
+
   pub fn instantiate_generic_param(&mut self, params: &Vec<GenericParam<'a>>, args: &Vec<Ty<'a>>) {
     for (index, param) in params.iter().enumerate() {
       let arg = args.get(index).copied().or(param.default).unwrap_or(Ty::Error);
-      self.type_scopes.insert(param.symbol_id, arg);
+      self.generics.insert(param.symbol_id, arg);
     }
     for param in params.iter() {
       if let Some(constraint) = param.constraint {
@@ -68,10 +83,10 @@ impl<'a> Analyzer<'a> {
 
       // instance.generic is a generic type
       Ty::Generic(generic) => {
-        self.type_scopes.push();
+        let old_generics = self.take_generics();
         self.instantiate_generic_param(&generic.params, &instance.args);
         let result = self.resolve_unresolved(generic.body);
-        self.type_scopes.pop();
+        self.restore_generics(old_generics);
         result
       }
       Ty::Intrinsic(_) => todo!(),

@@ -13,7 +13,7 @@ use crate::{
 impl<'a> Analyzer<'a> {
   pub fn declare_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) {
     let symbol_id = node.id.symbol_id();
-    self.type_scopes.insert(symbol_id, Ty::Unresolved(UnresolvedType::UnInitType(symbol_id)));
+    self.types.insert(symbol_id, Ty::Unresolved(UnresolvedType::UnInitType(symbol_id)));
   }
 
   pub fn init_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) -> Ty<'a> {
@@ -22,7 +22,7 @@ impl<'a> Analyzer<'a> {
     let params =
       node.type_parameters.as_ref().map(|params| self.resolve_type_parameter_declaration(params));
 
-    let ty = self.type_scopes.get_mut(symbol_id).unwrap();
+    let ty = self.types.get_mut(&symbol_id).unwrap();
 
     let mut interface = match ty {
       Ty::Unresolved(UnresolvedType::UnInitType(_)) => {
@@ -53,7 +53,8 @@ impl<'a> Analyzer<'a> {
       for heritage in extends {
         match &heritage.expression {
           Expression::Identifier(id) => {
-            let base = self.resolve_type_identifier_reference(id);
+            let reference = self.semantic.symbols().get_reference(id.reference_id());
+            let base = self.read_type(reference.symbol_id());
             let extends = if let Some(type_parameters) = &heritage.type_parameters {
               let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
               self.create_generic_instance(base, type_parameters)
@@ -69,6 +70,6 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    *self.type_scopes.get(symbol_id).unwrap()
+    *self.types.get(&symbol_id).unwrap()
   }
 }
