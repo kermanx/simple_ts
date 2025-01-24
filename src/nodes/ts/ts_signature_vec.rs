@@ -56,7 +56,7 @@ impl<'a> Analyzer<'a> {
           let return_type = self.ctx_ty_from_annotation(&node.return_type, None);
 
           callables.push(Ty::Function(self.allocator.alloc(CallableType {
-            bivariant: false,
+            is_method: false,
             scope: self.type_scopes.top(),
             type_params,
             this_param,
@@ -78,7 +78,7 @@ impl<'a> Analyzer<'a> {
           let return_type = self.ctx_ty_from_annotation(&node.return_type, None);
 
           let function = Ty::Function(self.allocator.alloc(CallableType {
-            bivariant: true,
+            is_method: true,
             scope: self.type_scopes.top(),
             type_params,
             this_param,

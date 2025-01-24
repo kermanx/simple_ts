@@ -33,7 +33,7 @@ impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
     fn union_is_bivariant<'a>(u: &UnionType<'a>) -> bool {
       let mut bivariant = true;
       u.for_each(|ty| match ty {
-        Ty::Function(f) => bivariant &= f.bivariant,
+        Ty::Function(f) => bivariant &= f.is_method,
         _ => bivariant = false,
       });
       bivariant
@@ -43,10 +43,10 @@ impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
       Entry::Occupied(mut entry) => {
         let prev = entry.get();
         value.value = match (prev.value, value.value) {
-          (Ty::Function(f1), Ty::Function(f2)) if f1.bivariant && f2.bivariant => {
+          (Ty::Function(f1), Ty::Function(f2)) if f1.is_method && f2.is_method => {
             analyzer.into_union([prev.value, value.value]).unwrap()
           }
-          (Ty::Union(u1), Ty::Function(f2)) if union_is_bivariant(u1) && f2.bivariant => {
+          (Ty::Union(u1), Ty::Function(f2)) if union_is_bivariant(u1) && f2.is_method => {
             analyzer.into_union([prev.value, value.value]).unwrap()
           }
           _ => value.value,

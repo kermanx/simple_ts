@@ -307,7 +307,7 @@ impl<'a> Analyzer<'a> {
       self.type_scopes.insert_on_scope(pattern_scope, pattern.symbol_id, placeholder);
     }
 
-    let bivariant = pattern.bivariant;
+    let bivariant = pattern.is_method;
     let mut inferred = FxHashMap::default();
 
     // Step2: Match this type

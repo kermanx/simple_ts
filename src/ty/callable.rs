@@ -12,8 +12,7 @@ use crate::{analyzer::Analyzer, scope::r#type::TypeScopeId};
 
 #[derive(Debug, Clone)]
 pub struct CallableType<'a, const CTOR: bool> {
-  /// Method is bivariant
-  pub bivariant: bool,
+  pub is_method: bool,
   pub scope: TypeScopeId,
 
   pub type_params: Vec<GenericParam<'a>>,
@@ -45,7 +44,7 @@ impl<'a> Analyzer<'a> {
     let rest_param = callable.rest_param.map(|ty| ty.with_scope(scope));
     let return_type = callable.return_type.with_scope(scope);
     Some(self.allocator.alloc(CallableType {
-      bivariant: callable.bivariant,
+      is_method: callable.is_method,
       scope,
       type_params: vec![],
       this_param: this_type,
