@@ -57,6 +57,7 @@ impl<'a> Analyzer<'a> {
 
           callables.push(Ty::Function(self.allocator.alloc(CallableType {
             bivariant: false,
+            scope: self.type_scopes.top(),
             type_params,
             this_param,
             params,
@@ -78,6 +79,7 @@ impl<'a> Analyzer<'a> {
 
           let function = Ty::Function(self.allocator.alloc(CallableType {
             bivariant: true,
+            scope: self.type_scopes.top(),
             type_params,
             this_param,
             params,

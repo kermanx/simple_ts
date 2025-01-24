@@ -109,4 +109,8 @@ impl<'a> TypeScopeTree<'a> {
   pub fn replace_top(&mut self, scope: TypeScopeId) -> TypeScopeId {
     mem::replace(&mut self.top, scope)
   }
+
+  pub fn set_parent(&mut self, scope: TypeScopeId, parent: TypeScopeId) {
+    self.nodes[scope].parent = Some(parent);
+  }
 }

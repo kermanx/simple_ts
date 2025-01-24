@@ -8,12 +8,13 @@ use oxc::{
 };
 
 use super::{ctx::CtxTy, generic::GenericParam, union::UnionType, Ty};
-use crate::analyzer::Analyzer;
+use crate::{analyzer::Analyzer, scope::r#type::TypeScopeId};
 
 #[derive(Debug, Clone)]
 pub struct CallableType<'a, const CTOR: bool> {
   /// Method is bivariant
   pub bivariant: bool,
+  pub scope: TypeScopeId,
 
   pub type_params: Vec<GenericParam<'a>>,
   pub this_param: Option<CtxTy<'a>>,
@@ -36,16 +37,16 @@ impl<'a> Analyzer<'a> {
       return None;
     }
 
-    self.type_scopes.push();
-    self.instantiate_generic_params(&callable.type_params, type_args);
-    let this_type = callable.this_param.map(|ty| self.refresh_ctx_ty(ty));
+    let scope = self.instantiate_generic_params(&callable.type_params, type_args);
+    self.type_scopes.set_parent(scope, callable.scope);
+    let this_type = callable.this_param.map(|ty| ty.with_scope(scope));
     let params =
-      callable.params.iter().map(|(optional, ty)| (*optional, self.refresh_ctx_ty(*ty))).collect();
-    let rest_param = callable.rest_param.map(|ty| self.refresh_ctx_ty(ty));
-    let return_type = self.refresh_ctx_ty(callable.return_type);
-    self.type_scopes.pop();
+      callable.params.iter().map(|(optional, ty)| (*optional, ty.with_scope(scope))).collect();
+    let rest_param = callable.rest_param.map(|ty| ty.with_scope(scope));
+    let return_type = callable.return_type.with_scope(scope);
     Some(self.allocator.alloc(CallableType {
       bivariant: callable.bivariant,
+      scope,
       type_params: vec![],
       this_param: this_type,
       params,

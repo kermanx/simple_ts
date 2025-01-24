@@ -19,6 +19,7 @@ impl<'a> Analyzer<'a> {
 
     Ty::Function(self.allocator.alloc(CallableType {
       bivariant: false,
+      scope: self.type_scopes.top(),
       type_params,
       this_param,
       params,

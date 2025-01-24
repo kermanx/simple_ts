@@ -25,6 +25,15 @@ impl<'a> PartialEq for CtxTy<'a> {
   }
 }
 
+impl<'a> CtxTy<'a> {
+  pub fn with_scope(self, scope: TypeScopeId) -> CtxTy<'a> {
+    match self {
+      CtxTy::Static(ty) => CtxTy::Static(ty),
+      CtxTy::WithCtx(_, node) => CtxTy::WithCtx(scope, node),
+    }
+  }
+}
+
 impl<'a> Analyzer<'a> {
   pub fn ctx_ty_from_ts_type(&self, node: &'a TSType<'a>) -> CtxTy<'a> {
     CtxTy::WithCtx(self.type_scopes.top(), node)
@@ -43,13 +52,6 @@ impl<'a> Analyzer<'a> {
         self.ctx_ty_from_ts_type(node)
       }
       (None, None) => CtxTy::Static(Ty::Any),
-    }
-  }
-
-  pub fn refresh_ctx_ty(&mut self, ty: CtxTy<'a>) -> CtxTy<'a> {
-    match ty {
-      CtxTy::Static(ty) => CtxTy::Static(ty),
-      CtxTy::WithCtx(_, node) => self.ctx_ty_from_ts_type(node),
     }
   }
 
