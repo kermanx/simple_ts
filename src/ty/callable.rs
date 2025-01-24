@@ -163,6 +163,7 @@ impl_extract_callable!(extract_callable_constructor, true, Constructor);
 impl<'a> Analyzer<'a> {
   pub fn get_callable_parameter_types<const CTOR: bool>(
     &mut self,
+    scope: TypeScopeId,
     callable: &ExtractedCallable<'a, CTOR>,
   ) -> Vec<Ty<'a>> {
     match callable {
@@ -171,13 +172,13 @@ impl<'a> Analyzer<'a> {
         .iter()
         .copied()
         .map(|(optional, ty)| {
-          let ty = self.resolve_ctx_ty(self.type_scopes.constraints_scope, ty);
+          let ty = self.resolve_ctx_ty(scope, ty);
           self.get_optional_type(optional, ty)
         })
         .collect(),
       ExtractedCallable::Overloaded(callables) => {
         let allocator = self.allocator;
-        let callables = callables.iter().map(|c| self.get_callable_parameter_types(c));
+        let callables = callables.iter().map(|c| self.get_callable_parameter_types(scope, c));
         let mut res = Vec::new();
         for callable in callables {
           for _ in res.len()..callable.len() {
@@ -207,17 +208,23 @@ impl<'a> Analyzer<'a> {
       match callable {
         ExtractedCallable::Single(callable) => {
           if callable.type_params.is_empty() {
-            let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
+            let params = self.get_callable_parameter_types(
+              self.type_scopes.empty_scope,
+              &ExtractedCallable::Single(callable),
+            );
             self.exec_arguments(arguments, params);
             self.resolve_ctx_ty(self.type_scopes.empty_scope, callable.return_type)
           } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
             let scope = self.instantiate_generic_params(&callable.type_params, &type_args);
-            let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
+            let params =
+              self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
             let ret = self.resolve_ctx_ty(scope, callable.return_type);
             ret
           } else {
+            // TODO: Match non-context-aware type parameters first.
+
             todo!()
           }
         }
