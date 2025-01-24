@@ -171,7 +171,7 @@ impl<'a> Analyzer<'a> {
         .iter()
         .copied()
         .map(|(optional, ty)| {
-          let ty = self.resolve_ctx_ty(ty);
+          let ty = self.resolve_ctx_ty(self.type_scopes.constraints_scope, ty);
           self.get_optional_type(optional, ty)
         })
         .collect(),
@@ -209,15 +209,13 @@ impl<'a> Analyzer<'a> {
           if callable.type_params.is_empty() {
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
-            self.resolve_ctx_ty(callable.return_type)
+            self.resolve_ctx_ty(self.type_scopes.empty_scope, callable.return_type)
           } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
-            self.type_scopes.push();
-            self.instantiate_generic_params(&callable.type_params, &type_args);
+            let scope = self.instantiate_generic_params(&callable.type_params, &type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
-            let ret = self.resolve_ctx_ty(callable.return_type);
-            self.type_scopes.pop();
+            let ret = self.resolve_ctx_ty(scope, callable.return_type);
             ret
           } else {
             todo!()

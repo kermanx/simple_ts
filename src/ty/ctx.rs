@@ -1,5 +1,5 @@
 use oxc::{
-  allocator,
+  allocator::{self, CloneIn},
   ast::ast::{TSType, TSTypeAnnotation},
 };
 
@@ -53,11 +53,12 @@ impl<'a> Analyzer<'a> {
     }
   }
 
-  pub fn resolve_ctx_ty(&mut self, ty: CtxTy<'a>) -> Ty<'a> {
+  pub fn resolve_ctx_ty(&mut self, instantiation_scope: TypeScopeId, ty: CtxTy<'a>) -> Ty<'a> {
     match ty {
       CtxTy::Static(ty) => ty,
-      CtxTy::WithCtx(scope, node) => {
-        let old_top = self.type_scopes.replace_top(scope);
+      CtxTy::WithCtx(creation_scope, node) => {
+        let old_top = self.type_scopes.replace_top(creation_scope);
+        self.type_scopes.push_existing(instantiation_scope);
         let ty = self.resolve_type(node);
         self.type_scopes.replace_top(old_top);
         ty
@@ -66,7 +67,9 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn serialize_ctx_ty(&mut self, ty: CtxTy<'a>) -> TSType<'a> {
-    let ty = self.resolve_ctx_ty(ty);
-    self.serialize_type(ty)
+    match ty {
+      CtxTy::Static(ty) => self.serialize_type(ty),
+      CtxTy::WithCtx(_, node) => node.clone_in(self.allocator),
+    }
   }
 }

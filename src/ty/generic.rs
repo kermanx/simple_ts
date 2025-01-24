@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use oxc::{ast::ast::TSType, semantic::SymbolId, span::Atom};
 
 use super::{ctx::CtxTy, intersection::IntersectionType, union::UnionType, Ty};
-use crate::analyzer::Analyzer;
+use crate::{analyzer::Analyzer, scope::r#type::TypeScopeId};
 
 #[derive(Debug, Clone)]
 pub struct GenericParam<'a> {
@@ -31,37 +31,42 @@ pub struct GenericInstanceType<'a> {
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn instantiate_generic_params(&mut self, params: &Vec<GenericParam<'a>>, args: &Vec<Ty<'a>>) {
+  pub fn instantiate_generic_params(
+    &mut self,
+    params: &Vec<GenericParam<'a>>,
+    args: &Vec<Ty<'a>>,
+  ) -> TypeScopeId {
+    let scope = self.type_scopes.create_scope();
+
     for (index, param) in params.iter().enumerate() {
       let arg = args
         .get(index)
         .copied()
-        .or_else(|| param.default.map(|node| self.resolve_ctx_ty(node)))
+        .or_else(|| param.default.map(|node| self.resolve_ctx_ty(scope, node)))
         .unwrap_or(Ty::Error);
-      self.type_scopes.insert(param.symbol_id, arg);
+      self.type_scopes.insert_on_scope(scope, param.symbol_id, arg);
     }
-    for param in params.iter() {
-      if let Some(constraint) = param.constraint {
-        // TODO: Check constraint
-      }
-    }
+
+    scope
   }
 
   pub fn create_generic_instance(&mut self, generic: Ty<'a>, mut args: Vec<Ty<'a>>) -> Ty<'a> {
     match generic {
       Ty::Generic(generic) => {
         if generic.params.len() > args.len() {
+          // Should resolve all the defaults
+          let scope = self.type_scopes.create_scope();
           for (param, arg) in generic.params.iter().zip(args.iter()) {
-            self.type_scopes.insert(param.symbol_id, *arg);
+            self.type_scopes.insert_on_scope(scope, param.symbol_id, *arg);
           }
           for param in generic.params.iter().skip(args.len()) {
             let arg = if let Some(default) = param.default {
-              self.resolve_ctx_ty(default)
+              self.resolve_ctx_ty(scope, default)
             } else {
               Ty::Error
             };
             args.push(arg);
-            self.type_scopes.insert(param.symbol_id, arg);
+            self.type_scopes.insert_on_scope(scope, param.symbol_id, arg);
           }
         }
       }
@@ -84,8 +89,8 @@ impl<'a> Analyzer<'a> {
 
         // instance.generic is a generic type
         Ty::Generic(generic) => {
-          self.instantiate_generic_params(&generic.params, &instance.args);
-          self.resolve_ctx_ty(generic.body)
+          let scope = self.instantiate_generic_params(&generic.params, &instance.args);
+          self.resolve_ctx_ty(scope, generic.body)
         }
         Ty::Intrinsic(_) => todo!(),
 

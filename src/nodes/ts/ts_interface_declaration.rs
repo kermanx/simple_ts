@@ -8,7 +8,9 @@ use crate::{
 impl<'a> Analyzer<'a> {
   pub fn declare_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) {
     let symbol_id = node.id.symbol_id();
-    self.type_scopes.insert(symbol_id, Ty::Unresolved(UnresolvedType::UnInitType(symbol_id)));
+    self
+      .type_scopes
+      .insert_on_top(symbol_id, Ty::Unresolved(UnresolvedType::UnInitType(symbol_id)));
   }
 
   pub fn init_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) -> Ty<'a> {
@@ -17,7 +19,7 @@ impl<'a> Analyzer<'a> {
     let params =
       node.type_parameters.as_ref().map(|params| self.resolve_type_parameter_declaration(params));
 
-    let ty = self.type_scopes.get_mut(symbol_id).unwrap();
+    let ty = self.type_scopes.get_mut_on_top(symbol_id).unwrap();
 
     let mut interface = match ty {
       Ty::Interface(interface) => interface.0.borrow_mut(),
@@ -47,6 +49,6 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    *self.type_scopes.get(symbol_id).unwrap()
+    self.type_scopes.get_on_top(symbol_id).unwrap()
   }
 }

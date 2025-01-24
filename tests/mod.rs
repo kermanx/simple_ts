@@ -53,6 +53,7 @@ pub fn serialize_queried_types(code: String) -> String {
 #[test]
 fn test() {
   glob!("fixtures/**/*.ts", |path| {
+    println!("Testing {}", path.display());
     let input = fs::read_to_string(path).unwrap();
     let mut settings = Settings::clone_current();
     settings.set_omit_expression(true);

@@ -21,7 +21,7 @@ impl<'a> Analyzer<'a> {
             self.type_scopes.push();
             let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
             for symbol in infer_declarations.values() {
-              self.type_scopes.insert(*symbol, Ty::Unknown);
+              self.type_scopes.insert_on_top(*symbol, Ty::Unknown);
             }
             let result = self.resolve_type(&node.true_type);
             self.type_scopes.pop();
@@ -32,7 +32,7 @@ impl<'a> Analyzer<'a> {
           self.type_scopes.push_with_types(inferred);
           let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
           for symbol in infer_declarations.values() {
-            self.type_scopes.entry(*symbol).or_insert(Ty::Unknown);
+            self.type_scopes.entry_on_top(*symbol).or_insert(Ty::Unknown);
           }
           results.push(self.resolve_type(&node.true_type));
           self.type_scopes.pop();

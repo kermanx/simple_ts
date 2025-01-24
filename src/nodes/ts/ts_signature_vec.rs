@@ -1,4 +1,4 @@
-use oxc::{allocator, ast::ast::TSSignature, span::SPAN};
+use oxc::{allocator, ast::ast::TSSignature};
 
 use crate::{
   ty::{callable::CallableType, property_key::PropertyKeyType, record::RecordType, Ty},

@@ -18,7 +18,7 @@ use crate::{
     r#type::TypeScopeTree,
     runtime::{RuntimeScope, RuntimeScopeTree},
   },
-  ty::{accumulator::TypeAccumulator, ctx::CtxTy, unresolved::UnresolvedType, Ty},
+  ty::{accumulator::TypeAccumulator, ctx::CtxTy, Ty},
 };
 
 pub struct Analyzer<'a> {

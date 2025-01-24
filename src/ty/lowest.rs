@@ -19,11 +19,14 @@ impl<'a> Analyzer<'a> {
           ty => ty,
         },
         UnresolvedType::GenericParam(symbol) => {
-          if let Some(constraint) = self.generic_constraints.get(&symbol) {
-            self.resolve_ctx_ty(*constraint)
-          } else {
-            Ty::Unknown
-          }
+          // if let Some(constraint) =
+          //   self.type_scopes.get_on_scope(self.type_scopes.generic_constraints, symbol)
+          // {
+          //   self.resolve_ctx_ty(self.type_scopes.generic_constraints, *constraint)
+          // } else {
+          //   Ty::Unknown
+          // }
+          todo!()
         }
         UnresolvedType::Keyof(_) => Ty::String,
         UnresolvedType::InferType(_) => Ty::Unknown,

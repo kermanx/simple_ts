@@ -10,7 +10,7 @@ define_index_type! {
   pub struct TypeScopeId = u32;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct TypeScope<'a> {
   types: FxHashMap<SymbolId, Ty<'a>>,
   parent: Option<TypeScopeId>,
@@ -21,13 +21,21 @@ pub struct TypeScopeTree<'a> {
   nodes: IndexVec<TypeScopeId, TypeScope<'a>>,
   root: TypeScopeId,
   top: TypeScopeId,
+  pub constraints_scope: TypeScopeId,
+  pub empty_scope: TypeScopeId,
 }
 
 impl<'a> TypeScopeTree<'a> {
   pub fn new() -> Self {
     let mut nodes = IndexVec::new();
-    let root = nodes.push(TypeScope { types: FxHashMap::default(), parent: None });
-    TypeScopeTree { nodes, root, top: root }
+    let root = nodes.push(TypeScope::default());
+    let constraints_scope = nodes.push(TypeScope::default());
+    let empty_scope = nodes.push(TypeScope::default());
+    TypeScopeTree { nodes, root, top: root, constraints_scope, empty_scope }
+  }
+
+  pub fn create_scope(&mut self) -> TypeScopeId {
+    self.nodes.push(TypeScope { types: Default::default(), parent: None })
   }
 
   pub fn push(&mut self) -> TypeScopeId {
@@ -38,6 +46,11 @@ impl<'a> TypeScopeTree<'a> {
     let id = self.nodes.push(TypeScope { types, parent: Some(self.top) });
     self.top = id;
     id
+  }
+
+  pub fn push_existing(&mut self, id: TypeScopeId) {
+    self.nodes[id].parent = Some(self.top);
+    self.top = id;
   }
 
   pub fn pop(&mut self) {
@@ -60,27 +73,40 @@ impl<'a> TypeScopeTree<'a> {
     Ty::Unresolved(UnresolvedType::UnInitType(symbol))
   }
 
-  pub fn insert(&mut self, id: SymbolId, ty: Ty<'a>) -> Option<Ty<'a>> {
-    self.nodes[self.top].types.insert(id, ty)
+  pub fn insert_on_scope(
+    &mut self,
+    scope: TypeScopeId,
+    symbol: SymbolId,
+    ty: Ty<'a>,
+  ) -> Option<Ty<'a>> {
+    self.nodes[scope].types.insert(symbol, ty)
   }
 
-  pub fn entry(&mut self, id: SymbolId) -> Entry<SymbolId, Ty<'a>> {
-    self.nodes[self.top].types.entry(id)
+  pub fn insert_on_top(&mut self, symbol: SymbolId, ty: Ty<'a>) -> Option<Ty<'a>> {
+    self.insert_on_scope(self.top, symbol, ty)
   }
 
-  pub fn get(&self, id: SymbolId) -> Option<&Ty<'a>> {
-    self.nodes[self.top].types.get(&id)
+  pub fn entry_on_top(&mut self, symbol: SymbolId) -> Entry<SymbolId, Ty<'a>> {
+    self.nodes[self.top].types.entry(symbol)
   }
 
-  pub fn get_mut(&mut self, id: SymbolId) -> Option<&mut Ty<'a>> {
-    self.nodes[self.top].types.get_mut(&id)
+  pub fn get_on_scope(&self, scope: TypeScopeId, symbol: SymbolId) -> Option<Ty<'a>> {
+    self.nodes[scope].types.get(&symbol).copied()
+  }
+
+  pub fn get_on_top(&self, symbol: SymbolId) -> Option<Ty<'a>> {
+    self.get_on_scope(self.top, symbol)
+  }
+
+  pub fn get_mut_on_top(&mut self, symbol: SymbolId) -> Option<&mut Ty<'a>> {
+    self.nodes[self.top].types.get_mut(&symbol)
   }
 
   pub fn top(&self) -> TypeScopeId {
     self.top
   }
 
-  pub fn replace_top(&mut self, id: TypeScopeId) -> TypeScopeId {
-    mem::replace(&mut self.top, id)
+  pub fn replace_top(&mut self, scope: TypeScopeId) -> TypeScopeId {
+    mem::replace(&mut self.top, scope)
   }
 }

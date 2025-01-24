@@ -275,14 +275,18 @@ impl<'a> Analyzer<'a> {
     if target.type_params.len() != pattern.type_params.len() {
       return MatchResult::Unmatched;
     }
+    let target_scope = self.type_scopes.create_scope();
+    let pattern_scope = self.type_scopes.create_scope();
     for (target, pattern) in target.type_params.iter().zip(pattern.type_params.iter()) {
       if target.constraint == pattern.constraint {
         continue;
       }
       // Note: Contravariance - `pattern.constraint extends target.constraint`
-      let target = target.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(ty));
-      let pattern = pattern.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(ty));
-      match self.match_contravariant_types(target, pattern) {
+      let target_ty =
+        target.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(target_scope, ty));
+      let pattern_ty =
+        pattern.constraint.map_or(Ty::Unknown, |ty| self.resolve_ctx_ty(pattern_scope, ty));
+      match self.match_contravariant_types(target_ty, pattern_ty) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
@@ -290,6 +294,10 @@ impl<'a> Analyzer<'a> {
           // Somehow in TypeScript this is ignored
         }
       }
+
+      let placeholder = todo!();
+      self.type_scopes.insert_on_scope(target_scope, target.symbol_id, placeholder);
+      self.type_scopes.insert_on_scope(pattern_scope, pattern.symbol_id, placeholder);
     }
 
     let bivariant = pattern.bivariant;
@@ -297,9 +305,9 @@ impl<'a> Analyzer<'a> {
 
     // Step2: Match this type
     if let (Some(target), Some(pattern)) = (target.this_param, pattern.this_param) {
-      let target = self.resolve_ctx_ty(target);
-      let pattern = self.resolve_ctx_ty(pattern);
-      match self.match_parameter_types(bivariant, target, pattern) {
+      let target_ty = self.resolve_ctx_ty(target_scope, target);
+      let pattern_ty = self.resolve_ctx_ty(pattern_scope, pattern);
+      match self.match_parameter_types(bivariant, target_ty, pattern_ty) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
@@ -310,13 +318,13 @@ impl<'a> Analyzer<'a> {
     // Step3: Match parameters
     for (index, (target_optional, target)) in target.params.iter().enumerate() {
       if let Some((pattern_optional, pattern)) = pattern.params.get(index) {
-        let mut target = self.resolve_ctx_ty(*target);
-        let mut pattern = self.resolve_ctx_ty(*pattern);
+        let mut target_ty = self.resolve_ctx_ty(target_scope, *target);
+        let mut pattern_ty = self.resolve_ctx_ty(pattern_scope, *pattern);
         if target_optional != pattern_optional {
-          target = self.get_optional_type(*target_optional, target);
-          pattern = self.get_optional_type(*pattern_optional, pattern);
+          target_ty = self.get_optional_type(*target_optional, target_ty);
+          pattern_ty = self.get_optional_type(*pattern_optional, pattern_ty);
         }
-        match self.match_parameter_types(bivariant, pattern, target) {
+        match self.match_parameter_types(bivariant, pattern_ty, target_ty) {
           MatchResult::Error => return MatchResult::Error,
           MatchResult::Unmatched => return MatchResult::Unmatched,
           MatchResult::Matched => {}
@@ -335,9 +343,9 @@ impl<'a> Analyzer<'a> {
 
     // Step5: Match return type
     {
-      let target = self.resolve_ctx_ty(target.return_type);
-      let pattern = self.resolve_ctx_ty(pattern.return_type);
-      match self.match_covariant_types(target, pattern) {
+      let target_ty = self.resolve_ctx_ty(target_scope, target.return_type);
+      let pattern_ty = self.resolve_ctx_ty(pattern_scope, pattern.return_type);
+      match self.match_covariant_types(target_ty, pattern_ty) {
         MatchResult::Error => return MatchResult::Error,
         MatchResult::Unmatched => return MatchResult::Unmatched,
         MatchResult::Matched => {}
