@@ -18,7 +18,7 @@ impl<'a> Analyzer<'a> {
     } else {
       self.resolve_type(&node.type_annotation)
     };
-    self.types.insert(symbol_id, ty);
+    self.type_scopes.insert(symbol_id, ty);
     self.accumulate_type(&node.id, ty);
   }
 

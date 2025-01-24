@@ -14,10 +14,13 @@ impl<'a> Analyzer<'a> {
 
       Ty::Unresolved(unresolved) => match unresolved {
         UnresolvedType::UnInitVariable(_) => Ty::Unknown,
-        UnresolvedType::UnInitType(symbol) => match *self.types.get(&symbol).unwrap() {
+        UnresolvedType::UnInitType(symbol) => match self.type_scopes.search(symbol) {
           Ty::Unresolved(UnresolvedType::UnInitType(s)) if s == symbol => Ty::Unknown,
           ty => ty,
         },
+        UnresolvedType::GenericParam(symbol) => {
+          self.generic_constraints.get(&symbol).copied().unwrap_or(Ty::Unknown)
+        }
         UnresolvedType::Keyof(_) => Ty::String,
         UnresolvedType::InferType(_) => Ty::Unknown,
       },

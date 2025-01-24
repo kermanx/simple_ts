@@ -21,7 +21,7 @@ impl<'a> Analyzer<'a> {
             let old_generics = self.take_generics();
             let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
             for symbol in infer_declarations.values() {
-              self.generics.insert(*symbol, Ty::Unknown);
+              self.type_scopes.insert(*symbol, Ty::Unknown);
             }
             let result = self.resolve_type(&node.true_type);
             self.restore_generics(old_generics);
@@ -32,7 +32,7 @@ impl<'a> Analyzer<'a> {
           let old_generics = self.replace_generics(Box::new(inferred));
           let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
           for symbol in infer_declarations.values() {
-            self.generics.entry(*symbol).or_insert(Ty::Unknown);
+            self.type_scopes.entry(*symbol).or_insert(Ty::Unknown);
           }
           results.push(self.resolve_type(&node.true_type));
           self.restore_generics(old_generics);

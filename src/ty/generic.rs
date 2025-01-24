@@ -111,7 +111,7 @@ impl<'a> Analyzer<'a> {
     match instance.generic {
       Ty::Generic(generic) => {
         for (param, arg) in generic.params.iter().zip(instance.args.iter()) {
-          self.generics.insert(param.symbol_id, *arg);
+          self.type_scopes.insert(param.symbol_id, *arg);
         }
         self.resolve_type(generic.body)
       }

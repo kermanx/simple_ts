@@ -2,7 +2,6 @@ use oxc::ast::ast::Function;
 
 use crate::{
   analyzer::Analyzer,
-  scope::{call::CallScope, control::CfScopeKind},
   ty::{callable::CallableType, Ty},
 };
 
@@ -14,15 +13,12 @@ impl<'a> Analyzer<'a> {
       .map(|type_parameters| self.resolve_type_parameter_declaration(&type_parameters))
       .unwrap_or_default();
 
-    let body_scope = self.push_scope(CfScopeKind::Function);
-    self.call_scopes.push(CallScope::new(body_scope, node.r#async, node.generator, annotated_ret));
-
     let (this_param, params, rest_param) = self.exec_formal_parameters(&node.params);
 
     let annotated_ret = node.return_type.as_ref().map(|n| &n.type_annotation);
     let inferred_ret = if let Some(body) = &node.body {
       let resolved_annotated = annotated_ret.map(|t| self.resolve_type(t));
-      self.exec_function_body(body, node.r#async, node.generator, resolved_annotated)
+      self.exec_function_body(body, node.r#async, node.generator, this_param, resolved_annotated)
     } else {
       Ty::Error
     };
