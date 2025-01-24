@@ -1,7 +1,11 @@
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
-use super::{callable::CallableType, unresolved::UnresolvedType, Ty};
+use super::{
+  callable::CallableType,
+  unresolved::{get_placeholder_ty, UnresolvedType},
+  Ty,
+};
 use crate::Analyzer;
 
 pub enum MatchResult<'a> {
@@ -277,7 +281,9 @@ impl<'a> Analyzer<'a> {
     }
     let target_scope = self.type_scopes.create_scope();
     let pattern_scope = self.type_scopes.create_scope();
-    for (target, pattern) in target.type_params.iter().zip(pattern.type_params.iter()) {
+    for (index, (target, pattern)) in
+      target.type_params.iter().zip(pattern.type_params.iter()).enumerate()
+    {
       if target.constraint == pattern.constraint {
         continue;
       }
@@ -295,7 +301,7 @@ impl<'a> Analyzer<'a> {
         }
       }
 
-      let placeholder = todo!();
+      let placeholder = get_placeholder_ty(index);
       self.type_scopes.insert_on_scope(target_scope, target.symbol_id, placeholder);
       self.type_scopes.insert_on_scope(pattern_scope, pattern.symbol_id, placeholder);
     }
