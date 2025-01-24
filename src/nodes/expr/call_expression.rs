@@ -32,6 +32,6 @@ impl<'a> Analyzer<'a> {
     let callable = self.extract_callable_function(callee);
     let ret_val = self.exec_call(callable, &node.type_parameters, this_arg, &node.arguments, sat);
 
-    (indeterminate, ret_val)
+    (indeterminate, ret_val.unwrap_or(Ty::Error))
   }
 }

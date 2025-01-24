@@ -196,6 +196,7 @@ impl<'a> Analyzer<'a> {
     }
   }
 
+  /// Returns `None` if the signature does not match. Otherwise, returns the return type.
   pub fn exec_call<const CTOR: bool>(
     &mut self,
     callable: Option<ExtractedCallable<'a, CTOR>>,
@@ -203,7 +204,7 @@ impl<'a> Analyzer<'a> {
     this_arg: Ty<'a>,
     arguments: &'a allocator::Vec<'a, Argument<'a>>,
     ret_sat: Option<Ty<'a>>,
-  ) -> Ty<'a> {
+  ) -> Option<Ty<'a>> {
     if let Some(callable) = callable {
       match callable {
         ExtractedCallable::Single(callable) => {
@@ -212,16 +213,15 @@ impl<'a> Analyzer<'a> {
               self.type_scopes.empty_scope,
               &ExtractedCallable::Single(callable),
             );
-            self.exec_arguments(arguments, params);
-            self.resolve_ctx_ty(self.type_scopes.empty_scope, callable.return_type)
+            self.exec_arguments(arguments, Some(params));
+            Some(self.resolve_ctx_ty(self.type_scopes.empty_scope, callable.return_type))
           } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
             let scope = self.instantiate_generic_params(&callable.type_params, &type_args);
             let params =
               self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
-            self.exec_arguments(arguments, params);
-            let ret = self.resolve_ctx_ty(scope, callable.return_type);
-            ret
+            self.exec_arguments(arguments, Some(params));
+            Some(self.resolve_ctx_ty(scope, callable.return_type))
           } else {
             // TODO: Match non-context-aware type parameters first.
 
@@ -229,29 +229,22 @@ impl<'a> Analyzer<'a> {
           }
         }
         ExtractedCallable::Overloaded(callables) => {
-          let ret = Ty::Error;
           for callable in callables {
-            todo!();
-            // If matches, set ret_val and break
+            if let Some(ret) =
+              self.exec_call(Some(callable), type_parameters, this_arg, arguments, ret_sat)
+            {
+              return Some(ret);
+            }
           }
-          ret
+          None
         }
         ExtractedCallable::Union(callables) => {
           todo!()
         }
       }
     } else {
-      for arg in arguments {
-        match arg {
-          Argument::SpreadElement(node) => {
-            self.exec_expression(&node.argument, None);
-          }
-          node => {
-            self.exec_expression(node.to_expression(), None);
-          }
-        }
-      }
-      Ty::Error
+      self.exec_arguments(arguments, None);
+      None
     }
   }
 }
