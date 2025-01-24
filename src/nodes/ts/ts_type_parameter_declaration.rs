@@ -10,13 +10,6 @@ impl<'a> Analyzer<'a> {
     &mut self,
     node: &'a TSTypeParameterDeclaration<'a>,
   ) -> Vec<GenericParam<'a>> {
-    for param in &node.params {
-      let symbol_id = param.name.symbol_id();
-      self
-        .types
-        .entry(symbol_id)
-        .or_insert_with(|| Ty::Unresolved(UnresolvedType::GenericParam(symbol_id)));
-    }
     node
       .params
       .iter()
@@ -29,7 +22,7 @@ impl<'a> Analyzer<'a> {
         GenericParam {
           symbol_id,
           constraint,
-          default: param.default.as_ref().map(|c| self.resolve_type(c)),
+          default: param.default.as_ref(),
           r#in: param.r#in,
           out: param.out,
           r#const: param.r#const,

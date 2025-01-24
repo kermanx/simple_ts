@@ -1,12 +1,7 @@
 use oxc::ast::ast::{Expression, TSInterfaceDeclaration};
 
 use crate::{
-  ty::{
-    generic::GenericType,
-    interface::{InterfaceType, InterfaceTypeInner},
-    unresolved::UnresolvedType,
-    Ty,
-  },
+  ty::{interface::InterfaceTypeInner, unresolved::UnresolvedType, Ty},
   Analyzer,
 };
 
@@ -25,24 +20,7 @@ impl<'a> Analyzer<'a> {
     let ty = self.types.get_mut(&symbol_id).unwrap();
 
     let mut interface = match ty {
-      Ty::Unresolved(UnresolvedType::UnInitType(_)) => {
-        let interface = &*self.allocator.alloc(InterfaceType::default());
-        *ty = if let Some(params) = params {
-          Ty::Generic(self.allocator.alloc(GenericType {
-            name: &node.id.name,
-            params,
-            body: Ty::Interface(interface),
-          }))
-        } else {
-          Ty::Interface(interface)
-        };
-        interface.0.borrow_mut()
-      }
       Ty::Interface(interface) => interface.0.borrow_mut(),
-      Ty::Generic(g) => match &g.body {
-        Ty::Interface(interface) => interface.0.borrow_mut(),
-        _ => unreachable!(),
-      },
       _ => unreachable!(),
     };
 

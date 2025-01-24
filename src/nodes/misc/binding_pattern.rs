@@ -74,7 +74,7 @@ impl<'a> Analyzer<'a> {
         }
       }
       BindingPatternKind::AssignmentPattern(node) => {
-        let binding_val = self.exec_with_default(&node.right, init.unwrap());
+        let binding_val = self.exec_with_default(&node.right, init);
 
         self.init_binding_pattern(&node.left, Some(binding_val));
       }

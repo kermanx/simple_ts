@@ -12,18 +12,6 @@ use super::{generic::GenericParam, union::UnionType, Ty};
 use crate::analyzer::Analyzer;
 
 #[derive(Debug, Clone)]
-pub enum ReturnType<'a> {
-  /// function f(): number;
-  Simple(Ty<'a>),
-
-  /// function f(a): asserts a is number;
-  Assertion(SymbolId, Ty<'a>),
-
-  /// function f(a): a is number;
-  Predicate(SymbolId, Ty<'a>),
-}
-
-#[derive(Debug, Clone)]
 pub struct CallableType<'a, const CTOR: bool> {
   /// Method is bivariant
   pub bivariant: bool,
@@ -31,9 +19,9 @@ pub struct CallableType<'a, const CTOR: bool> {
   pub type_params: Vec<GenericParam<'a>>,
   pub this_param: Option<Ty<'a>>,
   /// (optional, type)
-  pub params: Vec<(bool, Ty<'a>)>,
-  pub rest_param: Option<Ty<'a>>,
-  pub return_type: Ty<'a>,
+  pub params: Vec<(bool, &'a TSType<'a>)>,
+  pub rest_param: Option<&'a TSType<'a>>,
+  pub return_type: &'a TSType<'a>,
 }
 
 pub type FunctionType<'a> = CallableType<'a, false>;
@@ -50,7 +38,7 @@ impl<'a> Analyzer<'a> {
     }
 
     let old_generics = self.take_generics();
-    self.instantiate_generic_param(&callable.type_params, type_args);
+    self.instantiate_generic_params(&callable.type_params, type_args);
     let this_type = callable.this_param.map(|ty| self.resolve_unresolved(ty));
     let params = callable
       .params
@@ -222,7 +210,7 @@ impl<'a> Analyzer<'a> {
           } else if let Some(type_parameters) = type_parameters {
             let type_args = self.resolve_type_parameter_instantiation(type_parameters);
             let old_generics = self.take_generics();
-            self.instantiate_generic_param(&callable.type_params, &type_args);
+            self.instantiate_generic_params(&callable.type_params, &type_args);
             let params = self.get_callable_parameter_types(&ExtractedCallable::Single(callable));
             self.exec_arguments(arguments, params);
             let ret = self.resolve_unresolved(callable.return_type);

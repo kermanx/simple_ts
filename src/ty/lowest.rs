@@ -8,7 +8,7 @@ impl<'a> Analyzer<'a> {
   pub fn get_lowest_type(&mut self, ty: Ty<'a>) -> Ty<'a> {
     match ty {
       Ty::Instance(i) => self.unwrap_generic_instance(i),
-      Ty::Generic(g) => self.get_lowest_type(g.body),
+      Ty::Generic(g) => todo!(),
       Ty::Intrinsic(i) => todo!(),
       Ty::Namespace(_) => Ty::Error,
 
@@ -18,12 +18,6 @@ impl<'a> Analyzer<'a> {
           Ty::Unresolved(UnresolvedType::UnInitType(s)) if s == symbol => Ty::Unknown,
           ty => ty,
         },
-        UnresolvedType::GenericParam(symbol) => {
-          self.generic_constraints.get(&symbol).copied().unwrap_or(Ty::Unknown)
-        }
-        UnresolvedType::Conditional(cond) => {
-          self.into_union([cond.true_ty, cond.false_ty]).unwrap()
-        }
         UnresolvedType::Keyof(_) => Ty::String,
         UnresolvedType::InferType(_) => Ty::Unknown,
       },

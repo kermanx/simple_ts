@@ -1,4 +1,4 @@
-use std::{cell::RefCell, mem};
+use std::mem;
 
 use oxc::{ast::ast::TSType, semantic::SymbolId, span::Atom};
 use rustc_hash::FxHashMap;
@@ -10,7 +10,7 @@ use crate::analyzer::Analyzer;
 pub struct GenericParam<'a> {
   pub symbol_id: SymbolId,
   pub constraint: Option<Ty<'a>>,
-  pub default: Option<Ty<'a>>,
+  pub default: Option<&'a TSType<'a>>,
   pub r#in: bool,
   pub out: bool,
   pub r#const: bool,
@@ -20,7 +20,7 @@ pub struct GenericParam<'a> {
 pub struct GenericType<'a> {
   pub name: &'a Atom<'a>,
   pub params: Vec<GenericParam<'a>>,
-  pub body: Ty<'a>,
+  pub body: &'a TSType<'a>,
 }
 
 #[derive(Debug, Clone)]
@@ -46,9 +46,13 @@ impl<'a> Analyzer<'a> {
     self.generics = old_generics;
   }
 
-  pub fn instantiate_generic_param(&mut self, params: &Vec<GenericParam<'a>>, args: &Vec<Ty<'a>>) {
+  pub fn instantiate_generic_params(&mut self, params: &Vec<GenericParam<'a>>, args: &Vec<Ty<'a>>) {
     for (index, param) in params.iter().enumerate() {
-      let arg = args.get(index).copied().or(param.default).unwrap_or(Ty::Error);
+      let arg = args
+        .get(index)
+        .copied()
+        .or_else(|| param.default.map(|node| self.resolve_type(node)))
+        .unwrap_or(Ty::Error);
       self.generics.insert(param.symbol_id, arg);
     }
     for param in params.iter() {
@@ -61,11 +65,18 @@ impl<'a> Analyzer<'a> {
   pub fn create_generic_instance(&mut self, generic: Ty<'a>, mut args: Vec<Ty<'a>>) -> Ty<'a> {
     match generic {
       Ty::Generic(generic) => {
-        for g in generic.params.iter().skip(args.len()) {
-          if let Some(default) = g.default {
-            args.push(default);
-          } else {
-            args.push(Ty::Error);
+        if generic.params.len() > args.len() {
+          for (param, arg) in generic.params.iter().zip(args.iter()) {
+            self.generics.insert(param.symbol_id, *arg);
+          }
+          for param in generic.params.iter().skip(args.len()) {
+            let arg = if let Some(default) = param.default {
+              self.resolve_type(default)
+            } else {
+              Ty::Error
+            };
+            args.push(arg);
+            self.generics.insert(param.symbol_id, arg);
           }
         }
       }
@@ -84,8 +95,8 @@ impl<'a> Analyzer<'a> {
       // instance.generic is a generic type
       Ty::Generic(generic) => {
         let old_generics = self.take_generics();
-        self.instantiate_generic_param(&generic.params, &instance.args);
-        let result = self.resolve_unresolved(generic.body);
+        self.instantiate_generic_params(&generic.params, &instance.args);
+        let result = self.resolve_type(generic.body);
         self.restore_generics(old_generics);
         result
       }
@@ -93,6 +104,19 @@ impl<'a> Analyzer<'a> {
 
       // instance.generic is a generic value (function or constructor or compound of them)
       _ => self.instantiate_generic_value(instance.generic, &instance.args),
+    }
+  }
+
+  pub fn instantiate_generic_type(&mut self, instance: &GenericInstanceType<'a>) -> Ty<'a> {
+    match instance.generic {
+      Ty::Generic(generic) => {
+        for (param, arg) in generic.params.iter().zip(instance.args.iter()) {
+          self.generics.insert(param.symbol_id, *arg);
+        }
+        self.resolve_type(generic.body)
+      }
+      Ty::Intrinsic(_) => todo!(),
+      _ => Ty::Error,
     }
   }
 

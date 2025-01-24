@@ -10,7 +10,7 @@ impl<'a> Analyzer<'a> {
   ) {
     match node {
       AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(node) => {
-        let value = self.exec_with_default(&node.init, value);
+        let value = self.exec_with_default(&node.init, Some(value));
 
         self.exec_assignment_target_write(&node.binding, value, None);
       }

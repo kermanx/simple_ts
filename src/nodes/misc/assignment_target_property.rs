@@ -18,8 +18,11 @@ impl<'a> Analyzer<'a> {
 
         let value = self.get_property(value, key);
 
-        let value =
-          if let Some(init) = &node.init { self.exec_with_default(init, value) } else { value };
+        let value = if let Some(init) = &node.init {
+          self.exec_with_default(init, Some(value))
+        } else {
+          value
+        };
 
         self.exec_identifier_reference_write(&node.binding, value);
 
