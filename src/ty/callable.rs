@@ -111,6 +111,7 @@ impl<'a> Analyzer<'a> {
 
 #[derive(Debug)]
 pub enum ExtractedCallable<'a, const CTOR: bool> {
+  Any,
   Single(&'a CallableType<'a, CTOR>),
   Overloaded(Vec<ExtractedCallable<'a, CTOR>>),
   Union(Vec<ExtractedCallable<'a, CTOR>>),
@@ -122,6 +123,7 @@ macro_rules! impl_extract_callable {
       pub fn $name(&mut self, ty: Ty<'a>) -> Option<ExtractedCallable<'a, $ctor>> {
         match ty {
           Ty::$member(f) => Some(ExtractedCallable::Single(f)),
+          Ty::Any => Some(ExtractedCallable::Any),
           Ty::Union(u) => {
             let mut res = Some(vec![]);
             u.for_each(|ty| {
@@ -165,15 +167,16 @@ impl<'a> Analyzer<'a> {
     &mut self,
     scope: TypeScopeId,
     callable: &ExtractedCallable<'a, CTOR>,
-  ) -> Vec<Ty<'a>> {
+  ) -> Vec<(bool, Ty<'a>)> {
     match callable {
+      ExtractedCallable::Any => vec![(true, Ty::Any)],
       ExtractedCallable::Single(callable) => callable
         .params
         .iter()
         .copied()
         .map(|(optional, ty)| {
           let ty = self.resolve_ctx_ty(scope, ty);
-          self.get_optional_type(optional, ty)
+          (false, self.get_optional_type(optional, ty))
         })
         .collect(),
       ExtractedCallable::Overloaded(callables) => {
@@ -184,11 +187,15 @@ impl<'a> Analyzer<'a> {
           for _ in res.len()..callable.len() {
             res.push(allocator.alloc(UnionType::default()));
           }
-          for (i, item) in callable.into_iter().enumerate() {
-            res[i].add(item);
+          for (i, (spread, item)) in callable.into_iter().enumerate() {
+            if spread {
+              todo!()
+            } else {
+              res[i].add(item);
+            }
           }
         }
-        res.into_iter().map(|u| Ty::Union(u)).collect()
+        res.into_iter().map(|u| (false, Ty::Union(u))).collect()
       }
       ExtractedCallable::Union(callables) => {
         todo!()
@@ -207,6 +214,10 @@ impl<'a> Analyzer<'a> {
   ) -> Option<Ty<'a>> {
     if let Some(callable) = callable {
       match callable {
+        ExtractedCallable::Any => {
+          self.exec_arguments(arguments, None);
+          None
+        }
         ExtractedCallable::Single(callable) => {
           if callable.type_params.is_empty() {
             let params = self.get_callable_parameter_types(

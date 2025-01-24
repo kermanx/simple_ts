@@ -6,19 +6,27 @@ impl<'a> Analyzer<'a> {
   pub fn exec_arguments(
     &mut self,
     node: &'a allocator::Vec<'a, Argument<'a>>,
-    sat: Option<Vec<Ty<'a>>>,
+    mut sat: Option<Vec<(bool, Ty<'a>)>>,
   ) {
-    let mut in_order = true;
     for (i, arg) in node.iter().enumerate() {
       match arg {
         Argument::SpreadElement(node) => {
           self.exec_expression(&node.argument, None);
-          in_order = false;
+          sat = None;
         }
         node => {
           self.exec_expression(
             node.to_expression(),
-            sat.as_ref().and_then(|sat| in_order.then(|| sat.get(i).copied().unwrap_or(Ty::Error))),
+            if let Some(s) = sat.as_ref() {
+              if let Some((false, ty)) = s.get(i) {
+                Some(*ty)
+              } else {
+                sat = None;
+                None
+              }
+            } else {
+              None
+            },
           );
         }
       }
