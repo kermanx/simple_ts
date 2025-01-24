@@ -1,3 +1,5 @@
+use std::collections::hash_map::Entry;
+
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
@@ -21,6 +23,12 @@ impl<'a> From<bool> for MatchResult<'a> {
   }
 }
 
+impl<'a> MatchResult<'a> {
+  pub fn matched(self) -> bool {
+    matches!(self, MatchResult::Matched | MatchResult::Inferred(_))
+  }
+}
+
 impl<'a> Analyzer<'a> {
   pub fn match_types_with_dispatch(
     &mut self,
@@ -35,11 +43,11 @@ impl<'a> Analyzer<'a> {
         u.for_each(|ty| results.extend(self.match_types_with_dispatch(ty, pattern)));
         results
       }
-      _ => vec![self.match_covariant_types(0, target, pattern)],
+      _ => vec![self.match_covariant_types(1, target, pattern)],
     }
   }
 
-  fn match_covariant_types(
+  pub fn match_covariant_types(
     &mut self,
     specificity: i32,
     target: Ty<'a>,
@@ -104,7 +112,7 @@ impl<'a> Analyzer<'a> {
       (target, Ty::Union(pattern)) => {
         let mut error = false;
         let mut matched = false;
-        let mut inferred = FxHashMap::default();
+        let mut inferred = FxHashMap::<SymbolId, (i32, Ty<'a>)>::default();
 
         pattern.for_each(|pattern| {
           match self.match_covariant_types(specificity, target, pattern) {
@@ -113,7 +121,19 @@ impl<'a> Analyzer<'a> {
             MatchResult::Matched => matched = true,
             MatchResult::Inferred(i) => {
               matched = true;
-              inferred.extend(i);
+              for (symbol, (specificity, ty)) in i {
+                match inferred.entry(symbol) {
+                  Entry::Occupied(mut entry) => {
+                    let (prev_specificity, _) = *entry.get();
+                    if prev_specificity.abs() < specificity.abs() {
+                      entry.insert((specificity, ty));
+                    }
+                  }
+                  Entry::Vacant(entry) => {
+                    entry.insert((specificity, ty));
+                  }
+                }
+              }
             }
           }
         });

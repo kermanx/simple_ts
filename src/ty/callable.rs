@@ -4,11 +4,17 @@ use oxc::{
     ast::{Argument, FormalParameterKind, TSType, TSTypeParameterInstantiation},
     NONE,
   },
+  semantic::SymbolId,
   span::SPAN,
 };
+use rustc_hash::FxHashMap;
 
 use super::{ctx::CtxTy, generic::GenericParam, union::UnionType, Ty};
-use crate::{analyzer::Analyzer, scope::r#type::TypeScopeId};
+use crate::{
+  analyzer::Analyzer,
+  scope::r#type::TypeScopeId,
+  ty::{r#match::MatchResult, unresolved::UnresolvedType},
+};
 
 #[derive(Debug, Clone)]
 pub struct CallableType<'a, const CTOR: bool> {
@@ -207,7 +213,7 @@ impl<'a> Analyzer<'a> {
   pub fn exec_call<const CTOR: bool>(
     &mut self,
     callable: Option<ExtractedCallable<'a, CTOR>>,
-    type_parameters: &'a Option<allocator::Box<'a, TSTypeParameterInstantiation<'a>>>,
+    type_args: &'a Option<allocator::Box<'a, TSTypeParameterInstantiation<'a>>>,
     this_arg: Ty<'a>,
     arguments: &'a allocator::Vec<'a, Argument<'a>>,
     ret_sat: Option<Ty<'a>>,
@@ -219,30 +225,12 @@ impl<'a> Analyzer<'a> {
           None
         }
         ExtractedCallable::Single(callable) => {
-          if callable.type_params.is_empty() {
-            let params = self.get_callable_parameter_types(
-              self.type_scopes.empty_scope,
-              &ExtractedCallable::Single(callable),
-            );
-            self.exec_arguments(arguments, Some(params));
-            Some(self.resolve_ctx_ty(self.type_scopes.empty_scope, callable.return_type))
-          } else if let Some(type_parameters) = type_parameters {
-            let type_args = self.resolve_type_parameter_instantiation(type_parameters);
-            let scope = self.instantiate_generic_params(&callable.type_params, &type_args);
-            let params =
-              self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
-            self.exec_arguments(arguments, Some(params));
-            Some(self.resolve_ctx_ty(scope, callable.return_type))
-          } else {
-            // TODO: Match non-context-aware type parameters first.
-
-            todo!()
-          }
+          self.exec_call_on_single(callable, type_args, this_arg, arguments, ret_sat)
         }
         ExtractedCallable::Overloaded(callables) => {
           for callable in callables {
             if let Some(ret) =
-              self.exec_call(Some(callable), type_parameters, this_arg, arguments, ret_sat)
+              self.exec_call(Some(callable), type_args, this_arg, arguments, ret_sat)
             {
               return Some(ret);
             }
@@ -250,12 +238,154 @@ impl<'a> Analyzer<'a> {
           None
         }
         ExtractedCallable::Union(callables) => {
-          todo!()
+          let mut ret_types = Vec::new();
+          for callable in callables {
+            let ret = self.exec_call(Some(callable), type_args, this_arg, arguments, ret_sat)?;
+            ret_types.push(ret);
+          }
+          self.into_union(ret_types)
         }
       }
     } else {
       self.exec_arguments(arguments, None);
       None
     }
+  }
+
+  fn exec_call_on_single<const CTOR: bool>(
+    &mut self,
+    callable: &'a CallableType<'a, CTOR>,
+    type_args: &'a Option<allocator::Box<'a, TSTypeParameterInstantiation<'a>>>,
+    this_arg: Ty<'a>,
+    arguments: &'a allocator::Vec<'a, Argument<'a>>,
+    ret_sat: Option<Ty<'a>>,
+  ) -> Option<Ty<'a>> {
+    if callable.type_params.is_empty() {
+      let params = self.get_callable_parameter_types(
+        self.type_scopes.empty_scope,
+        &ExtractedCallable::Single(callable),
+      );
+      self.exec_arguments(arguments, Some(params));
+      Some(self.resolve_ctx_ty(self.type_scopes.empty_scope, callable.return_type))
+    } else if let Some(type_args) = type_args {
+      let type_args = self.resolve_type_parameter_instantiation(type_args);
+      let scope = self.instantiate_generic_params(&callable.type_params, &type_args);
+      let params = self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
+      self.exec_arguments(arguments, Some(params));
+      Some(self.resolve_ctx_ty(scope, callable.return_type))
+    } else {
+      self.exec_call_with_inference(callable, this_arg, arguments, ret_sat)
+    }
+  }
+
+  fn exec_call_with_inference<const CTOR: bool>(
+    &mut self,
+    callable: &'a CallableType<'a, CTOR>,
+    this_arg: Ty<'a>,
+    arguments: &'a allocator::Vec<'a, Argument<'a>>,
+    ret_sat: Option<Ty<'a>>,
+  ) -> Option<Ty<'a>> {
+    // # Inference
+    // See https://gitnation.com/contents/lets-make-a-generic-inference-algorithm
+    //
+    // - Non-context-aware arguments first (TODO)
+    // - Type inferred from input type is the upper-bound (specificity < 0)
+    // - Type inferred from output type is the lower-bound (specificity > 0)
+    // - Choose the widest type *FROM* output type inferred from output type
+
+    let scope = self.type_scopes.create_scope();
+    for param in &callable.type_params {
+      self.type_scopes.insert_on_scope(
+        scope,
+        param.symbol_id,
+        Ty::Unresolved(UnresolvedType::InferType(param.symbol_id)),
+      );
+    }
+    let params = self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
+
+    #[derive(Default)]
+    struct State<'a> {
+      upmost_output: Option<Ty<'a>>,
+      lowest_input: Option<Ty<'a>>,
+    }
+
+    impl<'a> State<'a> {
+      pub fn update(&mut self, analyzer: &mut Analyzer<'a>, specificity: i32, ty: Ty<'a>) {
+        if specificity > 0 {
+          if let Some(upmost) = &mut self.upmost_output {
+            if analyzer.match_covariant_types(1, *upmost, ty).matched() {
+              *upmost = ty;
+            }
+          } else {
+            self.upmost_output = Some(ty);
+          }
+        } else {
+          if let Some(lowest) = &mut self.lowest_input {
+            if analyzer.match_covariant_types(1, ty, *lowest).matched() {
+              *lowest = ty;
+            }
+          } else {
+            self.lowest_input = Some(ty);
+          }
+        }
+      }
+    }
+
+    let mut inferred = FxHashMap::<SymbolId, State<'a>>::default();
+
+    fn handle_match_result<'a>(
+      analyzer: &mut Analyzer<'a>,
+      inferred: &mut FxHashMap<SymbolId, State<'a>>,
+      result: MatchResult<'a>,
+    ) -> Option<()> {
+      match result {
+        MatchResult::Error | MatchResult::Unmatched => return None,
+        MatchResult::Matched => {}
+        MatchResult::Inferred(i) => {
+          for (symbol, (specificity, ty)) in i {
+            let state = inferred.entry(symbol).or_default();
+            state.update(analyzer, specificity, ty);
+          }
+        }
+      }
+      Some(())
+    }
+
+    for (arg, (_, param)) in arguments.iter().zip(params.iter()) {
+      match arg {
+        Argument::SpreadElement(node) => {
+          todo!()
+        }
+        node => {
+          let arg = self.exec_expression(node.to_expression(), None);
+          let result = self.match_covariant_types(1, arg, *param);
+          handle_match_result(self, &mut inferred, result);
+        }
+      }
+    }
+
+    if let Some(ret_sat) = ret_sat {
+      let actual_ret = self.resolve_ctx_ty(scope, callable.return_type);
+      let result = self.match_covariant_types(1, actual_ret, ret_sat);
+      handle_match_result(self, &mut inferred, result);
+    }
+
+    for param in &callable.type_params {
+      let ty = if let Some(inferred) = inferred.get(&param.symbol_id) {
+        if let Some(ty) = inferred.upmost_output {
+          ty
+        } else if let Some(ty) = inferred.lowest_input {
+          ty
+        } else {
+          return None;
+        }
+      } else {
+        // Or constraint? idk
+        Ty::Unknown
+      };
+      self.type_scopes.insert_on_scope(scope, param.symbol_id, ty);
+    }
+
+    Some(self.resolve_ctx_ty(scope, callable.return_type))
   }
 }
