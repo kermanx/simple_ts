@@ -19,12 +19,14 @@ impl<'a> Analyzer<'a> {
       Some(ty)
     } else if let Some(loop_init) = loop_init {
       Some(loop_init)
-    } else {
-      let mut ty = node.init.as_ref().map(|init| self.exec_expression(init, None));
-      if !node.kind.is_const() {
-        ty = ty.map(|ty| self.get_widened_type(ty));
+    } else if let Some(init) = &node.init {
+      if node.kind.is_const() && init.is_literal() {
+        Some(self.exec_expression_with_as_const(init, None, true))
+      } else {
+        Some(self.exec_expression(init, None))
       }
-      ty
+    } else {
+      None
     };
 
     self.init_binding_pattern(&node.id, init);

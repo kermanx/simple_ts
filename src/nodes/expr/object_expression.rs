@@ -10,6 +10,7 @@ impl<'a> Analyzer<'a> {
     &mut self,
     node: &'a ObjectExpression,
     sat: Option<Ty<'a>>,
+    as_const: bool,
   ) -> Ty<'a> {
     let mut object = RecordTypeBuilder::default();
 
@@ -18,7 +19,7 @@ impl<'a> Analyzer<'a> {
         ObjectPropertyKind::ObjectProperty(node) => {
           let key = self.exec_property_key(&node.key);
           let sat = sat.map(|sat| self.get_property(sat, key));
-          let value = self.exec_expression(&node.value, sat);
+          let value = self.exec_expression_with_as_const(&node.value, sat, as_const);
           let value = value;
 
           // tsc doesn't care. So we don't care either.
@@ -30,10 +31,10 @@ impl<'a> Analyzer<'a> {
             PropertyKind::Init => value,
             PropertyKind::Get | PropertyKind::Set => todo!(),
           };
-          object.init_property(self, key, value, false, false);
+          object.init_property(self, key, value, false, as_const);
         }
         ObjectPropertyKind::SpreadProperty(node) => {
-          let argument = self.exec_expression(&node.argument, sat);
+          let argument = self.exec_expression_with_as_const(&node.argument, sat, as_const);
           object.init_spread(self, argument);
         }
       }

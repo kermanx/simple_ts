@@ -6,10 +6,14 @@ impl<'a> Analyzer<'a> {
   pub fn exec_ts_type_assertion(
     &mut self,
     node: &'a TSTypeAssertion<'a>,
-    _sat: Option<Ty<'a>>,
+    sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
-    let ty = self.resolve_type(&node.type_annotation);
-    self.exec_expression(&node.expression, Some(ty));
-    ty
+    if node.type_annotation.is_const_type_reference() {
+      self.exec_expression_with_as_const(&node.expression, sat, true)
+    } else {
+      let ty = self.resolve_type(&node.type_annotation);
+      self.exec_expression(&node.expression, Some(ty));
+      ty
+    }
   }
 }

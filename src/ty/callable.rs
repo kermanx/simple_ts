@@ -384,7 +384,7 @@ impl<'a> Analyzer<'a> {
 
     for param in &callable.type_params {
       let ty = if let Some(inferred) = inferred.get(&param.symbol_id) {
-        inferred.upmost_output.or(inferred.lowest_input)?
+        inferred.upmost_output.or(inferred.lowest_input).unwrap()
       } else {
         // Or constraint? idk
         Ty::Unknown

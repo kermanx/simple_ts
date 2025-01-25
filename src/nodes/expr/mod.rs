@@ -35,17 +35,62 @@ impl<'a> Analyzer<'a> {
   pub fn exec_expression(&mut self, node: &'a Expression<'a>, sat: Option<Ty<'a>>) -> Ty<'a> {
     let span = node.span();
     self.push_span(&span);
+    let value = self.exec_expression_impl(node, sat);
+    self.accumulate_type(&span, value);
+    self.pop_span();
+    value
+  }
+
+  pub fn exec_expression_with_as_const(
+    &mut self,
+    node: &'a Expression<'a>,
+    sat: Option<Ty<'a>>,
+    as_const: bool,
+  ) -> Ty<'a> {
+    if !as_const {
+      return self.exec_expression(node, sat);
+    }
+
+    let span = node.span();
+    self.push_span(&span);
 
     let value = match node {
       match_member_expression!(Expression) => {
+        // TODO: Enum member
+        todo!()
+      }
+      Expression::StringLiteral(node) => Ty::StringLiteral(&node.value),
+      Expression::NumericLiteral(node) => Ty::NumericLiteral(node.value.into()),
+      Expression::BigIntLiteral(node) => Ty::BigIntLiteral(&node.raw),
+      Expression::BooleanLiteral(node) => Ty::BooleanLiteral(node.value),
+
+      Expression::ObjectExpression(node) => self.exec_object_expression(node, sat, true),
+      Expression::ArrayExpression(node) => self.exec_array_expression(node, sat, true),
+      Expression::ParenthesizedExpression(node) => {
+        self.exec_parenthesized_expression(node, sat, true)
+      }
+
+      _ => self.exec_expression_impl(node, sat),
+    };
+
+    self.accumulate_type(&span, value);
+
+    self.pop_span();
+
+    value
+  }
+
+  fn exec_expression_impl(&mut self, node: &'a Expression<'a>, sat: Option<Ty<'a>>) -> Ty<'a> {
+    match node {
+      match_member_expression!(Expression) => {
         self.exec_member_expression_read(node.to_member_expression(), sat).0
       }
-      Expression::StringLiteral(node) => self.exec_string_literal(node, sat),
-      Expression::NumericLiteral(node) => self.exec_numeric_literal(node, sat),
-      Expression::BigIntLiteral(node) => self.exc_big_int_literal(node, sat),
-      Expression::BooleanLiteral(node) => self.exec_boolean_literal(node, sat),
-      Expression::NullLiteral(node) => self.exec_null_literal(node, sat),
-      Expression::RegExpLiteral(node) => self.exec_regexp_literal(node, sat),
+      Expression::StringLiteral(_) => Ty::String,
+      Expression::NumericLiteral(_) => Ty::Number,
+      Expression::BigIntLiteral(_) => Ty::BigInt,
+      Expression::BooleanLiteral(_) => Ty::Boolean,
+      Expression::NullLiteral(_) => Ty::Null,
+      Expression::RegExpLiteral(_) => todo!("RegExp type"),
       Expression::TemplateLiteral(node) => self.exec_template_literal(node, sat),
       Expression::Identifier(node) => self.exec_identifier_reference_read(node, sat),
       Expression::FunctionExpression(node) => self.exec_function(node, sat),
@@ -59,9 +104,11 @@ impl<'a> Analyzer<'a> {
       Expression::TaggedTemplateExpression(node) => self.exec_tagged_template_expression(node, sat),
       Expression::AwaitExpression(node) => self.exec_await_expression(node, sat),
       Expression::YieldExpression(node) => self.exec_yield_expression(node, sat),
-      Expression::ObjectExpression(node) => self.exec_object_expression(node, sat),
-      Expression::ArrayExpression(node) => self.exec_array_expression(node, sat),
-      Expression::ParenthesizedExpression(node) => self.exec_parenthesized_expression(node, sat),
+      Expression::ObjectExpression(node) => self.exec_object_expression(node, sat, false),
+      Expression::ArrayExpression(node) => self.exec_array_expression(node, sat, false),
+      Expression::ParenthesizedExpression(node) => {
+        self.exec_parenthesized_expression(node, sat, false)
+      }
       Expression::SequenceExpression(node) => self.exec_sequence_expression(node, sat),
       Expression::AssignmentExpression(node) => self.exec_assignment_expression(node, sat),
       Expression::ChainExpression(node) => self.exec_chain_expression(node, sat),
@@ -83,12 +130,6 @@ impl<'a> Analyzer<'a> {
       Expression::TSInstantiationExpression(node) => {
         self.exec_ts_instantiation_expression(node, sat)
       }
-    };
-
-    self.accumulate_type(&span, value);
-
-    self.pop_span();
-
-    value
+    }
   }
 }

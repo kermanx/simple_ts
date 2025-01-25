@@ -16,13 +16,16 @@ pub struct TupleElement<'a> {
 }
 
 #[derive(Debug, Default)]
-pub struct TupleType<'a>(pub Vec<TupleElement<'a>>);
+pub struct TupleType<'a> {
+  pub elements: Vec<TupleElement<'a>>,
+  pub readonly: bool,
+}
 
 impl<'a> TupleType<'a> {
   pub fn iterate_result_union(&self, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
     let mut types = Vec::new();
 
-    for element in &self.0 {
+    for element in &self.elements {
       if element.spread {
         types.push(analyzer.iterate_result_union(element.ty));
       } else {
@@ -60,7 +63,7 @@ impl<'a> TupleType<'a> {
   fn get_element_by_index(&self, index: usize, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
     let mut determinate = true;
     let mut types = Vec::new();
-    for (i, element) in self.0.iter().enumerate() {
+    for (i, element) in self.elements.iter().enumerate() {
       if element.spread {
         determinate = false;
       }
@@ -83,7 +86,7 @@ impl<'a> TupleType<'a> {
 impl<'a> Analyzer<'a> {
   pub fn serialize_tuple_type(&mut self, tuple: &TupleType<'a>) -> TSType<'a> {
     let mut elements = self.ast_builder.vec();
-    for element in &tuple.0 {
+    for element in &tuple.elements {
       let ty = self.serialize_type(element.ty);
       let mut node = if element.optional && element.name.is_none() {
         self.ast_builder.ts_tuple_element_optional_type(SPAN, ty)

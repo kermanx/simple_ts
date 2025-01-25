@@ -7,7 +7,8 @@ impl<'a> Analyzer<'a> {
     &mut self,
     node: &'a ParenthesizedExpression<'a>,
     sat: Option<Ty<'a>>,
+    as_const: bool,
   ) -> Ty<'a> {
-    self.exec_expression(&node.expression, sat)
+    self.exec_expression_with_as_const(&node.expression, sat, as_const)
   }
 }

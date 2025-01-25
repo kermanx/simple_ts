@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl<'a> Analyzer<'a> {
-  pub fn exec_function(&mut self, node: &'a Function<'a>, _ty: Option<Ty<'a>>) -> Ty<'a> {
+  pub fn exec_function(&mut self, node: &'a Function<'a>, _sat: Option<Ty<'a>>) -> Ty<'a> {
     let type_params = node
       .type_parameters
       .as_ref()
