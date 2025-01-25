@@ -43,8 +43,10 @@ The following TypeScript features are implemented/to be implemented:
 - [ ] Builtin libs
 - [ ] Multiple files support
 
+![A small demo](./assets/image.png)
+
 For AST nodes, some are implemented and some are not.
 
 As you can see, the hardest part (generic and it's inference and control flow analysis) is already implemented. The rest is relatively easy.
 
-However, the rest still consumes a lot of time and effort. So, I'm not going to implement them. Please take over this project if you want to implement them. Thank you.
+However, the remaining part still requires a lot of time and energy. As a student, I have no plans to realize it for the time being. If there are kind people who want to realize it, pwease take over this project. Thank you.
