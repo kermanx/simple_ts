@@ -1,7 +1,12 @@
 use oxc::{allocator, ast::ast::TSSignature};
 
 use crate::{
-  ty::{callable::CallableType, property_key::PropertyKeyType, record::RecordType, Ty},
+  ty::{
+    callable::CallableType,
+    property_key::PropertyKeyType,
+    record::{RecordType, RecordTypeBuilder},
+    Ty,
+  },
   Analyzer,
 };
 
@@ -9,11 +14,9 @@ impl<'a> Analyzer<'a> {
   pub fn resolve_signature_vec(
     &mut self,
     node: &'a allocator::Vec<'a, TSSignature<'a>>,
-    record: &mut Option<&mut RecordType<'a>>,
     callables: &mut Vec<Ty<'a>>,
-  ) {
-    let allocator = self.allocator;
-    let alloc_record = || allocator.alloc(RecordType::default());
+  ) -> Option<RecordType<'a>> {
+    let mut record: Option<RecordTypeBuilder<'a>> = None;
 
     for member in node {
       match member {
@@ -21,7 +24,7 @@ impl<'a> Analyzer<'a> {
           let key = self.resolve_type_annotation(&node.parameters[0].type_annotation);
           let key = self.to_property_key(key);
           let value = self.resolve_type_annotation(&node.type_annotation);
-          record.get_or_insert_with(alloc_record).init_property(
+          record.get_or_insert_with(Default::default).init_property(
             self,
             key,
             value,
@@ -36,7 +39,7 @@ impl<'a> Analyzer<'a> {
           } else {
             Ty::Error
           };
-          record.get_or_insert_with(alloc_record).init_property(
+          record.get_or_insert_with(Default::default).init_property(
             self,
             key,
             value,
@@ -95,7 +98,7 @@ impl<'a> Analyzer<'a> {
               | PropertyKeyType::StringLiteral(_)
               | PropertyKeyType::UniqueSymbol(_)
           ) {
-            record.get_or_insert_with(alloc_record).init_property(
+            record.get_or_insert_with(Default::default).init_property(
               self,
               key,
               function,
@@ -108,5 +111,7 @@ impl<'a> Analyzer<'a> {
         }
       }
     }
+
+    record.map(RecordTypeBuilder::build)
   }
 }

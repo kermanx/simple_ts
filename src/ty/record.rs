@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::hash_map::Entry, hash::Hash};
+use std::{collections::hash_map::Entry, hash::Hash};
 
 use oxc::{
   ast::ast::{PropertyKey, TSSignature, TSType},
@@ -12,14 +12,14 @@ use super::{accumulator::TypeAccumulator, property_key::PropertyKeyType, Ty};
 use crate::{analyzer::Analyzer, ty::union::UnionType};
 
 #[derive(Debug, Clone)]
-pub struct KeyedProperty<'a> {
+pub struct RecordPropertyValue<'a> {
   pub value: Ty<'a>,
   pub optional: bool,
   pub readonly: bool,
 }
 
 #[derive(Debug, Clone)]
-pub struct KeyedPropertyMap<'a, K>(pub FxHashMap<K, KeyedProperty<'a>>);
+pub struct KeyedPropertyMap<'a, K>(pub FxHashMap<K, RecordPropertyValue<'a>>);
 
 // FIXME: Why is this not derived?
 impl<'a, K> Default for KeyedPropertyMap<'a, K> {
@@ -29,7 +29,7 @@ impl<'a, K> Default for KeyedPropertyMap<'a, K> {
 }
 
 impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
-  pub fn init(&mut self, analyzer: &mut Analyzer<'a>, key: K, mut value: KeyedProperty<'a>) {
+  pub fn init(&mut self, analyzer: &mut Analyzer<'a>, key: K, mut value: RecordPropertyValue<'a>) {
     fn union_is_bivariant<'a>(u: &UnionType<'a>) -> bool {
       let mut bivariant = true;
       u.for_each(|ty| match ty {
@@ -69,28 +69,22 @@ impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
 }
 
 #[derive(Debug, Default)]
-pub struct MappedProperty<'a> {
-  value: RefCell<TypeAccumulator<'a>>,
+pub struct MappedPropertyBuilder<'a> {
+  value: TypeAccumulator<'a>,
   readonly: bool,
 }
 
-impl<'a> Clone for MappedProperty<'a> {
-  fn clone(&self) -> Self {
-    Self { value: RefCell::new(self.value.borrow_mut().duplicate()), readonly: self.readonly }
-  }
-}
-
 #[derive(Debug, Default)]
-pub struct RecordType<'a> {
+pub struct RecordTypeBuilder<'a> {
   pub string_keyed: KeyedPropertyMap<'a, &'a str>,
   pub symbol_keyed: KeyedPropertyMap<'a, SymbolId>,
 
-  pub string_mapped: MappedProperty<'a>,
-  pub number_mapped: MappedProperty<'a>,
-  pub symbol_mapped: MappedProperty<'a>,
+  pub string_mapped: MappedPropertyBuilder<'a>,
+  pub number_mapped: MappedPropertyBuilder<'a>,
+  pub symbol_mapped: MappedPropertyBuilder<'a>,
 }
 
-impl<'a> RecordType<'a> {
+impl<'a> RecordTypeBuilder<'a> {
   pub fn init_property(
     &mut self,
     analyzer: &mut Analyzer<'a>,
@@ -99,18 +93,18 @@ impl<'a> RecordType<'a> {
     optional: bool,
     readonly: bool,
   ) {
-    let keyed_property = KeyedProperty { value, optional, readonly };
+    let keyed_property = RecordPropertyValue { value, optional, readonly };
     match key {
       PropertyKeyType::Error => {}
       PropertyKeyType::AnyString => {
-        self.string_mapped.value.borrow_mut().add(value, analyzer.allocator);
+        self.string_mapped.value.add(value, analyzer.allocator);
       }
       PropertyKeyType::AnyNumber => {
-        self.string_mapped.value.borrow_mut().add(value, analyzer.allocator);
-        self.number_mapped.value.borrow_mut().add(value, analyzer.allocator);
+        self.string_mapped.value.add(value, analyzer.allocator);
+        self.number_mapped.value.add(value, analyzer.allocator);
       }
       PropertyKeyType::AnySymbol => {
-        self.symbol_mapped.value.borrow_mut().add(value, analyzer.allocator);
+        self.symbol_mapped.value.add(value, analyzer.allocator);
       }
       PropertyKeyType::StringLiteral(s) => {
         self.string_keyed.init(analyzer, s.as_str(), keyed_property);
@@ -129,43 +123,71 @@ impl<'a> RecordType<'a> {
     todo!()
   }
 
+  pub fn remove_property(&mut self, analyzer: &mut Analyzer<'a>, key: PropertyKeyType<'a>) {
+    todo!()
+  }
+
+  pub fn build(mut self) -> RecordType<'a> {
+    RecordType {
+      string_keyed: self.string_keyed,
+      symbol_keyed: self.symbol_keyed,
+      string_mapped: self.string_mapped.value.to_ty().map(|ty| RecordPropertyValue {
+        value: ty,
+        optional: false,
+        readonly: self.string_mapped.readonly,
+      }),
+      number_mapped: self.number_mapped.value.to_ty().map(|ty| RecordPropertyValue {
+        value: ty,
+        optional: false,
+        readonly: self.number_mapped.readonly,
+      }),
+      symbol_mapped: self.symbol_mapped.value.to_ty().map(|ty| RecordPropertyValue {
+        value: ty,
+        optional: false,
+        readonly: self.symbol_mapped.readonly,
+      }),
+    }
+  }
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct RecordType<'a> {
+  pub string_keyed: KeyedPropertyMap<'a, &'a str>,
+  pub symbol_keyed: KeyedPropertyMap<'a, SymbolId>,
+
+  pub string_mapped: Option<RecordPropertyValue<'a>>,
+  pub number_mapped: Option<RecordPropertyValue<'a>>,
+  pub symbol_mapped: Option<RecordPropertyValue<'a>>,
+}
+
+impl<'a> RecordType<'a> {
   pub fn get_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
     match key {
       PropertyKeyType::Error => Ty::Error,
-      PropertyKeyType::AnyString => {
-        self.string_mapped.value.borrow_mut().to_ty().unwrap_or(Ty::Error)
-      }
-      PropertyKeyType::AnyNumber => {
-        self.number_mapped.value.borrow_mut().to_ty().unwrap_or(Ty::Error)
-      }
-      PropertyKeyType::AnySymbol => {
-        self.symbol_mapped.value.borrow_mut().to_ty().unwrap_or(Ty::Error)
-      }
+      PropertyKeyType::AnyString => self.string_mapped.as_ref().map_or(Ty::Error, |p| p.value),
+      PropertyKeyType::AnyNumber => self.number_mapped.as_ref().map_or(Ty::Error, |p| p.value),
+      PropertyKeyType::AnySymbol => self.symbol_mapped.as_ref().map_or(Ty::Error, |p| p.value),
       PropertyKeyType::StringLiteral(s) => self.string_keyed.get(s.as_str()),
       PropertyKeyType::NumericLiteral(n) => self.string_keyed.get(n.0.to_js_string().as_str()),
       PropertyKeyType::UniqueSymbol(s) => self.symbol_keyed.get(s),
     }
   }
 
-  pub fn delete_property(&mut self, analyzer: &mut Analyzer<'a>, key: PropertyKeyType<'a>) {
-    todo!()
-  }
-
-  pub fn extend(&mut self, other: &RecordType<'a>) {
+  pub fn extend(&mut self, other: RecordType<'a>) {
     // FIXME: overload
-    self.string_keyed.0.extend(other.string_keyed.0.clone());
-    self.symbol_keyed.0.extend(other.symbol_keyed.0.clone());
-    self.string_mapped = other.string_mapped.clone();
-    self.number_mapped = other.number_mapped.clone();
-    self.symbol_mapped = other.symbol_mapped.clone();
+    self.string_keyed.0.extend(other.string_keyed.0);
+    self.symbol_keyed.0.extend(other.symbol_keyed.0);
+    self.string_mapped = other.string_mapped;
+    self.number_mapped = other.number_mapped;
+    self.symbol_mapped = other.symbol_mapped;
   }
 
   pub fn is_empty(&self) -> bool {
     self.string_keyed.0.is_empty()
       && self.symbol_keyed.0.is_empty()
-      && self.string_mapped.value.borrow().is_empty()
-      && self.number_mapped.value.borrow().is_empty()
-      && self.symbol_mapped.value.borrow().is_empty()
+      && self.string_mapped.is_none()
+      && self.number_mapped.is_none()
+      && self.symbol_mapped.is_none()
   }
 }
 
@@ -173,7 +195,7 @@ impl<'a> Analyzer<'a> {
   fn serialize_keyed_property(
     &mut self,
     key: PropertyKey<'a>,
-    property: &KeyedProperty<'a>,
+    property: &RecordPropertyValue<'a>,
   ) -> TSSignature<'a> {
     self.ast_builder.ts_signature_property_signature(
       SPAN,
@@ -188,9 +210,9 @@ impl<'a> Analyzer<'a> {
   fn serialize_mapped_property(
     &mut self,
     key_type: TSType<'a>,
-    property: &MappedProperty<'a>,
+    property: &Option<RecordPropertyValue<'a>>,
   ) -> Option<TSSignature<'a>> {
-    let ty = property.value.borrow_mut().to_ty()?;
+    let property = property.as_ref()?;
     Some(self.ast_builder.ts_signature_index_signature(
       SPAN,
       self.ast_builder.vec1(self.ast_builder.ts_index_signature_name(
@@ -198,7 +220,7 @@ impl<'a> Analyzer<'a> {
         "1",
         self.ast_builder.ts_type_annotation(SPAN, key_type),
       )),
-      self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(ty)),
+      self.ast_builder.ts_type_annotation(SPAN, self.serialize_type(property.value)),
       property.readonly,
       false,
     ))

@@ -2,7 +2,10 @@ use oxc::ast::ast::{JSXAttributeItem, JSXOpeningElement};
 
 use crate::{
   analyzer::Analyzer,
-  ty::{record::RecordType, Ty},
+  ty::{
+    record::{RecordType, RecordTypeBuilder},
+    Ty,
+  },
 };
 
 impl<'a> Analyzer<'a> {
@@ -11,7 +14,7 @@ impl<'a> Analyzer<'a> {
     node: &'a JSXOpeningElement<'a>,
     sat: Option<Ty<'a>>,
   ) -> &'a mut RecordType<'a> {
-    let object = self.allocator.alloc(RecordType::default());
+    let mut object = RecordTypeBuilder::default();
 
     for attr in &node.attributes {
       match attr {
@@ -28,6 +31,6 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    object
+    self.allocator.alloc(object.build())
   }
 }

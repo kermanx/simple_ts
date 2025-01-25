@@ -1,6 +1,6 @@
 use crate::{
   analyzer::Analyzer,
-  ty::{property_key::PropertyKeyType, record::RecordType, Ty},
+  ty::{property_key::PropertyKeyType, record::RecordTypeBuilder, Ty},
 };
 
 impl<'a> Analyzer<'a> {
@@ -10,14 +10,14 @@ impl<'a> Analyzer<'a> {
     object: Ty<'a>,
     enumerated: Vec<PropertyKeyType<'a>>,
   ) -> Ty<'a> {
-    let rest = self.allocator.alloc(RecordType::default());
+    let mut rest = RecordTypeBuilder::default();
 
     rest.init_spread(self, object);
 
     for key in enumerated {
-      rest.delete_property(self, key);
+      rest.remove_property(self, key);
     }
 
-    Ty::Record(rest)
+    Ty::Record(self.allocator.alloc(rest.build()))
   }
 }

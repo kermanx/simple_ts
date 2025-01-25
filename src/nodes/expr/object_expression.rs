@@ -2,7 +2,7 @@ use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
 
 use crate::{
   analyzer::Analyzer,
-  ty::{record::RecordType, Ty},
+  ty::{record::RecordTypeBuilder, Ty},
 };
 
 impl<'a> Analyzer<'a> {
@@ -11,7 +11,7 @@ impl<'a> Analyzer<'a> {
     node: &'a ObjectExpression,
     sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
-    let object = self.allocator.alloc(RecordType::default());
+    let mut object = RecordTypeBuilder::default();
 
     for property in &node.properties {
       match property {
@@ -39,6 +39,6 @@ impl<'a> Analyzer<'a> {
       }
     }
 
-    Ty::Record(object)
+    Ty::Record(self.allocator.alloc(object.build()))
   }
 }

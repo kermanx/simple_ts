@@ -26,8 +26,10 @@ impl<'a> Analyzer<'a> {
       _ => unreachable!(),
     };
 
-    let InterfaceTypeInner { record, callables, .. } = &mut *interface;
-    self.resolve_signature_vec(&node.body.body, &mut Some(record), callables);
+    let InterfaceTypeInner { callables, .. } = &mut *interface;
+    if let Some(new_record) = self.resolve_signature_vec(&node.body.body, callables) {
+      interface.record.extend(new_record);
+    }
 
     if let Some(extends) = &node.extends {
       for heritage in extends {

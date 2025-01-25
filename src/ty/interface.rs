@@ -23,7 +23,7 @@ impl<'a> InterfaceTypeInner<'a> {
       Ty::Constructor(_) | Ty::Function(_) => self.callables.push(ty.clone()),
       Ty::Interface(i) => {
         let i = i.0.borrow();
-        self.record.extend(&i.record);
+        self.record.extend(i.record.clone());
         self.callables.extend(i.callables.iter().cloned());
       }
       Ty::Namespace(n) => todo!(),
