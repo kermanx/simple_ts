@@ -2,6 +2,14 @@
 
 \[WIP\] The simple way to resolve/infer TypeScript types. Written in Rust.
 
+### Why?
+
+There are several tries to implement TypeScript type checker in Rust. Why another one?
+
+The main reason is that they are just too complex. For example, [stc](https://github.com/dudykr/stc) takes [2.4k LOC](https://github.com/dudykr/stc/blob/main/crates/stc_ts_file_anaalyzer/src/analyzer/expr/bin.rs) to check `BinaryExpression`.
+
+I am working on [tree-shaker](https://github.com/KermanX/tree-shaker), and find its pattern can be used to infer TypeScript types. And after reading [_Rust-Based JavaScript Linters: Fast, But No Typed Linting Right Now_ by Josh Goldberg](https://www.joshuakgoldberg.com/blog/rust-based-javascript-linters-fast-but-no-typed-linting-right-now/#option-reimplementing-typescript-at-native-speed), I came up with the idea of copying some of tree-shaker's code and make a TypeScript type inferrer. To avoid the complexity, I will not implement type checking, but only type inference. See the goals and non-goals below.
+
 ### Goals
 
 - Type inference implemented _within 10k LOC_
