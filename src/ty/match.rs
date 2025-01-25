@@ -1,9 +1,9 @@
-use std::collections::hash_map::Entry;
+use std::{collections::hash_map::Entry, hash::Hash};
 
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
-use super::{callable::CallableType, unresolved::UnresolvedType, Ty};
+use super::{callable::CallableType, record::KeyedPropertyMap, unresolved::UnresolvedType, Ty};
 use crate::Analyzer;
 
 pub enum MatchResult<'a> {
@@ -110,41 +110,14 @@ impl<'a> Analyzer<'a> {
         }
       }
       (target, Ty::Union(pattern)) => {
-        let mut error = false;
-        let mut matched = false;
-        let mut inferred = FxHashMap::<SymbolId, (i32, Ty<'a>)>::default();
+        let mut builder = BuilderBySpecificity::default();
 
         pattern.for_each(|pattern| {
-          match self.match_covariant_types(specificity, target, pattern) {
-            MatchResult::Error => error = true,
-            MatchResult::Unmatched => {}
-            MatchResult::Matched => matched = true,
-            MatchResult::Inferred(i) => {
-              matched = true;
-              for (symbol, (specificity, ty)) in i {
-                match inferred.entry(symbol) {
-                  Entry::Occupied(mut entry) => {
-                    let (prev_specificity, _) = *entry.get();
-                    if prev_specificity.abs() < specificity.abs() {
-                      entry.insert((specificity, ty));
-                    }
-                  }
-                  Entry::Vacant(entry) => {
-                    entry.insert((specificity, ty));
-                  }
-                }
-              }
-            }
-          }
+          let result = self.match_covariant_types(specificity, target, pattern);
+          builder.add(result);
         });
 
-        if error {
-          MatchResult::Error
-        } else if matched {
-          MatchResult::Inferred(inferred)
-        } else {
-          MatchResult::Unmatched
-        }
+        builder.into_result()
       }
 
       (Ty::Intersection(_), Ty::Intersection(pattern)) => {
@@ -215,7 +188,7 @@ impl<'a> Analyzer<'a> {
           'instantiation_based_inference: {
             let mut inferred = FxHashMap::default();
             for (target, pattern) in target.args.iter().zip(pattern.args.iter()) {
-              match self.match_covariant_types(specificity, *target, *pattern) {
+              match self.match_covariant_types(specificity + 1, *target, *pattern) {
                 MatchResult::Error | MatchResult::Unmatched => break 'instantiation_based_inference,
                 MatchResult::Matched => {}
                 MatchResult::Inferred(map) => inferred.extend(map),
@@ -239,7 +212,26 @@ impl<'a> Analyzer<'a> {
         self.match_covariant_types(specificity, target, pattern)
       }
 
-      (Ty::Record(target), Ty::Record(pattern)) => todo!(),
+      (Ty::Record(target), Ty::Record(pattern)) => {
+        let mut builder = BuilderBySpecificity::default();
+
+        self.match_record_keyed_properties(
+          &mut builder,
+          specificity + 1,
+          &target.string_keyed,
+          &pattern.string_keyed,
+        );
+        self.match_record_keyed_properties(
+          &mut builder,
+          specificity + 1,
+          &target.symbol_keyed,
+          &pattern.symbol_keyed,
+        );
+
+        // TODO: Check mapped properties
+
+        builder.into_result()
+      }
       (Ty::Object, Ty::Record(pattern)) => MatchResult::from(pattern.is_empty()),
       (Ty::Record(_), Ty::Object) => MatchResult::Matched,
       (_, Ty::Record(_)) | (Ty::Record(_), _) => MatchResult::Unmatched,
@@ -408,5 +400,69 @@ impl<'a> Analyzer<'a> {
     }
 
     MatchResult::Inferred(inferred)
+  }
+
+  fn match_record_keyed_properties<K: Eq + Hash>(
+    &mut self,
+    builder: &mut BuilderBySpecificity<'a>,
+    specificity: i32,
+    target: &KeyedPropertyMap<'a, K>,
+    pattern: &KeyedPropertyMap<'a, K>,
+  ) {
+    for (key, target) in &target.0 {
+      if let Some(pattern) = pattern.0.get(key) {
+        let result = self.match_covariant_types(specificity, target.value, pattern.value);
+        builder.add(result);
+      } else {
+        builder.add(MatchResult::Unmatched);
+      }
+    }
+  }
+}
+
+#[derive(Debug, Default)]
+struct BuilderBySpecificity<'a> {
+  error: bool,
+  matched: bool,
+  inferred: FxHashMap<SymbolId, (i32, Ty<'a>)>,
+}
+
+impl<'a> BuilderBySpecificity<'a> {
+  fn insert(&mut self, symbol: SymbolId, specificity: i32, ty: Ty<'a>) {
+    match self.inferred.entry(symbol) {
+      Entry::Occupied(mut entry) => {
+        let (prev_specificity, _) = *entry.get();
+        if prev_specificity.abs() < specificity.abs() {
+          entry.insert((specificity, ty));
+        }
+      }
+      Entry::Vacant(entry) => {
+        entry.insert((specificity, ty));
+      }
+    }
+  }
+
+  fn add(&mut self, result: MatchResult<'a>) {
+    match result {
+      MatchResult::Error => self.error = true,
+      MatchResult::Unmatched => {}
+      MatchResult::Matched => self.matched = true,
+      MatchResult::Inferred(i) => {
+        self.matched = true;
+        for (symbol, (specificity, ty)) in i {
+          self.insert(symbol, specificity, ty);
+        }
+      }
+    }
+  }
+
+  fn into_result(self) -> MatchResult<'a> {
+    if self.error {
+      MatchResult::Error
+    } else if self.matched {
+      MatchResult::Inferred(self.inferred)
+    } else {
+      MatchResult::Unmatched
+    }
   }
 }
