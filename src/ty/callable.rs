@@ -9,7 +9,7 @@ use oxc::{
 };
 use rustc_hash::FxHashMap;
 
-use super::{ctx::CtxTy, generic::GenericParam, union::UnionType, Ty};
+use super::{ctx::CtxTy, generic::GenericParam, Ty};
 use crate::{
   analyzer::Analyzer,
   scope::r#type::TypeScopeId,
@@ -384,13 +384,7 @@ impl<'a> Analyzer<'a> {
 
     for param in &callable.type_params {
       let ty = if let Some(inferred) = inferred.get(&param.symbol_id) {
-        if let Some(ty) = inferred.upmost_output {
-          ty
-        } else if let Some(ty) = inferred.lowest_input {
-          ty
-        } else {
-          return None;
-        }
+        inferred.upmost_output.or(inferred.lowest_input)?
       } else {
         // Or constraint? idk
         Ty::Unknown
