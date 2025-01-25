@@ -7,6 +7,7 @@ mod ts_interface_declaration;
 mod ts_intersection_type;
 mod ts_literal;
 mod ts_non_null_expression;
+mod ts_operator_type;
 mod ts_satisfies_expression;
 mod ts_signature_vec;
 mod ts_tuple_element;
@@ -52,7 +53,8 @@ impl<'a> Analyzer<'a> {
       TSType::TSInferType(node) => self.resolve_infer_type(node),
       TSType::TSFunctionType(node) => self.resolve_function_type(node),
       TSType::TSConditionalType(node) => self.resolve_conditional_type(node),
-      TSType::TSTupleType(node) => self.resolve_tuple_type(node),
+      TSType::TSTypeOperatorType(node) => self.resolve_operator_type(node),
+      TSType::TSTupleType(node) => self.resolve_tuple_type(node, false),
       TSType::TSNamedTupleMember(_) => unreachable!("Handled in TSTupleElement"),
 
       _ => todo!(),

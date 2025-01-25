@@ -6,10 +6,10 @@ use crate::{
 };
 
 impl<'a> Analyzer<'a> {
-  pub fn resolve_tuple_type(&mut self, node: &'a TSTupleType<'a>) -> Ty<'a> {
+  pub fn resolve_tuple_type(&mut self, node: &'a TSTupleType<'a>, readonly: bool) -> Ty<'a> {
     Ty::Tuple(self.allocator.alloc(TupleType {
       elements: node.element_types.iter().map(|el| self.resolve_tuple_element(el)).collect(),
-      readonly: false,
+      readonly,
     }))
   }
 }
