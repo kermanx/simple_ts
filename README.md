@@ -1,6 +1,10 @@
 # simple_ts
 
-\[WIP\] The simple way to resolve/infer TypeScript types. Written in Rust.
+The simple way to resolve/infer TypeScript types. Written in Rust.
+
+> [!NOTE]
+>
+> This project already implemented the key features but it is far from usable. See [Status](#status).
 
 ### Why?
 
@@ -49,4 +53,4 @@ For AST nodes, some are implemented and some are not.
 
 As you can see, the hardest part (generic and its inference and control flow analysis) has already been implemented. The rest is relatively easy.
 
-However, the remaining part still requires a lot of time and energy. As a student, I have no plans to realize it for the time being. If there are kind people who want to realize it, pwease take over this project. Thank you.
+However, the remaining part still requires a lot of time. I am afraid that I don't have enough spare time to work on this. If there are kind people who want to realize it, pwease take over this project. Thank you.
