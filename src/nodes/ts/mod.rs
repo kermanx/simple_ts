@@ -1,5 +1,6 @@
 mod ts_as_expression;
 mod ts_conditional_type;
+mod ts_constructor_type;
 mod ts_function_type;
 mod ts_infer_type;
 mod ts_instantiation_expression;
@@ -52,12 +53,13 @@ impl<'a> Analyzer<'a> {
       TSType::TSTypeLiteral(node) => self.resolve_type_literal(node),
       TSType::TSInferType(node) => self.resolve_infer_type(node),
       TSType::TSFunctionType(node) => self.resolve_function_type(node),
+      TSType::TSConstructorType(node) => self.resolve_constructor_type(node),
       TSType::TSConditionalType(node) => self.resolve_conditional_type(node),
       TSType::TSTypeOperatorType(node) => self.resolve_operator_type(node),
       TSType::TSTupleType(node) => self.resolve_tuple_type(node, false),
       TSType::TSNamedTupleMember(_) => unreachable!("Handled in TSTupleElement"),
 
-      _ => todo!(),
+      _ => todo!("node: {:#?}", node),
     }
   }
 }
