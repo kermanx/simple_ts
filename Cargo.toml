@@ -1,7 +1,7 @@
 [package]
 name = "simple_ts"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [features]
 flame = ["dep:flame", "dep:flamescope"]
@@ -11,10 +11,10 @@ bitflags = "2.7.0"
 flame = { version = "0.2.2", optional = true }
 flamescope = { version = "0.1.3", optional = true }
 line-index = "0.1.2"
-oxc = { version = "0.46.0", features = ["codegen", "semantic", "minifier"] }
-oxc_ecmascript = "0.46.0"
-oxc_index = "2.0.0"
-oxc_syntax = { version = "0.46.0", features = ["to_js_string"] }
+oxc = { version = "0.64.0", features = ["codegen", "semantic", "minifier"] }
+oxc_ecmascript = "0.64.0"
+oxc_index = "3.0.0"
+oxc_syntax = { version = "0.64.0", features = ["to_js_string"] }
 rustc-hash = "2.1.0"
 
 [dev-dependencies]

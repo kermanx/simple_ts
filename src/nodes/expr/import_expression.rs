@@ -10,9 +10,9 @@ impl<'a> Analyzer<'a> {
   ) -> Ty<'a> {
     let source = self.exec_expression(&node.source, Some(Ty::String));
 
-    for argument in &node.arguments {
-      // FIXME: This first argument is `ImportCallOptions`
-      self.exec_expression(argument, Some(Ty::Any));
+    if let Some(options) = &node.options {
+      // FIXME: This first option is `ImportCallOptions`
+      self.exec_expression(options, Some(Ty::Any));
     }
 
     todo!()

@@ -9,8 +9,6 @@ impl<'a> Analyzer<'a> {
       TSLiteral::NumericLiteral(node) => Ty::NumericLiteral(node.value.into()),
       TSLiteral::StringLiteral(node) => Ty::StringLiteral(&node.value),
       TSLiteral::BigIntLiteral(node) => Ty::BigIntLiteral(&node.raw),
-      TSLiteral::NullLiteral(_) => Ty::Null,
-      TSLiteral::RegExpLiteral(node) => todo!(),
       TSLiteral::UnaryExpression(node) => todo!(),
       TSLiteral::TemplateLiteral(node) => todo!(),
     }

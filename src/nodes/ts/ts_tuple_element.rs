@@ -1,6 +1,6 @@
 use oxc::ast::ast::TSTupleElement;
 
-use crate::{ty::tuple::TupleElement, Analyzer};
+use crate::{Analyzer, ty::tuple::TupleElement};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_tuple_element(&mut self, node: &'a TSTupleElement<'a>) -> TupleElement<'a> {

@@ -130,6 +130,8 @@ impl<'a> Analyzer<'a> {
       Expression::TSInstantiationExpression(node) => {
         self.exec_ts_instantiation_expression(node, sat)
       }
+
+      Expression::V8IntrinsicExpression(_) => unreachable!(),
     }
   }
 }

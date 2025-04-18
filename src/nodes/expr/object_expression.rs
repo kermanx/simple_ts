@@ -2,7 +2,7 @@ use oxc::ast::ast::{ObjectExpression, ObjectPropertyKind, PropertyKind};
 
 use crate::{
   analyzer::Analyzer,
-  ty::{record::RecordTypeBuilder, Ty},
+  ty::{Ty, record::RecordTypeBuilder},
 };
 
 impl<'a> Analyzer<'a> {
@@ -12,7 +12,7 @@ impl<'a> Analyzer<'a> {
     sat: Option<Ty<'a>>,
     as_const: bool,
   ) -> Ty<'a> {
-    let mut object = RecordTypeBuilder::default();
+    let mut object = RecordTypeBuilder::new_in(self.allocator);
 
     for property in &node.properties {
       match property {
@@ -20,7 +20,6 @@ impl<'a> Analyzer<'a> {
           let key = self.exec_property_key(&node.key);
           let sat = sat.map(|sat| self.get_property(sat, key));
           let value = self.exec_expression_with_as_const(&node.value, sat, as_const);
-          let value = value;
 
           // tsc doesn't care. So we don't care either.
           // if matches!(&node.key, PropertyKey::StaticIdentifier(node) if node.name == "__proto__") {

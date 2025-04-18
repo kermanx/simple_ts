@@ -4,26 +4,26 @@ use oxc::ast::ast::TSType;
 
 use crate::Analyzer;
 
-use super::{property_key::PropertyKeyType, record::RecordType, unresolved::UnresolvedType, Ty};
+use super::{Ty, property_key::PropertyKeyType, record::RecordType, unresolved::UnresolvedType};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct InterfaceTypeInner<'a> {
   pub record: RecordType<'a>,
   pub callables: Vec<Ty<'a>>,
   pub unresolved_extends: Vec<UnresolvedType<'a>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct InterfaceType<'a>(pub RefCell<InterfaceTypeInner<'a>>);
 
 impl<'a> InterfaceTypeInner<'a> {
   pub fn extend(&mut self, ty: Ty<'a>) {
     match ty {
       Ty::Record(r) => {}
-      Ty::Constructor(_) | Ty::Function(_) => self.callables.push(ty.clone()),
+      Ty::Constructor(_) | Ty::Function(_) => self.callables.push(ty),
       Ty::Interface(i) => {
         let i = i.0.borrow();
-        self.record.extend(i.record.clone());
+        self.record.extend(&i.record);
         self.callables.extend(i.callables.iter().cloned());
       }
       Ty::Namespace(n) => todo!(),

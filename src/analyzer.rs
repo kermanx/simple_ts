@@ -2,27 +2,28 @@ use std::collections::BTreeSet;
 
 use line_index::LineIndex;
 use oxc::{
-  allocator::Allocator,
-  ast::{ast::Program, AstBuilder},
+  allocator,
+  ast::{AstBuilder, ast::Program},
   semantic::{Semantic, SymbolId},
-  span::{GetSpan, Span, SPAN},
+  span::{GetSpan, SPAN, Span},
 };
 use rustc_hash::FxHashMap;
 
 use crate::{
+  allocator::Allocator,
   builtins::Builtins,
   config::Config,
   scope::{
     call::CallScope,
     control::CfScopeKind,
-    r#type::TypeScopeTree,
     runtime::{RuntimeScope, RuntimeScopeTree},
+    r#type::TypeScopeTree,
   },
-  ty::{accumulator::TypeAccumulator, ctx::CtxTy, Ty},
+  ty::{Ty, accumulator::TypeAccumulator, ctx::CtxTy},
 };
 
 pub struct Analyzer<'a> {
-  pub allocator: &'a Allocator,
+  pub allocator: Allocator<'a>,
   pub config: &'a Config,
   pub line_index: LineIndex,
   pub semantic: Semantic<'a>,
@@ -43,11 +44,11 @@ pub struct Analyzer<'a> {
 
   pub diagnostics: BTreeSet<String>,
   pub span_to_type: FxHashMap<Span, TypeAccumulator<'a>>,
-  pub pos_to_span: &'a mut [Span],
+  pub pos_to_span: Vec<Span>,
 }
 
 impl<'a> Analyzer<'a> {
-  pub fn new(allocator: &'a Allocator, config: Config, semantic: Semantic<'a>) -> Self {
+  pub fn new(allocator: &'a allocator::Allocator, config: Config, semantic: Semantic<'a>) -> Self {
     let config = allocator.alloc(config);
 
     let mut runtime_scopes = RuntimeScopeTree::default();
@@ -61,10 +62,10 @@ impl<'a> Analyzer<'a> {
       CallScope::new(root_scope, true, false, /* TODO: globalThis */ Ty::Any, None);
 
     let ast_builder = AstBuilder::new(allocator);
-    let pos_to_expr = allocator.alloc_slice_fill_default(semantic.source_text().len());
+    let pos_to_span = vec![Default::default(); semantic.source_text().len()];
 
     Analyzer {
-      allocator,
+      allocator: allocator.into(),
       config,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
@@ -83,7 +84,7 @@ impl<'a> Analyzer<'a> {
 
       diagnostics: Default::default(),
       span_to_type: Default::default(),
-      pos_to_span: pos_to_expr,
+      pos_to_span,
     }
   }
 
@@ -140,15 +141,11 @@ impl<'a> Analyzer<'a> {
       }
       TypeAccumulator::default()
     });
-    acc.add(ty, allocator);
+    acc.add(ty, *allocator);
   }
 
   pub fn get_type_by_pos(&mut self, pos: usize) -> Option<Ty<'a>> {
     let span = self.pos_to_span[pos];
-    if span == SPAN {
-      None
-    } else {
-      self.span_to_type.get_mut(&span).unwrap().to_ty()
-    }
+    if span == SPAN { None } else { self.span_to_type.get_mut(&span).unwrap().to_ty() }
   }
 }

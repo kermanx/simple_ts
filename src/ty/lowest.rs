@@ -1,6 +1,6 @@
 use crate::Analyzer;
 
-use super::{unresolved::UnresolvedType, Ty};
+use super::{Ty, unresolved::UnresolvedType};
 
 impl<'a> Analyzer<'a> {
   /// Returns `None` if the type is singular.

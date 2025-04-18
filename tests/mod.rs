@@ -1,20 +1,20 @@
 use std::{fs, sync::LazyLock};
 
-use insta::{assert_snapshot, glob, Settings};
+use insta::{Settings, assert_snapshot, glob};
 use oxc::{
   allocator::Allocator,
-  ast::{ast::Statement, NONE},
+  ast::{NONE, ast::Statement},
   codegen::Codegen,
-  span::{SourceType, SPAN},
+  span::{SPAN, SourceType},
 };
 use regex::Regex;
-use simple_ts::{analyze, Config};
+use simple_ts::{Config, analyze};
 
 static TYPE_QUERY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\^\? (\w+)").unwrap());
 
 pub fn serialize_queried_types(code: String) -> String {
   let allocator = Allocator::default();
-  let code = allocator.alloc(code);
+  let code = allocator.alloc_str(&code);
   let mut analyzer = analyze(&allocator, code, Config::default());
   let codegen = Codegen::new();
 

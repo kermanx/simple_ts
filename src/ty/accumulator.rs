@@ -1,8 +1,8 @@
 use std::mem;
 
-use oxc::allocator::Allocator;
+use crate::allocator::Allocator;
 
-use super::{union::UnionType, Ty};
+use super::{Ty, union::UnionType};
 
 #[derive(Debug, Default)]
 pub enum TypeAccumulator<'a> {
@@ -14,38 +14,34 @@ pub enum TypeAccumulator<'a> {
 }
 
 impl<'a> TypeAccumulator<'a> {
-  pub fn add(&mut self, ty: Ty<'a>, allocator: &'a Allocator) {
+  pub fn add(&mut self, ty: Ty<'a>, allocator: Allocator<'a>) {
     match self {
       TypeAccumulator::None => *self = TypeAccumulator::Single(ty),
       TypeAccumulator::Single(t) => {
         if *t != ty {
-          let union = allocator.alloc(UnionType::default());
-          union.add(*t);
-          union.add(ty);
+          let union = allocator.alloc(UnionType::default_in(allocator));
+          union.add(*t, allocator);
+          union.add(ty, allocator);
           *self = TypeAccumulator::Union(union);
         }
       }
-      TypeAccumulator::Union(union) => union.add(ty),
+      TypeAccumulator::Union(union) => union.add(ty, allocator),
       TypeAccumulator::FrozenUnion(_) => unreachable!(),
     }
   }
 
   pub fn is_empty(&self) -> bool {
-    match self {
-      TypeAccumulator::None => true,
-      _ => false,
-    }
+    matches!(self, TypeAccumulator::None)
   }
 
   pub fn frozen(&mut self) {
-    match self {
-      TypeAccumulator::Union(_) => match mem::take(self) {
+    if let TypeAccumulator::Union(_) = self {
+      match mem::take(self) {
         TypeAccumulator::Union(union) => {
           *self = TypeAccumulator::FrozenUnion(union);
         }
         _ => unreachable!(),
-      },
-      _ => {}
+      }
     }
   }
 
@@ -55,15 +51,11 @@ impl<'a> TypeAccumulator<'a> {
       TypeAccumulator::None => None,
       TypeAccumulator::Single(ty) => Some(*ty),
       TypeAccumulator::Union(_) => unreachable!(),
-      TypeAccumulator::FrozenUnion(union) => Some(Ty::Union(*union)),
+      TypeAccumulator::FrozenUnion(union) => Some(Ty::Union(union)),
     }
   }
 
   pub fn duplicate(&mut self) -> TypeAccumulator<'a> {
-    if let Some(ty) = self.to_ty() {
-      TypeAccumulator::Single(ty)
-    } else {
-      TypeAccumulator::None
-    }
+    if let Some(ty) = self.to_ty() { TypeAccumulator::Single(ty) } else { TypeAccumulator::None }
   }
 }

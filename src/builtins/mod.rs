@@ -13,7 +13,13 @@ pub struct Builtins<'a> {
   pub symbol_prototype: Ty<'a>,
 }
 
-impl<'a> Builtins<'a> {
+impl Default for Builtins<'_> {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+impl Builtins<'_> {
   // TODO: Implement this
   pub fn new() -> Self {
     Self {

@@ -85,7 +85,7 @@ pub enum Ty<'a> {
   Unresolved(UnresolvedType<'a>),
 }
 
-impl<'a> PartialEq for Ty<'a> {
+impl PartialEq for Ty<'_> {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
       (Ty::Error, Ty::Error) => true,
@@ -122,9 +122,9 @@ impl<'a> PartialEq for Ty<'a> {
   }
 }
 
-impl<'a> Eq for Ty<'a> {}
+impl Eq for Ty<'_> {}
 
-impl<'a> hash::Hash for Ty<'a> {
+impl hash::Hash for Ty<'_> {
   fn hash<H: hash::Hasher>(&self, state: &mut H) {
     mem::discriminant(self).hash(state);
     match self {

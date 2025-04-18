@@ -5,7 +5,7 @@ use oxc::{
 
 use crate::{
   analyzer::Analyzer,
-  ty::{facts::Facts, property_key::PropertyKeyType, Ty},
+  ty::{Ty, facts::Facts, property_key::PropertyKeyType},
 };
 
 impl<'a> Analyzer<'a> {

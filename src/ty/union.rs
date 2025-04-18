@@ -1,23 +1,26 @@
-use std::{hash::Hash, i32};
+use std::hash::Hash;
 
 use oxc::{
   ast::ast::TSType,
   semantic::SymbolId,
   span::{Atom, SPAN},
 };
-use rustc_hash::FxHashSet;
 
-use super::{property_key::PropertyKeyType, unresolved::UnresolvedType, Ty};
-use crate::{analyzer::Analyzer, utils::F64WithEq};
+use super::{Ty, property_key::PropertyKeyType, unresolved::UnresolvedType};
+use crate::{
+  allocator::{self, Allocator},
+  analyzer::Analyzer,
+  utils::F64WithEq,
+};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 pub enum UnionTypeBuilder<'a> {
   #[default]
   Never,
   Error,
   Any,
   Unknown,
-  Compound(Box<UnionType<'a>>),
+  Compound(allocator::Box<'a, UnionType<'a>>),
 }
 
 impl<'a> UnionTypeBuilder<'a> {
@@ -42,12 +45,13 @@ impl<'a> UnionTypeBuilder<'a> {
 
       // The rest should be added to compound
       (s @ UnionTypeBuilder::Never, c) => {
-        let mut compound = Box::new(UnionType::default());
-        compound.add(c);
+        let mut compound =
+          allocator::Box::new_in(UnionType::default_in(analyzer.allocator), &analyzer.allocator);
+        compound.add(c, analyzer.allocator);
         *s = UnionTypeBuilder::Compound(compound);
       }
       (UnionTypeBuilder::Compound(compound), c) => {
-        compound.add(c);
+        compound.add(c, analyzer.allocator);
       }
     }
   }
@@ -63,12 +67,12 @@ impl<'a> UnionTypeBuilder<'a> {
   }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct UnionType<'a> {
-  pub string: LiteralAble<&'a Atom<'a>>,
-  pub number: LiteralAble<F64WithEq>,
-  pub bigint: LiteralAble<&'a Atom<'a>>,
-  pub symbol: LiteralAble<SymbolId>,
+  pub string: LiteralAble<'a, &'a Atom<'a>>,
+  pub number: LiteralAble<'a, F64WithEq>,
+  pub bigint: LiteralAble<'a, &'a Atom<'a>>,
+  pub symbol: LiteralAble<'a, SymbolId>,
 
   pub object: bool,
   pub void: bool,
@@ -77,12 +81,30 @@ pub struct UnionType<'a> {
   /// (has_true, has_false)
   pub boolean: (bool, bool),
 
-  pub complex: FxHashSet<Ty<'a>>,
-  pub unresolved: Vec<UnresolvedType<'a>>,
+  pub complex: allocator::HashSet<'a, Ty<'a>>,
+  pub unresolved: allocator::Vec<'a, UnresolvedType<'a>>,
 }
 
 impl<'a> UnionType<'a> {
-  pub fn add(&mut self, ty: Ty<'a>) {
+  pub fn default_in(allocator: Allocator<'a>) -> Self {
+    Self {
+      string: LiteralAble::Vacant,
+      number: LiteralAble::Vacant,
+      bigint: LiteralAble::Vacant,
+      symbol: LiteralAble::Vacant,
+
+      object: false,
+      void: false,
+      null: false,
+      undefined: false,
+      boolean: (false, false),
+
+      complex: allocator::HashSet::new_in(allocator),
+      unresolved: allocator.vec(),
+    }
+  }
+
+  pub fn add(&mut self, ty: Ty<'a>, allocator: Allocator<'a>) {
     match ty {
       Ty::Void => self.void = true,
       Ty::Null => self.null = true,
@@ -95,10 +117,10 @@ impl<'a> UnionType<'a> {
       Ty::Symbol => self.symbol = LiteralAble::Any,
       Ty::Boolean => self.boolean = (true, true),
 
-      Ty::StringLiteral(s) => self.string.add(s),
-      Ty::NumericLiteral(n) => self.number.add(n),
-      Ty::BigIntLiteral(b) => self.bigint.add(b),
-      Ty::UniqueSymbol(s) => self.symbol.add(s),
+      Ty::StringLiteral(s) => self.string.add(s, allocator),
+      Ty::NumericLiteral(n) => self.number.add(n, allocator),
+      Ty::BigIntLiteral(b) => self.bigint.add(b, allocator),
+      Ty::UniqueSymbol(s) => self.symbol.add(s, allocator),
       Ty::BooleanLiteral(true) => self.boolean.0 = true,
       Ty::BooleanLiteral(false) => self.boolean.1 = true,
 
@@ -108,7 +130,7 @@ impl<'a> UnionType<'a> {
       | Ty::Interface(_)
       | Ty::Namespace(_)
       | Ty::Intersection(_) => {
-        self.complex.insert(ty);
+        self.complex.insert(ty, ());
       }
 
       Ty::Unresolved(unresolved) => self.unresolved.push(unresolved),
@@ -117,7 +139,7 @@ impl<'a> UnionType<'a> {
     }
   }
 
-  pub fn for_each(&self, mut f: impl FnMut(Ty<'a>) -> ()) {
+  pub fn for_each(&self, mut f: impl FnMut(Ty<'a>)) {
     self.string.for_each(Ty::String, Ty::StringLiteral, &mut f);
     self.number.for_each(Ty::Number, Ty::NumericLiteral, &mut f);
     self.bigint.for_each(Ty::BigInt, Ty::BigIntLiteral, &mut f);
@@ -142,40 +164,40 @@ impl<'a> UnionType<'a> {
       (false, false) => {}
     }
 
-    self.complex.iter().copied().for_each(&mut f);
+    self.complex.keys().copied().for_each(&mut f);
     self.unresolved.iter().copied().map(Ty::Unresolved).for_each(f);
   }
 }
 
 #[derive(Debug, Default, Clone)]
-pub enum LiteralAble<L> {
+pub enum LiteralAble<'a, L: Clone + Eq + Hash> {
   #[default]
   Vacant,
   Any,
-  Literals(FxHashSet<L>),
+  Literals(allocator::HashSet<'a, L>),
 }
 
-impl<'a, L> LiteralAble<L> {
-  pub fn add(&mut self, literal: L)
+impl<'a, L: Clone + Eq + Hash> LiteralAble<'a, L> {
+  pub fn add(&mut self, literal: L, allocator: Allocator<'a>)
   where
     L: Hash + Eq,
   {
     match self {
       LiteralAble::Vacant => {
         *self = LiteralAble::Literals({
-          let mut set = FxHashSet::default();
-          set.insert(literal);
+          let mut set = allocator::HashSet::new_in(allocator);
+          set.insert(literal, ());
           set
         })
       }
       LiteralAble::Any => {}
       LiteralAble::Literals(set) => {
-        set.insert(literal);
+        set.insert(literal, ());
       }
     }
   }
 
-  pub fn for_each(&self, any: Ty<'a>, ctor: fn(L) -> Ty<'a>, mut f: impl FnMut(Ty<'a>) -> ())
+  pub fn for_each(&self, any: Ty<'a>, ctor: fn(L) -> Ty<'a>, mut f: impl FnMut(Ty<'a>))
   where
     L: Copy,
   {
@@ -183,7 +205,7 @@ impl<'a, L> LiteralAble<L> {
       LiteralAble::Vacant => {}
       LiteralAble::Any => f(any),
       LiteralAble::Literals(set) => {
-        set.iter().copied().map(ctor).for_each(&mut f as &mut dyn FnMut(Ty<'a>) -> ())
+        set.keys().copied().map(ctor).for_each(&mut f as &mut dyn FnMut(Ty<'a>))
       }
     }
   }
@@ -235,11 +257,7 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn get_optional_type(&mut self, optional: bool, ty: Ty<'a>) -> Ty<'a> {
-    if optional {
-      self.into_union([Ty::Undefined, ty]).unwrap()
-    } else {
-      ty
-    }
+    if optional { self.into_union([Ty::Undefined, ty]).unwrap() } else { ty }
   }
 
   pub fn get_union_property(&mut self, union: &UnionType<'a>, key: PropertyKeyType<'a>) -> Ty<'a> {

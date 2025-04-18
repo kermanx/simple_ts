@@ -3,7 +3,7 @@ use std::{collections::hash_map::Entry, hash::Hash};
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
-use super::{callable::CallableType, record::KeyedPropertyMap, unresolved::UnresolvedType, Ty};
+use super::{Ty, callable::CallableType, record::KeyedPropertyMap, unresolved::UnresolvedType};
 use crate::Analyzer;
 
 pub enum MatchResult<'a> {
@@ -13,17 +13,13 @@ pub enum MatchResult<'a> {
   Inferred(FxHashMap<SymbolId, (i32, Ty<'a>)>),
 }
 
-impl<'a> From<bool> for MatchResult<'a> {
+impl From<bool> for MatchResult<'_> {
   fn from(b: bool) -> Self {
-    if b {
-      MatchResult::Matched
-    } else {
-      MatchResult::Unmatched
-    }
+    if b { MatchResult::Matched } else { MatchResult::Unmatched }
   }
 }
 
-impl<'a> MatchResult<'a> {
+impl MatchResult<'_> {
   pub fn matched(self) -> bool {
     matches!(self, MatchResult::Matched | MatchResult::Inferred(_))
   }

@@ -1,6 +1,6 @@
 use crate::{
-  ty::{r#match::MatchResult, Ty},
   Analyzer,
+  ty::{Ty, r#match::MatchResult},
 };
 use oxc::ast::ast::TSConditionalType;
 
@@ -19,7 +19,7 @@ impl<'a> Analyzer<'a> {
         MatchResult::Matched => {
           results.push(*matched_no_infer.get_or_insert_with(|| {
             self.type_scopes.push();
-            let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
+            let infer_declarations = self.semantic.scoping().get_bindings(node.scope_id());
             for symbol in infer_declarations.values() {
               self.type_scopes.insert_on_top(*symbol, Ty::Unknown);
             }
@@ -32,7 +32,7 @@ impl<'a> Analyzer<'a> {
           self.type_scopes.push_with_types({
             inferred.into_iter().map(|(symbol, (_, ty))| (symbol, ty)).collect()
           });
-          let infer_declarations = self.semantic.scopes().get_bindings(node.scope_id());
+          let infer_declarations = self.semantic.scoping().get_bindings(node.scope_id());
           for symbol in infer_declarations.values() {
             self.type_scopes.entry_on_top(*symbol).or_insert(Ty::Unknown);
           }

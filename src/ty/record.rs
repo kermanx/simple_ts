@@ -1,36 +1,34 @@
-use std::{collections::hash_map::Entry, hash::Hash};
+use std::{fmt::Debug, hash::Hash};
 
 use oxc::{
+  allocator::{self},
   ast::ast::{PropertyKey, TSSignature, TSType},
   semantic::SymbolId,
   span::SPAN,
 };
 use oxc_syntax::number::ToJsString;
-use rustc_hash::FxHashMap;
 
-use super::{accumulator::TypeAccumulator, property_key::PropertyKeyType, Ty};
-use crate::{analyzer::Analyzer, ty::union::UnionType};
+use super::{Ty, accumulator::TypeAccumulator, property_key::PropertyKeyType};
+use crate::{allocator::Allocator, analyzer::Analyzer, ty::union::UnionType};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct RecordPropertyValue<'a> {
   pub value: Ty<'a>,
   pub optional: bool,
   pub readonly: bool,
 }
 
-#[derive(Debug, Clone)]
-pub struct KeyedPropertyMap<'a, K>(pub FxHashMap<K, RecordPropertyValue<'a>>);
+pub struct KeyedPropertyMap<'a, K>(pub allocator::HashMap<'a, K, RecordPropertyValue<'a>>);
 
-// FIXME: Why is this not derived?
-impl<'a, K> Default for KeyedPropertyMap<'a, K> {
-  fn default() -> Self {
-    Self(FxHashMap::default())
+impl<K: Debug> Debug for KeyedPropertyMap<'_, K> {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    f.debug_map().entries(self.0.iter()).finish()
   }
 }
 
 impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
   pub fn init(&mut self, analyzer: &mut Analyzer<'a>, key: K, mut value: RecordPropertyValue<'a>) {
-    fn union_is_bivariant<'a>(u: &UnionType<'a>) -> bool {
+    fn union_is_bivariant(u: &UnionType<'_>) -> bool {
       let mut bivariant = true;
       u.for_each(|ty| match ty {
         Ty::Function(f) => bivariant &= f.is_method,
@@ -40,7 +38,7 @@ impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
     }
 
     match self.0.entry(key) {
-      Entry::Occupied(mut entry) => {
+      allocator::hash_map::Entry::Occupied(mut entry) => {
         let prev = entry.get();
         value.value = match (prev.value, value.value) {
           (Ty::Function(f1), Ty::Function(f2)) if f1.is_method && f2.is_method => {
@@ -53,18 +51,14 @@ impl<'a, K: Eq + Hash> KeyedPropertyMap<'a, K> {
         };
         entry.insert(value);
       }
-      Entry::Vacant(entry) => {
+      allocator::hash_map::Entry::Vacant(entry) => {
         entry.insert(value);
       }
     }
   }
 
   pub fn get(&self, key: K) -> Ty<'a> {
-    if let Some(property) = self.0.get(&key) {
-      property.value.clone()
-    } else {
-      Ty::Error
-    }
+    if let Some(property) = self.0.get(&key) { property.value } else { Ty::Error }
   }
 }
 
@@ -74,7 +68,6 @@ pub struct MappedPropertyBuilder<'a> {
   readonly: bool,
 }
 
-#[derive(Debug, Default)]
 pub struct RecordTypeBuilder<'a> {
   pub string_keyed: KeyedPropertyMap<'a, &'a str>,
   pub symbol_keyed: KeyedPropertyMap<'a, SymbolId>,
@@ -85,6 +78,16 @@ pub struct RecordTypeBuilder<'a> {
 }
 
 impl<'a> RecordTypeBuilder<'a> {
+  pub fn new_in(allocator: Allocator<'a>) -> Self {
+    Self {
+      string_keyed: KeyedPropertyMap(allocator::HashMap::new_in(&allocator)),
+      symbol_keyed: KeyedPropertyMap(allocator::HashMap::new_in(&allocator)),
+      string_mapped: MappedPropertyBuilder::default(),
+      number_mapped: MappedPropertyBuilder::default(),
+      symbol_mapped: MappedPropertyBuilder::default(),
+    }
+  }
+
   pub fn init_property(
     &mut self,
     analyzer: &mut Analyzer<'a>,
@@ -110,7 +113,7 @@ impl<'a> RecordTypeBuilder<'a> {
         self.string_keyed.init(analyzer, s.as_str(), keyed_property);
       }
       PropertyKeyType::NumericLiteral(n) => {
-        let s = analyzer.allocator.alloc(n.0.to_js_string());
+        let s = analyzer.allocator.alloc_str(&n.0.to_js_string());
         self.string_keyed.init(analyzer, s, keyed_property);
       }
       PropertyKeyType::UniqueSymbol(s) => {
@@ -150,7 +153,7 @@ impl<'a> RecordTypeBuilder<'a> {
   }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug)]
 pub struct RecordType<'a> {
   pub string_keyed: KeyedPropertyMap<'a, &'a str>,
   pub symbol_keyed: KeyedPropertyMap<'a, SymbolId>,
@@ -161,6 +164,16 @@ pub struct RecordType<'a> {
 }
 
 impl<'a> RecordType<'a> {
+  pub fn empty_in(allocator: Allocator<'a>) -> Self {
+    Self {
+      string_keyed: KeyedPropertyMap(allocator::HashMap::new_in(&allocator)),
+      symbol_keyed: KeyedPropertyMap(allocator::HashMap::new_in(&allocator)),
+      string_mapped: None,
+      number_mapped: None,
+      symbol_mapped: None,
+    }
+  }
+
   pub fn get_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
     match key {
       PropertyKeyType::Error => Ty::Error,
@@ -173,10 +186,10 @@ impl<'a> RecordType<'a> {
     }
   }
 
-  pub fn extend(&mut self, other: RecordType<'a>) {
+  pub fn extend(&mut self, other: &RecordType<'a>) {
     // FIXME: overload
-    self.string_keyed.0.extend(other.string_keyed.0);
-    self.symbol_keyed.0.extend(other.symbol_keyed.0);
+    self.string_keyed.0.extend(&other.string_keyed.0);
+    self.symbol_keyed.0.extend(&other.symbol_keyed.0);
     self.string_mapped = other.string_mapped;
     self.number_mapped = other.number_mapped;
     self.symbol_mapped = other.symbol_mapped;
@@ -230,7 +243,7 @@ impl<'a> Analyzer<'a> {
     let mut members = self.ast_builder.vec();
     for (key, property) in &record.string_keyed.0 {
       members.push(self.serialize_keyed_property(
-        self.ast_builder.property_key_identifier_name(SPAN, *key),
+        self.ast_builder.property_key_static_identifier(SPAN, *key),
         property,
       ));
     }

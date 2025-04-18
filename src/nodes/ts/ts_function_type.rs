@@ -1,8 +1,8 @@
 use oxc::ast::ast::TSFunctionType;
 
 use crate::{
-  ty::{callable::CallableType, Ty},
   Analyzer,
+  ty::{Ty, callable::CallableType},
 };
 
 impl<'a> Analyzer<'a> {

@@ -1,6 +1,6 @@
 use oxc_syntax::operator::BinaryOperator;
 
-use super::{facts::Facts, intersection::IntersectionBaseKind, Ty};
+use super::{Ty, facts::Facts, intersection::IntersectionBaseKind};
 use crate::analyzer::Analyzer;
 
 impl<'a> Analyzer<'a> {

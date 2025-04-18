@@ -12,9 +12,9 @@ impl<'a> Analyzer<'a> {
       TSTypeQueryExprName::QualifiedName(_node) => todo!(),
     };
 
-    if let Some(type_parameters) = &node.type_parameters {
-      let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
-      self.create_generic_instance(base, type_parameters)
+    if let Some(type_arguments) = &node.type_arguments {
+      let type_arguments = self.resolve_type_parameter_instantiation(type_arguments);
+      self.create_generic_instance(base, type_arguments)
     } else {
       base
     }

@@ -1,12 +1,11 @@
 use oxc::{
-  allocator::Allocator,
   ast::ast::TSType,
   semantic::SymbolId,
   span::{Atom, SPAN},
 };
 
-use super::{unresolved::UnresolvedType, Ty};
-use crate::{analyzer::Analyzer, utils::F64WithEq};
+use super::{Ty, unresolved::UnresolvedType};
+use crate::{allocator::Allocator, analyzer::Analyzer, utils::F64WithEq};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 enum IntersectionBuilderState<'a> {
@@ -39,7 +38,7 @@ macro_rules! match_with_literal {
   };
 }
 
-impl<'a> IntersectionBuilderState<'a> {
+impl IntersectionBuilderState<'_> {
   pub fn intersect(self, other: Self) -> Self {
     match (self, other) {
       (k1, k2) if k1 == k2 => k1,
@@ -149,10 +148,10 @@ impl<'a> IntersectionTypeBuilder<'a> {
   }
 
   fn build_without_union(
-    allocator: &'a Allocator,
+    allocator: Allocator<'a>,
     kind: IntersectionBuilderState<'a>,
-    object_like: Vec<Ty<'a>>,
-    unresolved: Vec<UnresolvedType<'a>>,
+    object_like: &'a [Ty<'a>],
+    unresolved: &'a [UnresolvedType<'a>],
   ) -> Ty<'a> {
     let primitive_only = object_like.is_empty();
     let kind = match kind {
@@ -201,7 +200,12 @@ impl<'a> IntersectionTypeBuilder<'a> {
   pub fn build(self, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
     let allocator = analyzer.allocator;
     let Self { kind, object_like, unresolved, union } = self;
-    let base = Self::build_without_union(allocator, kind, object_like, unresolved);
+    let base = Self::build_without_union(
+      allocator,
+      kind,
+      analyzer.allocator.alloc_slice(object_like),
+      analyzer.allocator.alloc_slice(unresolved),
+    );
     if base == Ty::Never {
       return Ty::Never;
     }
@@ -236,8 +240,8 @@ pub enum IntersectionBaseKind<'a> {
 pub struct IntersectionType<'a> {
   pub kind: IntersectionBaseKind<'a>,
   /// non empty
-  pub object_like: Vec<Ty<'a>>,
-  pub unresolved: Vec<UnresolvedType<'a>>,
+  pub object_like: &'a [Ty<'a>],
+  pub unresolved: &'a [UnresolvedType<'a>],
 }
 
 impl<'a> IntersectionType<'a> {
@@ -259,7 +263,7 @@ impl<'a> IntersectionType<'a> {
     }
   }
 
-  pub fn for_each(&self, mut f: impl FnMut(Ty<'a>) -> ()) {
+  pub fn for_each(&self, mut f: impl FnMut(Ty<'a>)) {
     self.kind_to_ty().map(&mut f);
     self.object_like.iter().copied().for_each(&mut f);
     self.unresolved.iter().copied().map(Ty::Unresolved).for_each(f);

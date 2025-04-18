@@ -1,6 +1,6 @@
 use oxc::ast::ast::TSUnionType;
 
-use crate::{ty::Ty, Analyzer};
+use crate::{Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_union_type(&mut self, node: &'a TSUnionType<'a>) -> Ty<'a> {

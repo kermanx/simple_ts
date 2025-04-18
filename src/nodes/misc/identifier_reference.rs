@@ -8,7 +8,7 @@ impl<'a> Analyzer<'a> {
     node: &'a IdentifierReference<'a>,
     _sat: Option<Ty<'a>>,
   ) -> Ty<'a> {
-    let reference = self.semantic.symbols().get_reference(node.reference_id());
+    let reference = self.semantic.scoping().get_reference(node.reference_id());
     let symbol = reference.symbol_id();
 
     if let Some(symbol) = symbol {
@@ -24,7 +24,7 @@ impl<'a> Analyzer<'a> {
     node: &'a IdentifierReference<'a>,
     value: Ty<'a>,
   ) {
-    let reference = self.semantic.symbols().get_reference(node.reference_id());
+    let reference = self.semantic.scoping().get_reference(node.reference_id());
     assert!(reference.is_write());
     let symbol = reference.symbol_id();
 

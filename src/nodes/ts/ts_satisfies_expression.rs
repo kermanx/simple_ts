@@ -1,6 +1,6 @@
 use oxc::ast::ast::TSSatisfiesExpression;
 
-use crate::{ty::Ty, Analyzer};
+use crate::{Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_ts_satisfies_expression(

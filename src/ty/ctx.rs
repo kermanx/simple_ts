@@ -3,7 +3,7 @@ use oxc::{
   ast::ast::{TSType, TSTypeAnnotation},
 };
 
-use crate::{scope::r#type::TypeScopeId, Analyzer};
+use crate::{Analyzer, scope::r#type::TypeScopeId};
 
 use super::Ty;
 
@@ -13,13 +13,11 @@ pub enum CtxTy<'a> {
   WithCtx(TypeScopeId, &'a TSType<'a>),
 }
 
-impl<'a> PartialEq for CtxTy<'a> {
+impl PartialEq for CtxTy<'_> {
   fn eq(&self, other: &Self) -> bool {
     match (self, other) {
       (CtxTy::Static(a), CtxTy::Static(b)) => a == b,
-      (CtxTy::WithCtx(a, an), CtxTy::WithCtx(b, bn)) => {
-        a == b && (an as *const _) == (bn as *const _)
-      }
+      (CtxTy::WithCtx(a, an), CtxTy::WithCtx(b, bn)) => a == b && std::ptr::eq(an, bn),
       _ => false,
     }
   }
@@ -71,7 +69,7 @@ impl<'a> Analyzer<'a> {
   pub fn serialize_ctx_ty(&mut self, ty: CtxTy<'a>) -> TSType<'a> {
     match ty {
       CtxTy::Static(ty) => self.serialize_type(ty),
-      CtxTy::WithCtx(_, node) => node.clone_in(self.allocator),
+      CtxTy::WithCtx(_, node) => node.clone_in(&self.allocator),
     }
   }
 }

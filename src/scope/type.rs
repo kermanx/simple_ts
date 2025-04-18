@@ -1,10 +1,10 @@
 use std::{collections::hash_map::Entry, mem};
 
 use oxc::semantic::SymbolId;
-use oxc_index::{define_index_type, IndexVec};
+use oxc_index::{IndexVec, define_index_type};
 use rustc_hash::FxHashMap;
 
-use crate::ty::{unresolved::UnresolvedType, Ty};
+use crate::ty::{Ty, unresolved::UnresolvedType};
 
 define_index_type! {
   pub struct TypeScopeId = u32;
@@ -23,6 +23,12 @@ pub struct TypeScopeTree<'a> {
   top: TypeScopeId,
   pub constraints_scope: TypeScopeId,
   pub empty_scope: TypeScopeId,
+}
+
+impl Default for TypeScopeTree<'_> {
+  fn default() -> Self {
+    Self::new()
+  }
 }
 
 impl<'a> TypeScopeTree<'a> {

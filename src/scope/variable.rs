@@ -3,7 +3,7 @@ use rustc_hash::FxHashMap;
 
 use crate::{
   analyzer::Analyzer,
-  ty::{unresolved::UnresolvedType, Ty},
+  ty::{Ty, unresolved::UnresolvedType},
 };
 
 use super::runtime::{RuntimeScopeId, RuntimeScopeTree};
@@ -69,7 +69,7 @@ impl<'a> Analyzer<'a> {
         // ```
         Ty::Any
       } else {
-        unreachable!("Variable not found: {:?}", self.semantic.symbols().get_name(symbol));
+        unreachable!("Variable not found: {:?}", self.semantic.scoping().symbol_name(symbol));
       }
     }
   }
@@ -115,6 +115,6 @@ impl<'a> Analyzer<'a> {
   }
 
   fn is_symbol_var(&self, symbol: SymbolId) -> bool {
-    self.semantic.symbols().get_flags(symbol).is_function_scoped_declaration()
+    self.semantic.scoping().symbol_flags(symbol).is_function_scoped_declaration()
   }
 }

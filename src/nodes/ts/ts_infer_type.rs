@@ -1,8 +1,8 @@
 use oxc::ast::ast::TSInferType;
 
 use crate::{
-  ty::{unresolved::UnresolvedType, Ty},
   Analyzer,
+  ty::{Ty, unresolved::UnresolvedType},
 };
 
 impl<'a> Analyzer<'a> {

@@ -9,8 +9,8 @@ impl<'a> Analyzer<'a> {
       TSTypeName::QualifiedName(_node) => todo!(),
     };
 
-    if let Some(type_parameters) = &node.type_parameters {
-      let args = self.resolve_type_parameter_instantiation(type_parameters);
+    if let Some(type_arguments) = &node.type_arguments {
+      let args = self.resolve_type_parameter_instantiation(type_arguments);
       self.create_generic_instance(base, args)
     } else {
       base
@@ -18,7 +18,7 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn resolve_type_identifier_reference(&mut self, node: &'a IdentifierReference<'a>) -> Ty<'a> {
-    let reference = self.semantic.symbols().get_reference(node.reference_id());
+    let reference = self.semantic.scoping().get_reference(node.reference_id());
     if let Some(symbol_id) = reference.symbol_id() {
       self.type_scopes.search(symbol_id)
     } else {

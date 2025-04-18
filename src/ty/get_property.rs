@@ -1,4 +1,4 @@
-use super::{property_key::PropertyKeyType, Ty};
+use super::{Ty, property_key::PropertyKeyType};
 use crate::Analyzer;
 
 impl<'a> Analyzer<'a> {

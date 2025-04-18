@@ -1,6 +1,6 @@
 use oxc::ast::ast::TSAsExpression;
 
-use crate::{ty::Ty, Analyzer};
+use crate::{Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn exec_ts_as_expression(

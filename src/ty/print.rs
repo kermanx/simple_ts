@@ -38,7 +38,7 @@ impl<'a> Analyzer<'a> {
       Ty::BooleanLiteral(b) => self
         .ast_builder
         .ts_type_literal_type(SPAN, self.ast_builder.ts_literal_boolean_literal(SPAN, b)),
-      Ty::UniqueSymbol(_) => self.ast_builder.ts_type_type_operator(
+      Ty::UniqueSymbol(_) => self.ast_builder.ts_type_type_operator_type(
         SPAN,
         TSTypeOperatorOperator::Unique,
         self.ast_builder.ts_type_symbol_keyword(SPAN),

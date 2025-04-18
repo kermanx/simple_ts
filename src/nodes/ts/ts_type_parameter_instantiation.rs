@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
   ) -> Vec<Ty<'a>> {
     let mut result = vec![];
     for arg in &node.params {
-      result.push(self.resolve_type(&arg));
+      result.push(self.resolve_type(arg));
     }
     result
   }

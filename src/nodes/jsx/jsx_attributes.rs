@@ -3,8 +3,8 @@ use oxc::ast::ast::{JSXAttributeItem, JSXOpeningElement};
 use crate::{
   analyzer::Analyzer,
   ty::{
-    record::{RecordType, RecordTypeBuilder},
     Ty,
+    record::{RecordType, RecordTypeBuilder},
   },
 };
 
@@ -14,7 +14,7 @@ impl<'a> Analyzer<'a> {
     node: &'a JSXOpeningElement<'a>,
     sat: Option<Ty<'a>>,
   ) -> &'a mut RecordType<'a> {
-    let mut object = RecordTypeBuilder::default();
+    let mut object = RecordTypeBuilder::new_in(self.allocator);
 
     for attr in &node.attributes {
       match attr {

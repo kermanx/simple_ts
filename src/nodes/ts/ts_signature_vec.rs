@@ -1,13 +1,13 @@
 use oxc::{allocator, ast::ast::TSSignature};
 
 use crate::{
+  Analyzer,
   ty::{
+    Ty,
     callable::CallableType,
     property_key::PropertyKeyType,
     record::{RecordType, RecordTypeBuilder},
-    Ty,
   },
-  Analyzer,
 };
 
 impl<'a> Analyzer<'a> {
@@ -24,7 +24,7 @@ impl<'a> Analyzer<'a> {
           let key = self.resolve_type_annotation(&node.parameters[0].type_annotation);
           let key = self.to_property_key(key);
           let value = self.resolve_type_annotation(&node.type_annotation);
-          record.get_or_insert_with(Default::default).init_property(
+          record.get_or_insert_with(|| RecordTypeBuilder::new_in(self.allocator)).init_property(
             self,
             key,
             value,
@@ -39,7 +39,7 @@ impl<'a> Analyzer<'a> {
           } else {
             Ty::Error
           };
-          record.get_or_insert_with(Default::default).init_property(
+          record.get_or_insert_with(|| RecordTypeBuilder::new_in(self.allocator)).init_property(
             self,
             key,
             value,
@@ -98,7 +98,7 @@ impl<'a> Analyzer<'a> {
               | PropertyKeyType::StringLiteral(_)
               | PropertyKeyType::UniqueSymbol(_)
           ) {
-            record.get_or_insert_with(Default::default).init_property(
+            record.get_or_insert_with(|| RecordTypeBuilder::new_in(self.allocator)).init_property(
               self,
               key,
               function,

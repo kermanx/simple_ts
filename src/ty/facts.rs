@@ -51,11 +51,7 @@ bitflags! {
 
 impl Facts {
   pub fn truthy(truthy: bool) -> Self {
-    if truthy {
-      Self::TRUTHY
-    } else {
-      Self::FALSY
-    }
+    if truthy { Self::TRUTHY } else { Self::FALSY }
   }
 }
 
@@ -89,7 +85,7 @@ impl<'a> Analyzer<'a> {
           | Facts::T_NE_ALL & !Facts::NE_UNDEFINED
       }
 
-      Ty::StringLiteral(s) => self.get_facts(Ty::String) | Facts::truthy(s.len() > 0),
+      Ty::StringLiteral(s) => self.get_facts(Ty::String) | Facts::truthy(!s.is_empty()),
       Ty::NumericLiteral(n) => self.get_facts(Ty::Number) | Facts::truthy(n.0 != 0.0),
       Ty::BigIntLiteral(_) => self.get_facts(Ty::BigInt),
       Ty::BooleanLiteral(b) => self.get_facts(Ty::Boolean) | Facts::truthy(b),

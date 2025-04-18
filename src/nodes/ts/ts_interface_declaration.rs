@@ -1,8 +1,8 @@
 use oxc::ast::ast::{Expression, TSInterfaceDeclaration};
 
 use crate::{
-  ty::{interface::InterfaceTypeInner, unresolved::UnresolvedType, Ty},
   Analyzer,
+  ty::{Ty, interface::InterfaceTypeInner, unresolved::UnresolvedType},
 };
 
 impl<'a> Analyzer<'a> {
@@ -28,7 +28,7 @@ impl<'a> Analyzer<'a> {
 
     let InterfaceTypeInner { callables, .. } = &mut *interface;
     if let Some(new_record) = self.resolve_signature_vec(&node.body.body, callables) {
-      interface.record.extend(new_record);
+      interface.record.extend(&new_record);
     }
 
     if let Some(extends) = &node.extends {
@@ -36,9 +36,9 @@ impl<'a> Analyzer<'a> {
         match &heritage.expression {
           Expression::Identifier(id) => {
             let base = self.resolve_type_identifier_reference(id);
-            let extends = if let Some(type_parameters) = &heritage.type_parameters {
-              let type_parameters = self.resolve_type_parameter_instantiation(type_parameters);
-              self.create_generic_instance(base, type_parameters)
+            let extends = if let Some(type_arguments) = &heritage.type_arguments {
+              let type_arguments = self.resolve_type_parameter_instantiation(type_arguments);
+              self.create_generic_instance(base, type_arguments)
             } else {
               base
             };

@@ -37,11 +37,7 @@ impl<'a> CfScopeKind<'a> {
   }
 
   pub fn get_blocked_exit(self) -> Option<usize> {
-    if let CfScopeKind::ExitBlocker(target) = self {
-      target
-    } else {
-      None
-    }
+    if let CfScopeKind::ExitBlocker(target) = self { target } else { None }
   }
 }
 

@@ -1,4 +1,4 @@
-use crate::ty::{accumulator::TypeAccumulator, Ty};
+use crate::ty::{Ty, accumulator::TypeAccumulator};
 
 use super::runtime::RuntimeScopeId;
 

@@ -1,11 +1,12 @@
 use oxc::ast::ast::TSTypeLiteral;
 
 use crate::{
-  ty::{
-    intersection::{IntersectionBaseKind, IntersectionType},
-    Ty,
-  },
   Analyzer,
+  ty::{
+    Ty,
+    intersection::{IntersectionBaseKind, IntersectionType},
+    record::RecordType,
+  },
 };
 
 impl<'a> Analyzer<'a> {
@@ -14,15 +15,17 @@ impl<'a> Analyzer<'a> {
     let record = self.resolve_signature_vec(&node.members, &mut callables);
 
     if callables.is_empty() {
-      Ty::Record(self.allocator.alloc(record.unwrap_or_default()))
+      Ty::Record(
+        self.allocator.alloc(record.unwrap_or_else(|| RecordType::empty_in(self.allocator))),
+      )
     } else {
       if let Some(record) = record {
         callables.push(Ty::Record(self.allocator.alloc(record)));
       }
       Ty::Intersection(self.allocator.alloc(IntersectionType {
         kind: IntersectionBaseKind::NoBase,
-        object_like: callables,
-        unresolved: Vec::new(),
+        object_like: self.allocator.alloc_slice(callables),
+        unresolved: self.allocator.alloc_slice([]),
       }))
     }
   }

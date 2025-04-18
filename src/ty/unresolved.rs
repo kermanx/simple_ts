@@ -1,7 +1,7 @@
 use oxc::{
   ast::{
-    ast::{TSType, TSTypeName, TSTypeOperatorOperator},
     NONE,
+    ast::{TSType, TSTypeName, TSTypeOperatorOperator},
   },
   semantic::SymbolId,
   span::SPAN,
@@ -37,7 +37,7 @@ impl<'a> Analyzer<'a> {
         ),
         NONE,
       ),
-      UnresolvedType::Keyof(ty) => self.ast_builder.ts_type_type_operator(
+      UnresolvedType::Keyof(ty) => self.ast_builder.ts_type_type_operator_type(
         SPAN,
         TSTypeOperatorOperator::Keyof,
         self.serialize_type(*ty),

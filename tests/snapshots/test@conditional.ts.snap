@@ -4,7 +4,7 @@ input_file: tests/fixtures/conditional.ts
 ---
 type T1 = 1;
 type T2 = 1;
-type T3 = 2 | 1;
+type T3 = 1 | 2;
 type T4 = 1;
 type T5 = 2;
 type T6 = 1;

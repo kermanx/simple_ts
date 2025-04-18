@@ -1,5 +1,5 @@
 use oxc::semantic::SymbolId;
-use oxc_index::{define_index_type, IndexVec};
+use oxc_index::{IndexVec, define_index_type};
 use rustc_hash::FxHashMap;
 
 use crate::Analyzer;
@@ -35,7 +35,7 @@ impl<'a> RuntimeScopeTree<'a> {
   }
 
   pub fn get(&self, id: RuntimeScopeId) -> &RuntimeScope<'a> {
-    &self.nodes.get(id).unwrap()
+    self.nodes.get(id).unwrap()
   }
 
   pub fn get_mut(&mut self, id: RuntimeScopeId) -> &mut RuntimeScope<'a> {

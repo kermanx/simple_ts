@@ -8,10 +8,6 @@ impl<'a> Analyzer<'a> {
     let default_val = self.exec_expression(default, None);
     self.pop_scope();
 
-    if let Some(init) = init {
-      self.into_union([default_val, init]).unwrap()
-    } else {
-      default_val
-    }
+    if let Some(init) = init { self.into_union([default_val, init]).unwrap() } else { default_val }
   }
 }

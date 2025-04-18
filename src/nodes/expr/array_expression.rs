@@ -3,9 +3,9 @@ use oxc::ast::ast::{ArrayExpression, ArrayExpressionElement};
 use crate::{
   analyzer::Analyzer,
   ty::{
+    Ty,
     property_key::PropertyKeyType,
     tuple::{TupleElement, TupleType},
-    Ty,
   },
 };
 
@@ -34,15 +34,15 @@ impl<'a> Analyzer<'a> {
     }
 
     if as_const {
-      Ty::Tuple(
-        self.allocator.alloc(TupleType {
-          elements: values
-            .into_iter()
-            .map(|(spread, ty)| TupleElement { name: None, spread, ty, optional: false })
-            .collect(),
-          readonly: true,
-        }),
-      )
+      Ty::Tuple(self.allocator.alloc(TupleType {
+        elements: self.allocator.alloc_slice(values.into_iter().map(|(spread, ty)| TupleElement {
+          name: None,
+          spread,
+          ty,
+          optional: false,
+        })),
+        readonly: true,
+      }))
     } else {
       let types = values
         .into_iter()

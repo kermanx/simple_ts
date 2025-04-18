@@ -1,8 +1,8 @@
 use oxc::ast::ast::TSTypeAliasDeclaration;
 
 use crate::{
-  ty::{generic::GenericType, Ty},
   Analyzer,
+  ty::{Ty, generic::GenericType},
 };
 
 impl<'a> Analyzer<'a> {

@@ -2,16 +2,16 @@ use oxc::ast::ast::Function;
 
 use crate::{
   analyzer::Analyzer,
-  ty::{callable::CallableType, Ty},
+  ty::{Ty, callable::CallableType},
 };
 
 impl<'a> Analyzer<'a> {
   pub fn exec_function(&mut self, node: &'a Function<'a>, _sat: Option<Ty<'a>>) -> Ty<'a> {
-    let type_params = node
-      .type_parameters
-      .as_ref()
-      .map(|type_parameters| self.resolve_type_parameter_declaration(&type_parameters))
-      .unwrap_or_default();
+    let type_params = if let Some(type_params) = &node.type_parameters {
+      self.resolve_type_parameter_declaration(type_params)
+    } else {
+      self.allocator.alloc([])
+    };
 
     let (this_param, params, rest_param) = self.exec_formal_parameters(&node.params);
 

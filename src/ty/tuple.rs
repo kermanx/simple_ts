@@ -5,7 +5,7 @@ use oxc::{
 
 use crate::Analyzer;
 
-use super::{property_key::PropertyKeyType, Ty};
+use super::{Ty, property_key::PropertyKeyType};
 
 #[derive(Debug)]
 pub struct TupleElement<'a> {
@@ -15,9 +15,9 @@ pub struct TupleElement<'a> {
   pub ty: Ty<'a>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct TupleType<'a> {
-  pub elements: Vec<TupleElement<'a>>,
+  pub elements: &'a [TupleElement<'a>],
   pub readonly: bool,
 }
 
@@ -25,7 +25,7 @@ impl<'a> TupleType<'a> {
   pub fn iterate_result_union(&self, analyzer: &mut Analyzer<'a>) -> Ty<'a> {
     let mut types = Vec::new();
 
-    for element in &self.elements {
+    for element in self.elements {
       if element.spread {
         types.push(analyzer.iterate_result_union(element.ty));
       } else {
@@ -43,7 +43,7 @@ impl<'a> TupleType<'a> {
       PropertyKeyType::AnyNumber => self.iterate_result_union(analyzer),
       PropertyKeyType::AnySymbol => Ty::Error,
       PropertyKeyType::StringLiteral(s) => {
-        if let Some(index) = s.parse::<usize>().ok() {
+        if let Ok(index) = s.parse::<usize>() {
           self.get_element_by_index(index, analyzer)
         } else {
           todo!("Array prototype");
@@ -86,7 +86,7 @@ impl<'a> TupleType<'a> {
 impl<'a> Analyzer<'a> {
   pub fn serialize_tuple_type(&mut self, tuple: &TupleType<'a>) -> TSType<'a> {
     let mut elements = self.ast_builder.vec();
-    for element in &tuple.elements {
+    for element in tuple.elements {
       let ty = self.serialize_type(element.ty);
       let mut node = if element.optional && element.name.is_none() {
         self.ast_builder.ts_tuple_element_optional_type(SPAN, ty)

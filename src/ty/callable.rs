@@ -1,15 +1,15 @@
 use oxc::{
   allocator,
   ast::{
-    ast::{Argument, FormalParameterKind, TSType, TSTypeParameterInstantiation},
     NONE,
+    ast::{Argument, FormalParameterKind, TSType, TSTypeParameterInstantiation},
   },
   semantic::SymbolId,
   span::SPAN,
 };
 use rustc_hash::FxHashMap;
 
-use super::{ctx::CtxTy, generic::GenericParam, Ty};
+use super::{Ty, ctx::CtxTy, generic::GenericParam};
 use crate::{
   analyzer::Analyzer,
   scope::r#type::TypeScopeId,
@@ -21,10 +21,10 @@ pub struct CallableType<'a, const CTOR: bool> {
   pub is_method: bool,
   pub scope: TypeScopeId,
 
-  pub type_params: Vec<GenericParam<'a>>,
+  pub type_params: &'a [GenericParam<'a>],
   pub this_param: Option<CtxTy<'a>>,
   /// (optional, type)
-  pub params: Vec<(bool, CtxTy<'a>)>,
+  pub params: &'a [(bool, CtxTy<'a>)],
   pub rest_param: Option<CtxTy<'a>>,
   pub return_type: CtxTy<'a>,
 }
@@ -36,23 +36,24 @@ impl<'a> Analyzer<'a> {
   pub fn instantiate_callable_type_parameters<const CTOR: bool>(
     &mut self,
     callable: &CallableType<'a, CTOR>,
-    type_args: &Vec<Ty<'a>>,
+    type_args: &[Ty<'a>],
   ) -> Option<&'a CallableType<'a, CTOR>> {
     if callable.type_params.len() != type_args.len() {
       return None;
     }
 
-    let scope = self.instantiate_generic_params(&callable.type_params, type_args);
+    let scope = self.instantiate_generic_params(callable.type_params, type_args);
     self.type_scopes.set_parent(scope, callable.scope);
     let this_type = callable.this_param.map(|ty| ty.with_scope(scope));
-    let params =
-      callable.params.iter().map(|(optional, ty)| (*optional, ty.with_scope(scope))).collect();
-    let rest_param = callable.rest_param.map(|ty| ty.with_scope(scope));
+    let params = self
+      .allocator
+      .alloc_slice(callable.params.iter().map(|(optional, ty)| (*optional, ty.with_scope(scope))));
     let return_type = callable.return_type.with_scope(scope);
+    let rest_param = callable.rest_param.map(|ty| ty.with_scope(scope));
     Some(self.allocator.alloc(CallableType {
       is_method: callable.is_method,
       scope,
-      type_params: vec![],
+      type_params: self.allocator.alloc_slice([]),
       this_param: this_type,
       params,
       rest_param,
@@ -86,7 +87,7 @@ impl<'a> Analyzer<'a> {
               self.ast_builder.binding_pattern(
                 self.ast_builder.binding_pattern_kind_binding_identifier(
                   SPAN,
-                  &*self.allocator.alloc(format!("a{i}")),
+                  &*self.allocator.alloc_str(&format!("a{i}")),
                 ),
                 Some(self.ast_builder.ts_type_annotation(SPAN, self.serialize_ctx_ty(*param))),
                 *optional,
@@ -280,7 +281,7 @@ impl<'a> Analyzer<'a> {
     } else if let Some(type_args) = type_args {
       // Generic, and type arguments are provided
       let type_args = self.resolve_type_parameter_instantiation(type_args);
-      let scope = self.instantiate_generic_params(&callable.type_params, &type_args);
+      let scope = self.instantiate_generic_params(callable.type_params, &type_args);
       let params = self.get_callable_parameter_types(scope, &ExtractedCallable::Single(callable));
       self.exec_arguments(arguments, Some(params));
       Some(self.resolve_ctx_ty(scope, callable.return_type))
@@ -306,7 +307,7 @@ impl<'a> Analyzer<'a> {
     // - Choose the widest type *FROM* output type inferred from output type
 
     let scope = self.type_scopes.create_scope();
-    for param in &callable.type_params {
+    for param in callable.type_params {
       self.type_scopes.insert_on_scope(
         scope,
         param.symbol_id,
@@ -331,14 +332,12 @@ impl<'a> Analyzer<'a> {
           } else {
             self.upmost_output = Some(ty);
           }
-        } else {
-          if let Some(lowest) = &mut self.lowest_input {
-            if analyzer.match_covariant_types(1, ty, *lowest).matched() {
-              *lowest = ty;
-            }
-          } else {
-            self.lowest_input = Some(ty);
+        } else if let Some(lowest) = &mut self.lowest_input {
+          if analyzer.match_covariant_types(1, ty, *lowest).matched() {
+            *lowest = ty;
           }
+        } else {
+          self.lowest_input = Some(ty);
         }
       }
     }
@@ -382,7 +381,7 @@ impl<'a> Analyzer<'a> {
       handle_match_result(self, &mut inferred, result);
     }
 
-    for param in &callable.type_params {
+    for param in callable.type_params {
       let ty = if let Some(inferred) = inferred.get(&param.symbol_id) {
         inferred.upmost_output.or(inferred.lowest_input).unwrap()
       } else {
