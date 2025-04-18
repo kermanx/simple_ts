@@ -14,7 +14,7 @@ impl<'a> Analyzer<'a> {
       }
       TSTypeOperatorOperator::Readonly => match &node.type_annotation {
         TSType::TSTupleType(node) => self.resolve_tuple_type(node, true),
-        TSType::TSArrayType(node) => todo!(),
+        TSType::TSArrayType(node) => self.resolve_array_type(node, true),
         _ => self.resolve_type(&node.type_annotation),
       },
       TSTypeOperatorOperator::Unique => match &node.type_annotation {
