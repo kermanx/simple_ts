@@ -2,6 +2,7 @@ mod ts_as_expression;
 mod ts_conditional_type;
 mod ts_constructor_type;
 mod ts_function_type;
+mod ts_indexed_access_type;
 mod ts_infer_type;
 mod ts_instantiation_expression;
 mod ts_interface_declaration;
@@ -57,6 +58,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSConditionalType(node) => self.resolve_conditional_type(node),
       TSType::TSTypeOperatorType(node) => self.resolve_operator_type(node),
       TSType::TSTupleType(node) => self.resolve_tuple_type(node, false),
+      TSType::TSIndexedAccessType(node) => self.resolve_indexed_access_type(node),
       TSType::TSNamedTupleMember(_) => unreachable!("Handled in TSTupleElement"),
 
       _ => todo!("node: {:#?}", node),

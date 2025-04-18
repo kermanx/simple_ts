@@ -14,6 +14,7 @@ pub enum PropertyKeyType<'a> {
   StringLiteral(&'a Atom<'a>),
   NumericLiteral(F64WithEq),
   UniqueSymbol(SymbolId),
+  // TODO: Union
 }
 
 impl<'a> Analyzer<'a> {
