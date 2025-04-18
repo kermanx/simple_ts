@@ -7,7 +7,6 @@ use crate::{
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_tuple_type(&mut self, node: &'a TSTupleType<'a>, readonly: bool) -> Ty<'a> {
-    let allocator = self.allocator;
     Ty::Tuple(
       self.allocator.alloc(TupleType {
         elements: self

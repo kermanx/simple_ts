@@ -2,15 +2,18 @@ use std::cell::RefCell;
 
 use oxc::ast::ast::TSType;
 
-use crate::Analyzer;
+use crate::{
+  Analyzer,
+  allocator::{self, Allocator},
+};
 
 use super::{Ty, property_key::PropertyKeyType, record::RecordType, unresolved::UnresolvedType};
 
 #[derive(Debug)]
 pub struct InterfaceTypeInner<'a> {
   pub record: RecordType<'a>,
-  pub callables: Vec<Ty<'a>>,
-  pub unresolved_extends: Vec<UnresolvedType<'a>>,
+  pub callables: allocator::Vec<'a, Ty<'a>>,
+  pub unresolved_extends: allocator::Vec<'a, UnresolvedType<'a>>,
 }
 
 #[derive(Debug)]
@@ -44,6 +47,15 @@ impl<'a> InterfaceTypeInner<'a> {
 }
 
 impl<'a> InterfaceType<'a> {
+  pub fn new_in(allocator: Allocator<'a>) -> Self {
+    let inner = InterfaceTypeInner {
+      record: RecordType::new_in(allocator),
+      callables: allocator.vec(),
+      unresolved_extends: allocator.vec(),
+    };
+    Self(RefCell::new(inner))
+  }
+
   pub fn get_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
     let inner = self.0.borrow();
     inner.record.get_property(key)

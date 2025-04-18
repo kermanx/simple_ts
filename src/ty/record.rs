@@ -164,7 +164,7 @@ pub struct RecordType<'a> {
 }
 
 impl<'a> RecordType<'a> {
-  pub fn empty_in(allocator: Allocator<'a>) -> Self {
+  pub fn new_in(allocator: Allocator<'a>) -> Self {
     Self {
       string_keyed: KeyedPropertyMap(allocator::HashMap::new_in(&allocator)),
       symbol_keyed: KeyedPropertyMap(allocator::HashMap::new_in(&allocator)),

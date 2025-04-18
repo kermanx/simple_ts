@@ -164,7 +164,7 @@ impl<'a> Analyzer<'a> {
   pub fn instantiate_generic_value(&mut self, ty: Ty<'a>, args: &[Ty<'a>]) -> Ty<'a> {
     self
       .try_instantiate_generic_value(ty, args)
-      .unwrap_or_else(|| Ty::Record(self.allocator.alloc(RecordType::empty_in(self.allocator))))
+      .unwrap_or_else(|| Ty::Record(self.allocator.alloc(RecordType::new_in(self.allocator))))
   }
 
   pub fn serialize_instance_type(&mut self, instance: &GenericInstanceType<'a>) -> TSType<'a> {

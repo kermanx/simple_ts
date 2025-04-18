@@ -2,15 +2,19 @@ use oxc::ast::ast::{Expression, TSInterfaceDeclaration};
 
 use crate::{
   Analyzer,
-  ty::{Ty, interface::InterfaceTypeInner, unresolved::UnresolvedType},
+  ty::{
+    Ty,
+    interface::{InterfaceType, InterfaceTypeInner},
+  },
 };
 
 impl<'a> Analyzer<'a> {
   pub fn declare_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) {
     let symbol_id = node.id.symbol_id();
-    self
-      .type_scopes
-      .insert_on_top(symbol_id, Ty::Unresolved(UnresolvedType::UnInitType(symbol_id)));
+    self.type_scopes.insert_on_top(
+      symbol_id,
+      Ty::Interface(self.allocator.alloc(InterfaceType::new_in(self.allocator))),
+    );
   }
 
   pub fn init_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) -> Ty<'a> {
