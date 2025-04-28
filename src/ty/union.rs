@@ -129,7 +129,9 @@ impl<'a> UnionType<'a> {
       | Ty::Constructor(_)
       | Ty::Interface(_)
       | Ty::Namespace(_)
-      | Ty::Intersection(_) => {
+      | Ty::Intersection(_)
+      | Ty::EnumClass(_)
+      | Ty::EnumMember(_) => {
         self.complex.insert(ty, ());
       }
 

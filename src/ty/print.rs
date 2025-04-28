@@ -58,6 +58,9 @@ impl<'a> Analyzer<'a> {
       Ty::Generic(g) => self.serialize_generic_type(g),
       Ty::Intrinsic(i) => self.serialize_intrinsic_type(i),
 
+      Ty::EnumClass(e) => self.serialize_enum_class_type(e),
+      Ty::EnumMember(m) => self.serialize_enum_member_type(m),
+
       Ty::Unresolved(u) => self.serialize_unresolved_type(u),
     }
   }

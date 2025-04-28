@@ -1,4 +1,4 @@
-use super::Ty;
+use super::{Ty, r#enum::EnumMemberType};
 use crate::Analyzer;
 
 impl<'a> Analyzer<'a> {
@@ -37,6 +37,15 @@ impl<'a> Analyzer<'a> {
       Ty::Instance(_) => ty,
 
       Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => Ty::Error,
+
+      Ty::EnumClass(_) => ty,
+      Ty::EnumMember(m) => {
+        if m.name.is_some() {
+          Ty::EnumMember(self.allocator.alloc(EnumMemberType { name: None, ..*m }))
+        } else {
+          return m.value;
+        }
+      }
 
       Ty::Unresolved(_) => todo!(),
     }

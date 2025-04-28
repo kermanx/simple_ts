@@ -1,6 +1,7 @@
 pub mod accumulator;
 pub mod callable;
 pub mod ctx;
+pub mod r#enum;
 pub mod facts;
 pub mod generic;
 pub mod get_property;
@@ -22,6 +23,7 @@ pub mod widen;
 use std::{hash, mem};
 
 use callable::{ConstructorType, FunctionType};
+use r#enum::{EnumClassType, EnumMemberType};
 use generic::{GenericInstanceType, GenericType};
 use interface::InterfaceType;
 use intersection::IntersectionType;
@@ -79,9 +81,13 @@ pub enum Ty<'a> {
   // -- HKT starts here
   Generic(&'a GenericType<'a>),
   Intrinsic(&'a IntrinsicType),
-
-  Namespace(&'a NamespaceType<'a>),
   // -- HKT ends here
+
+  /* Namespace */
+  Namespace(&'a NamespaceType<'a>),
+  EnumClass(&'a EnumClassType<'a>),
+  EnumMember(&'a EnumMemberType<'a>),
+
   Unresolved(UnresolvedType<'a>),
 }
 
@@ -108,6 +114,7 @@ impl PartialEq for Ty<'_> {
       (Ty::UniqueSymbol(a), Ty::UniqueSymbol(b)) => a == b,
       (Ty::Record(a), Ty::Record(b)) => a as *const _ == b,
       (Ty::Interface(a), Ty::Interface(b)) => a as *const _ == b,
+      (Ty::Tuple(a), Ty::Tuple(b)) => a as *const _ == b,
       (Ty::Function(a), Ty::Function(b)) => a as *const _ == b,
       (Ty::Constructor(a), Ty::Constructor(b)) => a as *const _ == b,
       (Ty::Union(a), Ty::Union(b)) => a as *const _ == b,
@@ -116,6 +123,8 @@ impl PartialEq for Ty<'_> {
       (Ty::Generic(a), Ty::Generic(b)) => a as *const _ == b,
       (Ty::Intrinsic(a), Ty::Intrinsic(b)) => a as *const _ == b,
       (Ty::Namespace(a), Ty::Namespace(b)) => a as *const _ == b,
+      (Ty::EnumClass(a), Ty::EnumClass(b)) => a as *const _ == b,
+      (Ty::EnumMember(a), Ty::EnumMember(b)) => a as *const _ == b,
       (Ty::Unresolved(a), Ty::Unresolved(b)) => a == b,
       _ => false,
     }
@@ -128,6 +137,19 @@ impl hash::Hash for Ty<'_> {
   fn hash<H: hash::Hasher>(&self, state: &mut H) {
     mem::discriminant(self).hash(state);
     match self {
+      Ty::Error => {}
+      Ty::Any => {}
+      Ty::Unknown => {}
+      Ty::Never => {}
+      Ty::Void => {}
+      Ty::BigInt => {}
+      Ty::Boolean => {}
+      Ty::Null => {}
+      Ty::Number => {}
+      Ty::Object => {}
+      Ty::String => {}
+      Ty::Symbol => {}
+      Ty::Undefined => {}
       Ty::StringLiteral(atom) => atom.hash(state),
       Ty::NumericLiteral(f) => f.hash(state),
       Ty::BigIntLiteral(atom) => atom.hash(state),
@@ -135,6 +157,7 @@ impl hash::Hash for Ty<'_> {
       Ty::UniqueSymbol(id) => id.hash(state),
       Ty::Record(r) => (r as *const _ as usize).hash(state),
       Ty::Interface(i) => (i as *const _ as usize).hash(state),
+      Ty::Tuple(t) => (t as *const _ as usize).hash(state),
       Ty::Function(f) => (f as *const _ as usize).hash(state),
       Ty::Constructor(c) => (c as *const _ as usize).hash(state),
       Ty::Union(u) => (u as *const _ as usize).hash(state),
@@ -143,8 +166,9 @@ impl hash::Hash for Ty<'_> {
       Ty::Generic(g) => (g as *const _ as usize).hash(state),
       Ty::Intrinsic(i) => (i as *const _ as usize).hash(state),
       Ty::Namespace(n) => (n as *const _ as usize).hash(state),
+      Ty::EnumClass(e) => (e as *const _ as usize).hash(state),
+      Ty::EnumMember(e) => (e as *const _ as usize).hash(state),
       Ty::Unresolved(u) => u.hash(state),
-      _ => {}
     }
   }
 }

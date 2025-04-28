@@ -1,13 +1,10 @@
-use oxc::ast::ast::{IdentifierReference, TSTypeName, TSTypeReference};
+use oxc::ast::ast::{IdentifierReference, TSTypeReference};
 
 use crate::{analyzer::Analyzer, ty::Ty};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type_reference(&mut self, node: &'a TSTypeReference<'a>) -> Ty<'a> {
-    let base = match &node.type_name {
-      TSTypeName::IdentifierReference(node) => self.resolve_type_identifier_reference(node),
-      TSTypeName::QualifiedName(_node) => todo!(),
-    };
+    let base = self.resolve_type_name(&node.type_name);
 
     if let Some(type_arguments) = &node.type_arguments {
       let args = self.resolve_type_parameter_instantiation(type_arguments);

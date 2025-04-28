@@ -15,9 +15,7 @@ impl<'a> Analyzer<'a> {
     let record = self.resolve_signature_vec(&node.members, &mut callables);
 
     if callables.is_empty() {
-      Ty::Record(
-        self.allocator.alloc(record.unwrap_or_else(|| RecordType::new_in(self.allocator))),
-      )
+      Ty::Record(self.allocator.alloc(record.unwrap_or_else(|| RecordType::new_in(self.allocator))))
     } else {
       if let Some(record) = record {
         callables.push(Ty::Record(self.allocator.alloc(record)));

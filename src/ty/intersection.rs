@@ -138,6 +138,12 @@ impl<'a> IntersectionTypeBuilder<'a> {
         }
         Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => IntersectionBuilderState::Error,
 
+        Ty::EnumClass(_) | Ty::EnumMember(_) => {
+          // FIXME:
+          self.object_like.push(ty);
+          return;
+        }
+
         Ty::Unresolved(u) => {
           self.unresolved.push(u);
           return;

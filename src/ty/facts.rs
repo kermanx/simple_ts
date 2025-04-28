@@ -109,6 +109,9 @@ impl<'a> Analyzer<'a> {
 
       Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => Facts::NONE,
 
+      Ty::EnumClass(_) => Facts::NONE,
+      Ty::EnumMember(m) => self.get_facts(m.value),
+
       Ty::Instance(_) | Ty::Unresolved(_) => {
         let lowest = self.get_lowest_type(ty);
         self.get_facts(lowest)

@@ -20,6 +20,9 @@ impl<'a> Analyzer<'a> {
       Declaration::TSInterfaceDeclaration(node) => {
         self.declare_ts_interface(node);
       }
+      Declaration::TSEnumDeclaration(node) => {
+        self.declare_ts_enum(node);
+      }
       _ => todo!(),
     }
   }
@@ -40,6 +43,9 @@ impl<'a> Analyzer<'a> {
       }
       Declaration::TSInterfaceDeclaration(node) => {
         self.init_ts_interface(node);
+      }
+      Declaration::TSEnumDeclaration(_node) => {
+        // Nothing to do
       }
       _ => todo!(),
     }

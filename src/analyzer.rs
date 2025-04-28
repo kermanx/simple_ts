@@ -7,6 +7,7 @@ use oxc::{
   semantic::{Semantic, SymbolId},
   span::{GetSpan, SPAN, Span},
 };
+use oxc_index::IndexVec;
 use rustc_hash::FxHashMap;
 
 use crate::{
@@ -19,7 +20,12 @@ use crate::{
     runtime::{RuntimeScope, RuntimeScopeTree},
     r#type::TypeScopeTree,
   },
-  ty::{Ty, accumulator::TypeAccumulator, ctx::CtxTy},
+  ty::{
+    Ty,
+    accumulator::TypeAccumulator,
+    ctx::CtxTy,
+    r#enum::{EnumClassId, EnumClassType},
+  },
 };
 
 pub struct Analyzer<'a> {
@@ -40,7 +46,10 @@ pub struct Analyzer<'a> {
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
   /// Generic parameter with its constraint
   pub generic_constraints: FxHashMap<SymbolId, CtxTy<'a>>,
+  /// Namespaces
+  pub namespaces: FxHashMap<SymbolId, Ty<'a>>,
   pub type_placeholder_count: usize,
+  pub enum_classes: IndexVec<EnumClassId, &'a EnumClassType<'a>>,
 
   pub diagnostics: BTreeSet<String>,
   pub span_to_type: FxHashMap<Span, TypeAccumulator<'a>>,
@@ -80,7 +89,9 @@ impl<'a> Analyzer<'a> {
 
       variables: Default::default(),
       generic_constraints: Default::default(),
+      namespaces: Default::default(),
       type_placeholder_count: 0,
+      enum_classes: Default::default(),
 
       diagnostics: Default::default(),
       span_to_type: Default::default(),

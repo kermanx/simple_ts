@@ -95,6 +95,9 @@ impl<'a> Analyzer<'a> {
 
       Ty::Generic(_) | Ty::Intrinsic(_) => PropertyKeyType::Error,
 
+      Ty::EnumClass(_) => PropertyKeyType::Error,
+      Ty::EnumMember(m) => self.to_property_key(m.value),
+
       Ty::Instance(_) | Ty::Unresolved(_) => {
         let lowest = self.get_lowest_type(ty);
         self.to_property_key(lowest)

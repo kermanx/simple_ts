@@ -3,7 +3,10 @@ use std::{collections::hash_map::Entry, hash::Hash};
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
-use super::{Ty, callable::CallableType, record::KeyedPropertyMap, unresolved::UnresolvedType};
+use super::{
+  Ty, callable::CallableType, r#enum::EnumMemberType, record::KeyedPropertyMap,
+  unresolved::UnresolvedType,
+};
 use crate::Analyzer;
 
 pub enum MatchResult<'a> {
@@ -183,7 +186,7 @@ impl<'a> Analyzer<'a> {
         if target.generic == pattern.generic {
           'instantiation_based_inference: {
             let mut inferred = FxHashMap::default();
-            for (target, pattern) in target.args.iter().zip(pattern.args.iter()) {
+            for (target, pattern) in target.args.iter().zip(pattern.args) {
               match self.match_covariant_types(specificity + 1, *target, *pattern) {
                 MatchResult::Error | MatchResult::Unmatched => break 'instantiation_based_inference,
                 MatchResult::Matched => {}
@@ -251,6 +254,27 @@ impl<'a> Analyzer<'a> {
       }
       (Ty::Constructor(_), Ty::Object) => MatchResult::Matched,
       (Ty::Constructor(_), _) | (_, Ty::Constructor(_)) => MatchResult::Unmatched,
+
+      (Ty::EnumClass(target), Ty::EnumClass(pattern)) => MatchResult::from(target.id == pattern.id),
+      (Ty::EnumClass(target), pattern) => {
+        self.match_covariant_types(specificity, target.record_ty(), pattern)
+      }
+      (target, Ty::EnumClass(pattern)) => {
+        self.match_covariant_types(specificity, target, pattern.record_ty())
+      }
+
+      (Ty::EnumMember(target), Ty::EnumMember(pattern)) => {
+        if target.class != pattern.class {
+          return MatchResult::Unmatched;
+        }
+        self.match_covariant_types(specificity, target.value, pattern.value)
+      }
+      (Ty::EnumMember(target), pattern) => {
+        self.match_covariant_types(specificity, target.value, pattern)
+      }
+      (target, Ty::EnumMember(pattern)) => {
+        self.match_covariant_types(specificity, target, pattern.value)
+      }
 
       (Ty::Undefined, Ty::Void) => MatchResult::Matched,
       (Ty::Undefined, _) => MatchResult::Unmatched,
