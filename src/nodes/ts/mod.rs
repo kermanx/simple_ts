@@ -10,6 +10,7 @@ mod ts_instantiation_expression;
 mod ts_interface_declaration;
 mod ts_intersection_type;
 mod ts_literal;
+mod ts_module_declaration;
 mod ts_non_null_expression;
 mod ts_operator_type;
 mod ts_qualified_name;

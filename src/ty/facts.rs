@@ -107,7 +107,7 @@ impl<'a> Analyzer<'a> {
         facts
       }
 
-      Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => Facts::NONE,
+      Ty::Generic(_) | Ty::Intrinsic(_) => Facts::NONE,
 
       Ty::EnumClass(_) => Facts::NONE,
       Ty::EnumMember(m) => self.get_facts(m.value),

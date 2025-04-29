@@ -25,6 +25,7 @@ use crate::{
     accumulator::TypeAccumulator,
     ctx::CtxTy,
     r#enum::{EnumClassId, EnumClassType},
+    namespace::Ns,
   },
 };
 
@@ -41,13 +42,16 @@ pub struct Analyzer<'a> {
   pub call_scopes: Vec<CallScope<'a>>,
   pub runtime_scopes: RuntimeScopeTree<'a>,
   pub type_scopes: TypeScopeTree<'a>,
+  pub active_namespaces: Vec<&'a Ns<'a>>,
+  pub declare_scopes: usize,
 
   /// Variables with a unique type
   pub variables: FxHashMap<SymbolId, Ty<'a>>,
   /// Generic parameter with its constraint
   pub generic_constraints: FxHashMap<SymbolId, CtxTy<'a>>,
   /// Namespaces
-  pub namespaces: FxHashMap<SymbolId, Ty<'a>>,
+  pub namespaces: FxHashMap<SymbolId, &'a Ns<'a>>,
+
   pub type_placeholder_count: usize,
   pub enum_classes: IndexVec<EnumClassId, &'a EnumClassType<'a>>,
 
@@ -72,9 +76,10 @@ impl<'a> Analyzer<'a> {
 
     let ast_builder = AstBuilder::new(allocator);
     let pos_to_span = vec![Default::default(); semantic.source_text().len()];
+    let allocator = allocator.into();
 
     Analyzer {
-      allocator: allocator.into(),
+      allocator,
       config,
       line_index: LineIndex::new(semantic.source_text()),
       semantic,
@@ -86,11 +91,13 @@ impl<'a> Analyzer<'a> {
       call_scopes: Vec::from([root_call_scope]),
       runtime_scopes,
       type_scopes: TypeScopeTree::new(),
+      active_namespaces: vec![allocator.alloc(Ns::new_in(allocator))],
+      declare_scopes: 0,
 
       variables: Default::default(),
       generic_constraints: Default::default(),
       namespaces: Default::default(),
-      type_placeholder_count: 0,
+      type_placeholder_count: Default::default(),
       enum_classes: Default::default(),
 
       diagnostics: Default::default(),

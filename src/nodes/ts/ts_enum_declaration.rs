@@ -1,11 +1,14 @@
+use std::cell::RefCell;
+
 use oxc::ast::ast::TSEnumDeclaration;
 
 use crate::{
-  Analyzer,
+  Analyzer, allocator,
   ty::{
     Ty,
     r#enum::{EnumClassId, EnumClassType, EnumMemberType},
     facts::Facts,
+    namespace::Ns,
     record::{RecordPropertyValue, RecordType},
     union::UnionTypeBuilder,
   },
@@ -45,18 +48,16 @@ impl<'a> Analyzer<'a> {
       value_union.add(self, value);
 
       let id = member.id.static_name();
+      let value = Ty::EnumMember(self.allocator.alloc(EnumMemberType {
+        class: class.id,
+        name: Some(id),
+        value,
+      }));
+
       record.string_keyed.init(
         self,
         id.as_str(),
-        RecordPropertyValue {
-          value: Ty::EnumMember(self.allocator.alloc(EnumMemberType {
-            class: class.id,
-            name: Some(id),
-            value,
-          })),
-          optional: false,
-          readonly: false,
-        },
+        RecordPropertyValue { value, optional: false, readonly: false },
       );
     }
     self.accumulate_type(&node.id, Ty::EnumClass(class));
@@ -64,7 +65,12 @@ impl<'a> Analyzer<'a> {
     self.declare_binding_identifier(&node.id, true);
     self.init_binding_identifier(&node.id, Some(Ty::EnumClass(class)));
 
-    self.namespaces.insert(node.id.symbol_id(), Ty::EnumClass(class));
+    self.namespaces.insert(
+      node.id.symbol_id(),
+      self
+        .allocator
+        .alloc(Ns { record, children: RefCell::new(allocator::HashMap::new_in(self.allocator)) }),
+    );
     self.type_scopes.insert_on_top(
       node.id.symbol_id(),
       Ty::EnumMember(self.allocator.alloc(EnumMemberType {

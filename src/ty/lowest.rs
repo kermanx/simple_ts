@@ -10,7 +10,6 @@ impl<'a> Analyzer<'a> {
       Ty::Instance(i) => self.unwrap_generic_instance(i),
       Ty::Generic(g) => todo!(),
       Ty::Intrinsic(i) => todo!(),
-      Ty::Namespace(_) => Ty::Error,
 
       Ty::Unresolved(unresolved) => match unresolved {
         UnresolvedType::UnInitVariable(_) => Ty::Unknown,

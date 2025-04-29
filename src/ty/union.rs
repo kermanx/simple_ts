@@ -27,9 +27,7 @@ impl<'a> UnionTypeBuilder<'a> {
   pub fn add(&mut self, analyzer: &mut Analyzer<'a>, ty: Ty<'a>) {
     match (self, ty) {
       (UnionTypeBuilder::Error | UnionTypeBuilder::Any | UnionTypeBuilder::Unknown, _) => {}
-      (s, Ty::Error | Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_)) => {
-        *s = UnionTypeBuilder::Error
-      }
+      (s, Ty::Error | Ty::Generic(_) | Ty::Intrinsic(_)) => *s = UnionTypeBuilder::Error,
       (s, Ty::Any) => *s = UnionTypeBuilder::Any,
       (s, Ty::Unknown) => *s = UnionTypeBuilder::Unknown,
       (_, Ty::Never) => {}
@@ -128,7 +126,6 @@ impl<'a> UnionType<'a> {
       | Ty::Function(_)
       | Ty::Constructor(_)
       | Ty::Interface(_)
-      | Ty::Namespace(_)
       | Ty::Intersection(_)
       | Ty::EnumClass(_)
       | Ty::EnumMember(_) => {

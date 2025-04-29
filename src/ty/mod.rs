@@ -28,7 +28,7 @@ use generic::{GenericInstanceType, GenericType};
 use interface::InterfaceType;
 use intersection::IntersectionType;
 use intrinsics::IntrinsicType;
-use namespace::NamespaceType;
+use namespace::Ns;
 use oxc::{semantic::SymbolId, span::Atom};
 use property_key::PropertyKeyType;
 use record::RecordType;
@@ -83,8 +83,7 @@ pub enum Ty<'a> {
   Intrinsic(&'a IntrinsicType),
   // -- HKT ends here
 
-  /* Namespace */
-  Namespace(&'a NamespaceType<'a>),
+  /* Enum */
   EnumClass(&'a EnumClassType<'a>),
   EnumMember(&'a EnumMemberType<'a>),
 
@@ -122,7 +121,6 @@ impl PartialEq for Ty<'_> {
       (Ty::Instance(a), Ty::Instance(b)) => a as *const _ == b,
       (Ty::Generic(a), Ty::Generic(b)) => a as *const _ == b,
       (Ty::Intrinsic(a), Ty::Intrinsic(b)) => a as *const _ == b,
-      (Ty::Namespace(a), Ty::Namespace(b)) => a as *const _ == b,
       (Ty::EnumClass(a), Ty::EnumClass(b)) => a as *const _ == b,
       (Ty::EnumMember(a), Ty::EnumMember(b)) => a as *const _ == b,
       (Ty::Unresolved(a), Ty::Unresolved(b)) => a == b,
@@ -165,7 +163,6 @@ impl hash::Hash for Ty<'_> {
       Ty::Instance(i) => (i as *const _ as usize).hash(state),
       Ty::Generic(g) => (g as *const _ as usize).hash(state),
       Ty::Intrinsic(i) => (i as *const _ as usize).hash(state),
-      Ty::Namespace(n) => (n as *const _ as usize).hash(state),
       Ty::EnumClass(e) => (e as *const _ as usize).hash(state),
       Ty::EnumMember(e) => (e as *const _ as usize).hash(state),
       Ty::Unresolved(u) => u.hash(state),

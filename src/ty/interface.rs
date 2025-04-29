@@ -29,7 +29,6 @@ impl<'a> InterfaceTypeInner<'a> {
         self.record.extend(&i.record);
         self.callables.extend(i.callables.iter().cloned());
       }
-      Ty::Namespace(n) => todo!(),
 
       Ty::Intersection(i) => {
         i.for_each(|ty| self.extend(ty));

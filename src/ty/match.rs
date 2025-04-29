@@ -55,7 +55,6 @@ impl<'a> Analyzer<'a> {
     match (target, pattern) {
       (Ty::Generic(_) | Ty::Intrinsic(_), _) => MatchResult::Error,
       (_, Ty::Generic(_) | Ty::Intrinsic(_)) => MatchResult::Error,
-      (_, Ty::Namespace(_)) | (Ty::Namespace(_), _) => MatchResult::Error,
 
       (target, pattern) if target == pattern => MatchResult::Matched,
 

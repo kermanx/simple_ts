@@ -23,6 +23,9 @@ impl<'a> Analyzer<'a> {
       Declaration::TSEnumDeclaration(node) => {
         self.declare_ts_enum(node);
       }
+      Declaration::TSModuleDeclaration(node) => {
+        self.declare_ts_module(node);
+      }
       _ => todo!(),
     }
   }
@@ -46,6 +49,9 @@ impl<'a> Analyzer<'a> {
       }
       Declaration::TSEnumDeclaration(_node) => {
         // Nothing to do
+      }
+      Declaration::TSModuleDeclaration(node) => {
+        self.init_ts_module(node);
       }
       _ => todo!(),
     }

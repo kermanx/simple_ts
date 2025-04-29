@@ -136,7 +136,7 @@ impl<'a> IntersectionTypeBuilder<'a> {
           self.add(analyzer, resolved);
           return;
         }
-        Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => IntersectionBuilderState::Error,
+        Ty::Generic(_) | Ty::Intrinsic(_) => IntersectionBuilderState::Error,
 
         Ty::EnumClass(_) | Ty::EnumMember(_) => {
           // FIXME:

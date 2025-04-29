@@ -49,7 +49,6 @@ impl<'a> Analyzer<'a> {
       Ty::Tuple(t) => self.serialize_tuple_type(t),
       Ty::Function(r) => self.serialize_callable_type(r),
       Ty::Constructor(r) => self.serialize_callable_type(r),
-      Ty::Namespace(r) => self.serialize_namespace_type(r),
 
       Ty::Union(u) => self.serialize_union_type(u),
       Ty::Intersection(i) => self.serialize_intersection_type(i),

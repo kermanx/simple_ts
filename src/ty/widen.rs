@@ -36,7 +36,7 @@ impl<'a> Analyzer<'a> {
       // This is not accurate. But this is OK because we only widen untyped variables.
       Ty::Instance(_) => ty,
 
-      Ty::Generic(_) | Ty::Intrinsic(_) | Ty::Namespace(_) => Ty::Error,
+      Ty::Generic(_) | Ty::Intrinsic(_) => Ty::Error,
 
       Ty::EnumClass(_) => ty,
       Ty::EnumMember(m) => {
