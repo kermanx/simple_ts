@@ -159,6 +159,19 @@ macro_rules! impl_extract_callable {
             let unwrapped = self.unwrap_generic_instance(i);
             self.$name(unwrapped)
           }
+          Ty::Interface(i) => {
+            let mut res = vec![];
+            for ty in i.borrow().callables.iter() {
+              if let Some(extracted) = self.$name(*ty) {
+                res.push(extracted);
+              }
+            }
+            match res.len() {
+              0 => None,
+              1 => Some(res.into_iter().next().unwrap()),
+              _ => Some(ExtractedCallable::Overloaded(res)),
+            }
+          }
           _ => None,
         }
       }

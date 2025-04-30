@@ -55,13 +55,20 @@ impl<'a> InterfaceType<'a> {
     Self(RefCell::new(inner))
   }
 
+  pub fn borrow(&self) -> std::cell::Ref<'_, InterfaceTypeInner<'a>> {
+    self.0.borrow()
+  }
+
+  pub fn borrow_mut(&self) -> std::cell::RefMut<'_, InterfaceTypeInner<'a>> {
+    self.0.borrow_mut()
+  }
+
   pub fn get_property(&self, key: PropertyKeyType<'a>) -> Ty<'a> {
-    let inner = self.0.borrow();
-    inner.record.get_property(key)
+    self.borrow().record.get_property(key)
   }
 
   pub fn is_empty(&self) -> bool {
-    let inner = self.0.borrow();
+    let inner = self.borrow();
     inner.record.is_empty() && inner.callables.is_empty() && inner.unresolved_extends.is_empty()
   }
 }
