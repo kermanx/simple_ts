@@ -18,13 +18,11 @@ impl<'a> Analyzer<'a> {
     let class = self.allocator.alloc(EnumClassType {
       id: EnumClassId::from_usize(self.enum_classes.len()),
       name: node.id.name,
-      record: ns.record(),
+      record: ns.variables(),
       number_value: false,
       string_value: false,
     });
     let mut ns_ref = ns.borrow_mut();
-    // FIXME: get rid of this
-    self.enum_classes.push(unsafe { &*(class as *const _) });
 
     let mut counter = Some(0f64);
     let mut value_union = UnionTypeBuilder::default();
@@ -52,20 +50,21 @@ impl<'a> Analyzer<'a> {
         value,
       }));
 
-      ns_ref.record.string_keyed.init(
-        self,
-        id.as_str(),
-        RecordPropertyValue { value, optional: false, readonly: false },
-      );
+      ns_ref
+        .variables
+        .string_keyed
+        .0
+        .insert(id.as_str(), RecordPropertyValue { value, optional: false, readonly: true });
+      ns_ref.types.insert(id, value);
     }
-    self.accumulate_type(&node.id, Ty::EnumClass(class));
 
+    self.enum_classes.push(class);
+    self.declare_namespace_identifier(&node.id, false, ns);
     self.declare_binding_identifier(&node.id, true);
     self.init_binding_identifier(&node.id, Some(Ty::EnumClass(class)));
-
-    self.namespaces.insert(node.id.symbol_id(), ns);
-    self.type_scopes.insert_on_top(
-      node.id.symbol_id(),
+    self.declare_type_identifier(
+      &node.id,
+      false,
       Ty::EnumMember(self.allocator.alloc(EnumMemberType {
         class: class.id,
         name: None,

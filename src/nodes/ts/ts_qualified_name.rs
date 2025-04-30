@@ -41,9 +41,7 @@ impl<'a> Analyzer<'a> {
             NsOrTy::Ty(Ty::Error)
           }
         } else {
-          NsOrTy::Ty(
-            ns.borrow().record.get_property(PropertyKeyType::StringLiteral(&node.right.name)),
-          )
+          NsOrTy::Ty(ns.borrow().types.get(&node.right.name).copied().unwrap_or(Ty::Error))
         }
       }
       NsOrTy::Ty(_) => NsOrTy::Ty(Ty::Error),

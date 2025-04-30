@@ -2,7 +2,7 @@ use std::cell::RefCell;
 
 use oxc::{ast::ast::TSType, span::Atom};
 
-use super::record::RecordType;
+use super::{Ty, record::RecordType};
 use crate::{
   allocator::{self, Allocator},
   analyzer::Analyzer,
@@ -10,7 +10,8 @@ use crate::{
 
 #[derive(Debug)]
 pub struct NsInner<'a> {
-  pub record: RecordType<'a>,
+  pub variables: RecordType<'a>,
+  pub types: allocator::HashMap<'a, Atom<'a>, Ty<'a>>,
   pub children: allocator::HashMap<'a, Atom<'a>, &'a Ns<'a>>,
 }
 
@@ -26,7 +27,8 @@ impl<'a> From<NsInner<'a>> for Ns<'a> {
 impl<'a> Ns<'a> {
   pub fn new_in(allocator: Allocator<'a>) -> Self {
     Self(RefCell::new(NsInner {
-      record: RecordType::new_in(allocator),
+      variables: RecordType::new_in(allocator),
+      types: allocator::HashMap::new_in(allocator),
       children: allocator::HashMap::new_in(allocator),
     }))
   }
@@ -39,8 +41,8 @@ impl<'a> Ns<'a> {
     self.0.borrow_mut()
   }
 
-  pub fn record(&'a self) -> &'a RecordType<'a> {
-    unsafe { &(&*self.0.as_ptr()).record }
+  pub fn variables(&'a self) -> &'a RecordType<'a> {
+    unsafe { &(&*self.0.as_ptr()).variables }
   }
 }
 

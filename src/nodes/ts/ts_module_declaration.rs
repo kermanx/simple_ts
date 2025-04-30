@@ -12,9 +12,9 @@ impl<'a> Analyzer<'a> {
         let ns = self.allocator.alloc(Ns::new_in(self.allocator));
 
         if let TSModuleDeclarationName::Identifier(id) = &node.id {
-          self.namespaces.insert(id.symbol_id(), ns);
           self.declare_binding_identifier(id, true);
-          self.init_binding_identifier(id, Some(Ty::Record(ns.record())));
+          self.init_binding_identifier(id, Some(Ty::Record(ns.variables())));
+          self.declare_namespace_identifier(id, false, ns);
         } else {
           // ERROR
         }

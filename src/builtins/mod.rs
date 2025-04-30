@@ -20,7 +20,6 @@ impl Default for Builtins<'_> {
 }
 
 impl Builtins<'_> {
-  // TODO: Implement this
   pub fn new() -> Self {
     Self {
       string_prototype: Ty::Any,

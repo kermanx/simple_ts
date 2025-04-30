@@ -2,14 +2,14 @@ use oxc::ast::ast::BindingIdentifier;
 
 use crate::{
   analyzer::Analyzer,
-  ty::{Ty, unresolved::UnresolvedType},
+  ty::{Ty, namespace::Ns, unresolved::UnresolvedType},
 };
 
 impl<'a> Analyzer<'a> {
   pub fn declare_binding_identifier(&mut self, node: &'a BindingIdentifier<'a>, typed: bool) {
     let symbol = node.symbol_id.get().unwrap();
     self.declare_variable(symbol, typed);
-    self.update_namespace(
+    self.update_namespace_variable(
       symbol,
       false, // FIXME: export
       node.name,
@@ -32,6 +32,27 @@ impl<'a> Analyzer<'a> {
       }
     };
     self.init_variable(symbol, init);
-    self.update_namespace(symbol, false, node.name, init);
+    self.update_namespace_variable(symbol, false, node.name, init);
+  }
+
+  pub fn declare_type_identifier(
+    &mut self,
+    node: &'a BindingIdentifier<'a>,
+    export: bool,
+    ty: Ty<'a>,
+  ) {
+    self.accumulate_type(node, ty);
+    self.type_scopes.insert_on_top(node.symbol_id(), ty);
+    self.update_namespace_type(export, node.name, ty);
+  }
+
+  pub fn declare_namespace_identifier(
+    &mut self,
+    node: &'a BindingIdentifier<'a>,
+    export: bool,
+    ns: &'a Ns<'a>,
+  ) {
+    self.namespaces.insert(node.symbol_id(), ns);
+    self.update_namespace_child(export, node.name, ns);
   }
 }

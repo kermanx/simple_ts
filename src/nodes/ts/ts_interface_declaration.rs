@@ -10,9 +10,9 @@ use crate::{
 
 impl<'a> Analyzer<'a> {
   pub fn declare_ts_interface(&mut self, node: &'a TSInterfaceDeclaration<'a>) {
-    let symbol_id = node.id.symbol_id();
-    self.type_scopes.insert_on_top(
-      symbol_id,
+    self.declare_type_identifier(
+      &node.id,
+      false, // FIXME: export
       Ty::Interface(self.allocator.alloc(InterfaceType::new_in(self.allocator))),
     );
   }
