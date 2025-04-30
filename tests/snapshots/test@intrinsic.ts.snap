@@ -1,0 +1,8 @@
+---
+source: tests/mod.rs
+input_file: tests/fixtures/intrinsic.ts
+---
+type T1 = "HELLO";
+type T2 = "hello";
+type T3 = "Hello world";
+type T4 = "hello World";

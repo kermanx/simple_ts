@@ -92,7 +92,7 @@ impl<'a> Analyzer<'a> {
           let scope = self.instantiate_generic_params(generic.params, instance.args);
           self.resolve_ctx_ty(scope, generic.body)
         }
-        Ty::Intrinsic(_) => todo!(),
+        Ty::Intrinsic(intrinsic) => self.resolve_intrinsic_type(intrinsic, instance.args),
 
         // instance.generic is a generic value (function or constructor or compound of them)
         _ => self.instantiate_generic_value(instance.generic, instance.args),

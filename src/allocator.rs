@@ -5,7 +5,7 @@ use std::{
   slice,
 };
 
-use oxc::allocator;
+use oxc::{allocator, span::Atom};
 
 #[derive(Clone, Copy)]
 pub struct Allocator<'a>(&'a allocator::Allocator);
@@ -37,6 +37,11 @@ impl<'a> Allocator<'a> {
 
   pub fn vec<T>(self) -> Vec<'a, T> {
     Vec(allocator::Vec::new_in(self.0), self)
+  }
+
+  pub fn alloc_atom(self, s: &str) -> &'a Atom<'a> {
+    let atom = &*self.0.alloc_str(s);
+    self.0.alloc(Atom::from(atom))
   }
 }
 

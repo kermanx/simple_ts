@@ -1,8 +1,8 @@
-use oxc::ast::ast::TSTypeAliasDeclaration;
+use oxc::ast::ast::{TSType, TSTypeAliasDeclaration};
 
 use crate::{
   Analyzer,
-  ty::{Ty, generic::GenericType},
+  ty::{Ty, generic::GenericType, intrinsics::IntrinsicType},
 };
 
 impl<'a> Analyzer<'a> {
@@ -10,11 +10,15 @@ impl<'a> Analyzer<'a> {
     let symbol_id = node.id.symbol_id();
     let ty = if let Some(type_parameters) = &node.type_parameters {
       let params = self.resolve_type_parameter_declaration(type_parameters);
-      Ty::Generic(self.allocator.alloc(GenericType {
-        name: &node.id.name,
-        params,
-        body: self.ctx_ty_from_ts_type(&node.type_annotation),
-      }))
+      if matches!(node.type_annotation, TSType::TSIntrinsicKeyword(_)) {
+        Ty::Intrinsic(IntrinsicType::from_name(&node.id.name))
+      } else {
+        Ty::Generic(self.allocator.alloc(GenericType {
+          name: &node.id.name,
+          params,
+          body: self.ctx_ty_from_ts_type(&node.type_annotation),
+        }))
+      }
     } else {
       self.resolve_type(&node.type_annotation)
     };

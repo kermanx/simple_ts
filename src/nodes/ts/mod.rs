@@ -31,7 +31,10 @@ mod ts_union_type;
 
 use oxc::ast::ast::TSType;
 
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{Ty, intrinsics::IntrinsicType},
+};
 
 impl<'a> Analyzer<'a> {
   pub fn resolve_type(&mut self, node: &'a TSType<'a>) -> Ty<'a> {
@@ -39,7 +42,7 @@ impl<'a> Analyzer<'a> {
       TSType::TSAnyKeyword(_) => Ty::Any,
       TSType::TSBigIntKeyword(_) => Ty::BigInt,
       TSType::TSBooleanKeyword(_) => Ty::Boolean,
-      TSType::TSIntrinsicKeyword(_) => todo!(),
+      TSType::TSIntrinsicKeyword(_) => unreachable!(),
       TSType::TSNeverKeyword(_) => Ty::Never,
       TSType::TSNullKeyword(_) => Ty::Null,
       TSType::TSNumberKeyword(_) => Ty::Number,

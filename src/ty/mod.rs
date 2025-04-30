@@ -80,7 +80,7 @@ pub enum Ty<'a> {
   Instance(&'a GenericInstanceType<'a>),
   // -- HKT starts here
   Generic(&'a GenericType<'a>),
-  Intrinsic(&'a IntrinsicType),
+  Intrinsic(IntrinsicType),
   // -- HKT ends here
 
   /* Enum */
