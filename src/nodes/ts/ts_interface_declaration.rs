@@ -39,7 +39,7 @@ impl<'a> Analyzer<'a> {
       for heritage in extends {
         match &heritage.expression {
           Expression::Identifier(id) => {
-            let base = self.resolve_type_identifier_reference(id);
+            let base = self.resolve_identifier_reference_ty(id);
             let extends = if let Some(type_arguments) = &heritage.type_arguments {
               let type_arguments = self.resolve_type_parameter_instantiation(type_arguments);
               self.create_generic_instance(base, type_arguments)
