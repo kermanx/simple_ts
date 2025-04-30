@@ -42,10 +42,9 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn declare_function(&mut self, node: &'a Function<'a>) {
-    let symbol = node.id.as_ref().unwrap().symbol_id.get().unwrap();
     let value = self.exec_function(node, None);
-
-    self.declare_variable(symbol, true);
-    self.init_variable(symbol, value);
+    let id = node.id.as_ref().unwrap();
+    self.declare_binding_identifier(id, true);
+    self.init_binding_identifier(id, Some(value));
   }
 }

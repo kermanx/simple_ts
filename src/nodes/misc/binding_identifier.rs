@@ -1,11 +1,20 @@
 use oxc::ast::ast::BindingIdentifier;
 
-use crate::{analyzer::Analyzer, ty::Ty};
+use crate::{
+  analyzer::Analyzer,
+  ty::{Ty, unresolved::UnresolvedType},
+};
 
 impl<'a> Analyzer<'a> {
   pub fn declare_binding_identifier(&mut self, node: &'a BindingIdentifier<'a>, typed: bool) {
     let symbol = node.symbol_id.get().unwrap();
     self.declare_variable(symbol, typed);
+    self.update_namespace(
+      symbol,
+      false, // FIXME: export
+      node.name,
+      Ty::Unresolved(UnresolvedType::UnInitVariable(symbol)),
+    );
   }
 
   pub fn init_binding_identifier(&mut self, node: &'a BindingIdentifier<'a>, init: Option<Ty<'a>>) {
@@ -23,5 +32,6 @@ impl<'a> Analyzer<'a> {
       }
     };
     self.init_variable(symbol, init);
+    self.update_namespace(symbol, false, node.name, init);
   }
 }

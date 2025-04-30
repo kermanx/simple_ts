@@ -8,18 +8,39 @@ use crate::{
   analyzer::Analyzer,
 };
 
-#[derive(Debug, Clone)]
-pub struct Ns<'a> {
-  pub record: &'a RecordType<'a>,
-  pub children: RefCell<allocator::HashMap<'a, Atom<'a>, &'a Ns<'a>>>,
+#[derive(Debug)]
+pub struct NsInner<'a> {
+  pub record: RecordType<'a>,
+  pub children: allocator::HashMap<'a, Atom<'a>, &'a Ns<'a>>,
+}
+
+#[derive(Debug)]
+pub struct Ns<'a>(pub RefCell<NsInner<'a>>);
+
+impl<'a> From<NsInner<'a>> for Ns<'a> {
+  fn from(inner: NsInner<'a>) -> Self {
+    Self(RefCell::new(inner))
+  }
 }
 
 impl<'a> Ns<'a> {
   pub fn new_in(allocator: Allocator<'a>) -> Self {
-    Ns {
-      record: allocator.alloc(RecordType::new_in(allocator)),
-      children: RefCell::new(allocator::HashMap::new_in(allocator)),
-    }
+    Self(RefCell::new(NsInner {
+      record: RecordType::new_in(allocator),
+      children: allocator::HashMap::new_in(allocator),
+    }))
+  }
+
+  pub fn borrow(&self) -> std::cell::Ref<'_, NsInner<'a>> {
+    self.0.borrow()
+  }
+
+  pub fn borrow_mut(&self) -> std::cell::RefMut<'_, NsInner<'a>> {
+    self.0.borrow_mut()
+  }
+
+  pub fn record(&'a self) -> &'a RecordType<'a> {
+    unsafe { &(&*self.0.as_ptr()).record }
   }
 }
 
