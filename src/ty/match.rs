@@ -3,10 +3,7 @@ use std::{collections::hash_map::Entry, hash::Hash};
 use oxc::semantic::SymbolId;
 use rustc_hash::FxHashMap;
 
-use super::{
-  Ty, callable::CallableType, r#enum::EnumMemberType, record::KeyedPropertyMap,
-  unresolved::UnresolvedType,
-};
+use super::{Ty, callable::CallableType, record::KeyedPropertyMap, unresolved::UnresolvedType};
 use crate::Analyzer;
 
 pub enum MatchResult<'a> {

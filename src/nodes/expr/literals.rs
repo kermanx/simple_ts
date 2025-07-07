@@ -14,7 +14,7 @@ impl<'a> Analyzer<'a> {
   }
 
   pub fn exc_big_int_literal(&mut self, node: &'a BigIntLiteral, _sat: Option<Ty<'a>>) -> Ty<'a> {
-    Ty::BigIntLiteral(&node.raw)
+    Ty::BigIntLiteral(&node.value)
   }
 
   pub fn exec_boolean_literal(&mut self, node: &'a BooleanLiteral, _sat: Option<Ty<'a>>) -> Ty<'a> {

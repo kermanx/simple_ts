@@ -26,14 +26,14 @@ impl<'a> Analyzer<'a> {
 
       Ty::StringLiteral(s) => self
         .ast_builder
-        .ts_type_literal_type(SPAN, self.ast_builder.ts_literal_string_literal(SPAN, s, None)),
+        .ts_type_literal_type(SPAN, self.ast_builder.ts_literal_string_literal(SPAN, *s, None)),
       Ty::NumericLiteral(n) => self.ast_builder.ts_type_literal_type(
         SPAN,
         self.ast_builder.ts_literal_numeric_literal(SPAN, n.0, None, NumberBase::Decimal),
       ),
       Ty::BigIntLiteral(n) => self.ast_builder.ts_type_literal_type(
         SPAN,
-        self.ast_builder.ts_literal_big_int_literal(SPAN, n, BigintBase::Decimal),
+        self.ast_builder.ts_literal_big_int_literal(SPAN, *n, None, BigintBase::Decimal),
       ),
       Ty::BooleanLiteral(b) => self
         .ast_builder

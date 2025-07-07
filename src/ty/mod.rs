@@ -28,7 +28,6 @@ use generic::{GenericInstanceType, GenericType};
 use interface::InterfaceType;
 use intersection::IntersectionType;
 use intrinsics::IntrinsicType;
-use namespace::Ns;
 use oxc::{semantic::SymbolId, span::Atom};
 use property_key::PropertyKeyType;
 use record::RecordType;

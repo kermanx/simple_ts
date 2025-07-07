@@ -85,7 +85,7 @@ impl<'a> Analyzer<'a> {
       semantic,
       ast_builder,
 
-      builtins: Builtins::new(),
+      builtins: Builtins::new(allocator),
 
       span_stack: Vec::new(),
       call_scopes: Vec::from([root_call_scope]),

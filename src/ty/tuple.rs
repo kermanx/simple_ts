@@ -98,8 +98,8 @@ impl<'a> Analyzer<'a> {
       if let Some(name) = element.name {
         node = TSTupleElement::from(self.ast_builder.ts_type_named_tuple_member(
           SPAN,
+          self.ast_builder.identifier_name(SPAN, *name),
           node,
-          self.ast_builder.identifier_name(SPAN, name),
           element.optional,
         ));
       }

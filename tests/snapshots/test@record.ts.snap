@@ -3,7 +3,7 @@ source: tests/mod.rs
 input_file: tests/fixtures/record.ts
 ---
 type Obj = {
-	a: string
-	b: 111
+	a: string;
+	b: 111;
 };
 type Obj_a = string;

@@ -5,3 +5,4 @@ input_file: tests/fixtures/namespace.ts
 type T1 = "a";
 type T2 = number;
 type T3 = A.A;
+type T4 = 2;

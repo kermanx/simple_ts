@@ -35,11 +35,11 @@ impl<'a> Analyzer<'a> {
       interface.record.extend(&new_record);
     }
 
-    if let Some(extends) = &node.extends {
-      for heritage in extends {
+    if !node.extends.is_empty() {
+      for heritage in &node.extends {
         match &heritage.expression {
           Expression::Identifier(id) => {
-            let base = self.resolve_identifier_reference_ty(id);
+            let base = self.resolve_identifier_reference_ty(&id);
             let extends = if let Some(type_arguments) = &heritage.type_arguments {
               let type_arguments = self.resolve_type_parameter_instantiation(type_arguments);
               self.create_generic_instance(base, type_arguments)

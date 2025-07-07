@@ -6,6 +6,8 @@ declare namespace N1 {
     enum A {
       A = 1
     }
+
+    type B = 2
   }
 }
 
@@ -17,3 +19,6 @@ const t2 = N1.f(a)
 
 const t3 = N1.N2.A.A
 //    ^? T3
+
+type T4 = N1.N2.B
+//    ^? T4

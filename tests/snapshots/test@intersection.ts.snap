@@ -5,7 +5,7 @@ input_file: tests/fixtures/intersection.ts
 type T1 = never;
 type T2 = 2;
 type T3 = string & {
-	a: number
+	a: number;
 };
 type T4 = never;
 type T5 = "a";

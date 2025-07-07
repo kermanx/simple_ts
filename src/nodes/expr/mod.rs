@@ -61,7 +61,7 @@ impl<'a> Analyzer<'a> {
       }
       Expression::StringLiteral(node) => Ty::StringLiteral(&node.value),
       Expression::NumericLiteral(node) => Ty::NumericLiteral(node.value.into()),
-      Expression::BigIntLiteral(node) => Ty::BigIntLiteral(&node.raw),
+      Expression::BigIntLiteral(node) => Ty::BigIntLiteral(&node.value),
       Expression::BooleanLiteral(node) => Ty::BooleanLiteral(node.value),
 
       Expression::ObjectExpression(node) => self.exec_object_expression(node, sat, true),
