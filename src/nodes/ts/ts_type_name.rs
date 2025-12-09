@@ -10,6 +10,7 @@ impl<'a> Analyzer<'a> {
     match node {
       TSTypeName::IdentifierReference(node) => self.resolve_identifier_reference_ty(node),
       TSTypeName::QualifiedName(node) => self.resolve_qualified_name_ty(node),
+      TSTypeName::ThisExpression(_node) => todo!(),
     }
   }
 
@@ -17,6 +18,7 @@ impl<'a> Analyzer<'a> {
     match node {
       TSTypeName::IdentifierReference(node) => self.resolve_identifier_reference_ns(node),
       TSTypeName::QualifiedName(node) => self.resolve_qualified_name_ns(node),
+      TSTypeName::ThisExpression(_node) => todo!(),
     }
   }
 }

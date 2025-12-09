@@ -9,7 +9,7 @@ impl<'a> Analyzer<'a> {
   /// Note: this is for flamegraph only. May not conform to the standard.
   pub fn resolve_function_name(&self, scope_id: ScopeId) -> Option<&'a str> {
     let node_id = self.semantic.scoping().get_node_id(scope_id);
-    let parent = self.semantic.nodes().parent_kind(node_id)?;
+    let parent = self.semantic.nodes().parent_kind(node_id);
     match parent {
       AstKind::VariableDeclarator(node) => node.id.get_identifier_name().map(|a| a.as_str()),
       AstKind::AssignmentPattern(node) => node.left.get_identifier_name().map(|a| a.as_str()),

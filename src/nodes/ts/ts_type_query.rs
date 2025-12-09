@@ -10,6 +10,7 @@ impl<'a> Analyzer<'a> {
       }
       TSTypeQueryExprName::TSImportType(_node) => todo!(),
       TSTypeQueryExprName::QualifiedName(_node) => todo!(),
+      TSTypeQueryExprName::ThisExpression(_node) => todo!(),
     };
 
     if let Some(type_arguments) = &node.type_arguments {
