@@ -125,9 +125,9 @@ impl<'a> Analyzer<'a> {
       Ty::Constructor(c) => self.instantiate_callable_type_parameters(c, args).map(Ty::Constructor),
 
       Ty::Union(union) => {
-        let mut complex = allocator::HashMap::new_in(self.allocator);
-        for ty in union.complex.keys() {
-          complex.insert(self.instantiate_generic_value(*ty, args), ());
+        let mut complex = self.allocator.vec();
+        for ty in union.complex.iter() {
+          complex.push(self.instantiate_generic_value(*ty, args));
         }
         Some(Ty::Union(self.allocator.alloc(UnionType { complex, ..union.clone() })))
       }

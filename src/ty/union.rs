@@ -79,7 +79,7 @@ pub struct UnionType<'a> {
   /// (has_true, has_false)
   pub boolean: (bool, bool),
 
-  pub complex: allocator::HashSet<'a, Ty<'a>>,
+  pub complex: allocator::Vec<'a, Ty<'a>>, // TODO: Make it a BTreeSet
   pub unresolved: allocator::Vec<'a, UnresolvedType<'a>>,
 }
 
@@ -97,7 +97,7 @@ impl<'a> UnionType<'a> {
       undefined: false,
       boolean: (false, false),
 
-      complex: allocator::HashSet::new_in(allocator),
+      complex: allocator.vec(),
       unresolved: allocator.vec(),
     }
   }
@@ -129,7 +129,7 @@ impl<'a> UnionType<'a> {
       | Ty::Intersection(_)
       | Ty::EnumClass(_)
       | Ty::EnumMember(_) => {
-        self.complex.insert(ty, ());
+        self.complex.push(ty);
       }
 
       Ty::Unresolved(unresolved) => self.unresolved.push(unresolved),
@@ -163,7 +163,7 @@ impl<'a> UnionType<'a> {
       (false, false) => {}
     }
 
-    self.complex.keys().copied().for_each(&mut f);
+    self.complex.iter().copied().for_each(&mut f);
     self.unresolved.iter().copied().map(Ty::Unresolved).for_each(f);
   }
 }

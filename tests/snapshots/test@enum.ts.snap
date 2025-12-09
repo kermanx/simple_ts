@@ -3,5 +3,5 @@ source: tests/mod.rs
 input_file: tests/fixtures/enum.ts
 ---
 type A2 = A;
-type T1 = A.Y | A.X;
+type T1 = A.X | A.Y;
 type T2 = false;
